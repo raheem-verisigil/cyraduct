@@ -1,0 +1,26 @@
+{
+  "name": "banking",
+  "version": "0.1.0",
+  "signed_by": "cyraduct-reference (placeholder — in production this field must name the actual signing authority, e.g. a banking compliance body)",
+  "description": "Illustrative banking domain pack for wire transfers and account actions.",
+  "rules": [
+    {
+      "id": "banking.deny.high_value_no_jurisdiction",
+      "when": { "action_type": "wire_transfer", "amount_gt": 10000, "jurisdiction_missing": true },
+      "effect": "deny",
+      "reason": "High-value transfer with no declared jurisdiction cannot be evaluated for sanctions/compliance exposure"
+    },
+    {
+      "id": "banking.conditional.cross_border",
+      "when": { "action_type": "wire_transfer", "jurisdiction_in": ["EU", "UK", "APAC"] },
+      "effect": "conditional",
+      "reason": "Cross-border transfer requires compliance review"
+    },
+    {
+      "id": "banking.deny.amount_ceiling",
+      "when": { "action_type": "wire_transfer", "amount_gt": 5000000 },
+      "effect": "deny",
+      "reason": "Exceeds absolute ceiling for automated agent-initiated transfers"
+    }
+  ]
+}

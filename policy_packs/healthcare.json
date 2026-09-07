@@ -1,0 +1,26 @@
+{
+  "name": "healthcare",
+  "version": "0.1.0",
+  "signed_by": "cyraduct-reference (placeholder — in production this field must name the actual signing authority, e.g. a healthcare compliance body)",
+  "description": "Illustrative healthcare domain pack for EHR/record access actions.",
+  "rules": [
+    {
+      "id": "healthcare.deny.record_access_no_purpose",
+      "when": { "consequence_class": "health_record_access", "purpose_missing": true },
+      "effect": "deny",
+      "reason": "Patient record access requires a stated clinical or administrative purpose"
+    },
+    {
+      "id": "healthcare.conditional.bulk_export",
+      "when": { "action_type": "bulk_record_export" },
+      "effect": "conditional",
+      "reason": "Bulk record export requires elevated review before execution"
+    },
+    {
+      "id": "healthcare.deny.cross_jurisdiction_transfer",
+      "when": { "action_type": "record_transfer", "jurisdiction_missing": true },
+      "effect": "deny",
+      "reason": "Cross-border/undeclared-jurisdiction record transfer cannot be evaluated for regulatory exposure"
+    }
+  ]
+}

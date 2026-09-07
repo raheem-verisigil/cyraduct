@@ -1,0 +1,38 @@
+{
+  "name": "generic",
+  "version": "0.1.0",
+  "signed_by": "cyraduct-reference (unsigned placeholder — replace with a real domain authority signature before production use)",
+  "description": "General-purpose baseline pack. Not a substitute for a domain-specific, independently signed pack in regulated deployments.",
+  "rules": [
+    {
+      "id": "generic.deny.no_purpose_high_consequence",
+      "when": { "consequence_class": "financial_transfer", "purpose_missing": true },
+      "effect": "deny",
+      "reason": "High-consequence action submitted without a stated purpose"
+    },
+    {
+      "id": "generic.deny.financial_transfer.amount_ceiling",
+      "when": { "action_type": "wire_transfer", "amount_gt": 1000000 },
+      "effect": "deny",
+      "reason": "Transfer amount exceeds the unconditional ceiling for this pack"
+    },
+    {
+      "id": "generic.conditional.financial_transfer.review_band",
+      "when": { "action_type": "wire_transfer", "amount_gt": 50000 },
+      "effect": "conditional",
+      "reason": "Transfer amount requires additional review/approval before execution"
+    },
+    {
+      "id": "generic.deny.infra_change.no_jurisdiction",
+      "when": { "consequence_class": "infra_change" },
+      "effect": "conditional",
+      "reason": "Infrastructure changes are conditional pending change-control sign-off"
+    },
+    {
+      "id": "generic.allow.low_risk",
+      "when": { "consequence_class": "low_risk" },
+      "effect": "allow",
+      "reason": "Low-risk consequence class, no additional controls required"
+    }
+  ]
+}

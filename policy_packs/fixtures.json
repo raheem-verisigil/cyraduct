@@ -1,0 +1,112 @@
+[
+  {
+    "id": "fixture.generic.allow.low_risk",
+    "type": "positive",
+    "description": "Low-risk action should be allowed with no friction",
+    "request": {
+      "agent_id": "agent-test-1",
+      "action_type": "read_public_doc",
+      "consequence_class": "low_risk",
+      "policy_pack": "generic",
+      "payload": {}
+    },
+    "expected_decision": "allow"
+  },
+  {
+    "id": "fixture.generic.deny.transfer_over_ceiling",
+    "type": "negative",
+    "description": "Transfer far exceeding the ceiling must be denied outright",
+    "request": {
+      "agent_id": "agent-test-2",
+      "action_type": "wire_transfer",
+      "consequence_class": "financial_transfer",
+      "purpose": "vendor payment",
+      "policy_pack": "generic",
+      "payload": { "amount": 5000000 }
+    },
+    "expected_decision": "deny"
+  },
+  {
+    "id": "fixture.generic.deny.transfer_no_purpose",
+    "type": "negative",
+    "description": "Financial transfer with no stated purpose must be denied, regardless of amount",
+    "request": {
+      "agent_id": "agent-test-3",
+      "action_type": "wire_transfer",
+      "consequence_class": "financial_transfer",
+      "policy_pack": "generic",
+      "payload": { "amount": 500 }
+    },
+    "expected_decision": "deny"
+  },
+  {
+    "id": "fixture.generic.conditional.transfer_review_band",
+    "type": "positive",
+    "description": "Mid-size transfer with purpose should be conditional, not an outright allow",
+    "request": {
+      "agent_id": "agent-test-4",
+      "action_type": "wire_transfer",
+      "consequence_class": "financial_transfer",
+      "purpose": "payroll run",
+      "policy_pack": "generic",
+      "payload": { "amount": 75000 }
+    },
+    "expected_decision": "conditional"
+  },
+  {
+    "id": "fixture.banking.deny.high_value_no_jurisdiction",
+    "type": "negative",
+    "description": "High-value transfer with no declared jurisdiction cannot be admitted, even if amount is otherwise fine",
+    "request": {
+      "agent_id": "agent-test-5",
+      "action_type": "wire_transfer",
+      "consequence_class": "financial_transfer",
+      "purpose": "settlement",
+      "policy_pack": "banking",
+      "payload": { "amount": 20000 }
+    },
+    "expected_decision": "deny"
+  },
+  {
+    "id": "fixture.banking.conditional.cross_border",
+    "type": "positive",
+    "description": "Cross-border transfer within jurisdiction list should be conditional, not silently allowed",
+    "request": {
+      "agent_id": "agent-test-6",
+      "action_type": "wire_transfer",
+      "consequence_class": "financial_transfer",
+      "purpose": "settlement",
+      "jurisdiction": "EU",
+      "policy_pack": "banking",
+      "payload": { "amount": 2000 }
+    },
+    "expected_decision": "conditional"
+  },
+  {
+    "id": "fixture.healthcare.deny.record_access_no_purpose",
+    "type": "negative",
+    "description": "Availability of the EHR tool must not itself authorize access without a stated purpose",
+    "request": {
+      "agent_id": "agent-test-7",
+      "action_type": "read_ehr",
+      "consequence_class": "health_record_access",
+      "policy_pack": "healthcare",
+      "payload": {}
+    },
+    "expected_decision": "deny"
+  },
+  {
+    "id": "fixture.healthcare.deny.cross_jurisdiction_transfer",
+    "type": "negative",
+    "description": "Record transfer with no declared jurisdiction must be denied",
+    "request": {
+      "agent_id": "agent-test-8",
+      "action_type": "record_transfer",
+      "consequence_class": "health_record_access",
+      "purpose": "care coordination",
+      "policy_pack": "healthcare",
+      "payload": {}
+    },
+    "expected_decision": "deny"
+  }
+]
