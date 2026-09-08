@@ -11,6 +11,7 @@ Enforcement invariant:
         -> signature valid
         -> not expired
         -> action/agent binding valid
+        -> execution webhook destination is safe (SSRF check)
         -> execution webhook
 
 Any failed check blocks execution before the webhook is called.
@@ -18,13 +19,19 @@ Any failed check blocks execution before the webhook is called.
 This reference implementation uses a caller-supplied webhook as the execution
 sink. A production broker may terminate provider-specific protocols directly
 (MCP, A2A, HTTP tool calls, etc.).
+
+SSRF note: execution_webhook is caller-supplied, so it is validated via
+url_safety.validate_webhook_url() before any request is made, and the
+HTTP client below disables redirect-following — a URL that passes
+validation could otherwise redirect to an internal address at request
+time. See app/url_safety.py for the full threat model and residual risk.
 """
 
 import httpx
 from fastapi import APIRouter, HTTPException
 
 from ..models import ActionRequest
-from .. import receipts, storage
+from .. import receipts, storage, url_safety
 
 
 router = APIRouter(prefix="/v1/broker", tags=["broker"])
@@ -131,12 +138,34 @@ async def execute(
             "receipt": receipt.model_dump(),
         }
 
-    # 7. Only after ALL receipt checks pass may execution occur.
+    # 7. SSRF check — the execution_webhook is caller-supplied and must not
+    #    point at internal/private network infrastructure.
+    is_safe, webhook_reason = url_safety.validate_webhook_url(execution_webhook)
+    if not is_safe:
+        storage.append_audit(
+            "broker_blocked_unsafe_webhook",
+            {
+                "agent_id": req.agent_id,
+                "receipt_id": receipt_id,
+                "reason": webhook_reason,
+            },
+        )
+        return {
+            "executed": False,
+            "reason": f"unsafe_execution_webhook:{webhook_reason}",
+            "receipt": receipt.model_dump(),
+        }
+
+    # 8. Only after ALL checks pass may execution occur.
     execution_result = None
     executed = False
 
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
+        # follow_redirects=False is deliberate: a webhook URL that passed
+        # the SSRF check above could still redirect to an internal address
+        # at request time. We refuse to follow any redirect rather than
+        # re-validating a moving target.
+        async with httpx.AsyncClient(timeout=10.0, follow_redirects=False) as client:
             resp = await client.post(
                 execution_webhook,
                 json={
