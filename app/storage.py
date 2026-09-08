@@ -1,226 +1,265 @@
 """
 Storage layer.
 
-Uses SQLite by default (fine for a pilot/MVP; swap CYRADUCT_DATABASE_URL
-for Postgres in a real deployment).
+Uses SQLAlchemy Core so the same code runs against SQLite (local dev,
+zero setup) or Postgres (production — set CYRADUCT_DATABASE_URL to a
+Railway Postgres connection string). This replaces the earlier
+SQLite-only implementation; nothing in the routers changed, since every
+function here keeps its exact original signature.
+
+Why this matters: SQLite on Railway lives on ephemeral local disk — every
+redeploy silently wipes receipts, evidence, and the audit log. Postgres
+(via Railway's Postgres plugin, or any managed Postgres) persists across
+redeploys, which is the actual requirement once anyone relies on a
+receipt being retrievable later.
 
 The audit log is hash-chained: each entry embeds the hash of the previous
 entry, so any tampering with history breaks the chain and is detectable.
 Receipts are additionally chained per-agent (prev_receipt_hash), and that
 chain link is itself covered by the receipt's Ed25519 signature.
 """
-import sqlite3
-import json
 import hashlib
+import json
+import os
 import threading
 from datetime import datetime, timezone
 from typing import Optional, List
 
+from sqlalchemy import (
+    create_engine, MetaData, Table, Column, String, Integer, Text, select,
+    insert, update, delete as sa_delete, desc, asc,
+)
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
+
 from .models import Receipt, EvidencePackage
 
-_DB_PATH = "cyraduct.db"
-_lock = threading.Lock()
+_DATABASE_URL = os.environ.get("CYRADUCT_DATABASE_URL", "sqlite:///./cyraduct.db")
 
+_engine = create_engine(_DATABASE_URL, future=True)
+_is_sqlite = _engine.dialect.name == "sqlite"
+_lock = threading.Lock()  # SQLite has no real concurrent-writer story; harmless no-op contention under Postgres
 
-def _conn():
-    conn = sqlite3.connect(_DB_PATH, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    return conn
+metadata = MetaData()
+
+receipts_table = Table(
+    "receipts", metadata,
+    Column("receipt_id", String, primary_key=True),
+    Column("agent_id", String, nullable=False, index=True),
+    Column("issued_at", String, nullable=False, index=True),
+    Column("consequence_class", String),
+    Column("data", Text, nullable=False),
+    Column("revoked", Integer, nullable=False, default=0),
+)
+
+audit_log_table = Table(
+    "audit_log", metadata,
+    Column("seq", Integer, primary_key=True, autoincrement=True),
+    Column("timestamp", String, nullable=False),
+    Column("event_type", String, nullable=False),
+    Column("detail", Text, nullable=False),
+    Column("prev_hash", String, nullable=False),
+    Column("entry_hash", String, nullable=False),
+)
+
+kill_switch_table = Table(
+    "kill_switch", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("active", Integer, nullable=False, default=0),
+    Column("reason", Text),
+)
+
+evidence_table = Table(
+    "evidence", metadata,
+    Column("evidence_id", String, primary_key=True),
+    Column("data", Text, nullable=False),
+)
+
+agent_chain_table = Table(
+    "agent_chain", metadata,
+    Column("agent_id", String, primary_key=True),
+    Column("last_receipt_hash", String, nullable=False),
+)
 
 
 def init_db():
-    with _lock, _conn() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS receipts (
-                receipt_id TEXT PRIMARY KEY,
-                agent_id TEXT NOT NULL,
-                issued_at TEXT NOT NULL,
-                consequence_class TEXT,
-                data TEXT NOT NULL,
-                revoked INTEGER NOT NULL DEFAULT 0
-            )
-        """)
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_receipts_agent ON receipts (agent_id)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_receipts_issued ON receipts (issued_at)")
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS audit_log (
-                seq INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT NOT NULL,
-                event_type TEXT NOT NULL,
-                detail TEXT NOT NULL,
-                prev_hash TEXT NOT NULL,
-                entry_hash TEXT NOT NULL
-            )
-        """)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS kill_switch (
-                id INTEGER PRIMARY KEY CHECK (id = 1),
-                active INTEGER NOT NULL DEFAULT 0,
-                reason TEXT
-            )
-        """)
-        conn.execute("INSERT OR IGNORE INTO kill_switch (id, active, reason) VALUES (1, 0, NULL)")
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS evidence (
-                evidence_id TEXT PRIMARY KEY,
-                data TEXT NOT NULL
-            )
-        """)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS agent_chain (
-                agent_id TEXT PRIMARY KEY,
-                last_receipt_hash TEXT NOT NULL
-            )
-        """)
-        conn.commit()
+    metadata.create_all(_engine)
+    with _engine.begin() as conn:
+        exists = conn.execute(
+            select(kill_switch_table.c.id).where(kill_switch_table.c.id == 1)
+        ).fetchone()
+        if not exists:
+            conn.execute(insert(kill_switch_table).values(id=1, active=0, reason=None))
+
+
+def _upsert_agent_chain(conn, agent_id: str, last_hash: str):
+    if _is_sqlite:
+        stmt = sqlite_insert(agent_chain_table).values(agent_id=agent_id, last_receipt_hash=last_hash)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["agent_id"], set_={"last_receipt_hash": last_hash}
+        )
+    else:
+        stmt = pg_insert(agent_chain_table).values(agent_id=agent_id, last_receipt_hash=last_hash)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["agent_id"], set_={"last_receipt_hash": last_hash}
+        )
+    conn.execute(stmt)
 
 
 def save_receipt(receipt: Receipt):
-    with _lock, _conn() as conn:
-        conn.execute(
-            "INSERT OR REPLACE INTO receipts (receipt_id, agent_id, issued_at, consequence_class, data, revoked) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
-            (receipt.receipt_id, receipt.agent.agent_id, receipt.issued_at,
-             receipt.action.consequence_class, receipt.model_dump_json(), int(receipt.revoked)),
-        )
-        # Chain: this receipt's own signature covers prev_receipt_hash, so
-        # what we store as "last hash" for the next receipt is this
-        # receipt's action_hash (a stable, content-derived value).
-        conn.execute(
-            "INSERT INTO agent_chain (agent_id, last_receipt_hash) VALUES (?, ?) "
-            "ON CONFLICT(agent_id) DO UPDATE SET last_receipt_hash = excluded.last_receipt_hash",
-            (receipt.agent.agent_id, receipt.action_hash),
-        )
-        conn.commit()
+    with _lock, _engine.begin() as conn:
+        conn.execute(sa_delete(receipts_table).where(receipts_table.c.receipt_id == receipt.receipt_id))
+        conn.execute(insert(receipts_table).values(
+            receipt_id=receipt.receipt_id,
+            agent_id=receipt.agent.agent_id,
+            issued_at=receipt.issued_at,
+            consequence_class=receipt.action.consequence_class,
+            data=receipt.model_dump_json(),
+            revoked=int(receipt.revoked),
+        ))
+        _upsert_agent_chain(conn, receipt.agent.agent_id, receipt.action_hash)
 
 
 def get_last_receipt_hash(agent_id: str) -> Optional[str]:
-    with _lock, _conn() as conn:
-        row = conn.execute("SELECT last_receipt_hash FROM agent_chain WHERE agent_id = ?", (agent_id,)).fetchone()
-        return row["last_receipt_hash"] if row else None
+    with _lock, _engine.begin() as conn:
+        row = conn.execute(
+            select(agent_chain_table.c.last_receipt_hash).where(agent_chain_table.c.agent_id == agent_id)
+        ).fetchone()
+        return row[0] if row else None
 
 
 def get_receipt(receipt_id: str) -> Optional[Receipt]:
-    with _lock, _conn() as conn:
-        row = conn.execute("SELECT data, revoked FROM receipts WHERE receipt_id = ?", (receipt_id,)).fetchone()
+    with _lock, _engine.begin() as conn:
+        row = conn.execute(
+            select(receipts_table.c.data, receipts_table.c.revoked)
+            .where(receipts_table.c.receipt_id == receipt_id)
+        ).fetchone()
         if not row:
             return None
-        r = Receipt.model_validate_json(row["data"])
-        r.revoked = bool(row["revoked"])
+        r = Receipt.model_validate_json(row[0])
+        r.revoked = bool(row[1])
         return r
 
 
 def query_receipts(agent_id: Optional[str] = None, since: Optional[str] = None,
                     until: Optional[str] = None, limit: int = 100) -> List[Receipt]:
-    clauses, params = [], []
+    stmt = select(receipts_table.c.data, receipts_table.c.revoked)
     if agent_id:
-        clauses.append("agent_id = ?")
-        params.append(agent_id)
+        stmt = stmt.where(receipts_table.c.agent_id == agent_id)
     if since:
-        clauses.append("issued_at >= ?")
-        params.append(since)
+        stmt = stmt.where(receipts_table.c.issued_at >= since)
     if until:
-        clauses.append("issued_at <= ?")
-        params.append(until)
-    where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
-    with _lock, _conn() as conn:
-        rows = conn.execute(
-            f"SELECT data, revoked FROM receipts {where} ORDER BY issued_at DESC LIMIT ?",
-            (*params, limit),
-        ).fetchall()
+        stmt = stmt.where(receipts_table.c.issued_at <= until)
+    stmt = stmt.order_by(desc(receipts_table.c.issued_at)).limit(limit)
+
+    with _lock, _engine.begin() as conn:
+        rows = conn.execute(stmt).fetchall()
         out = []
         for row in rows:
-            r = Receipt.model_validate_json(row["data"])
-            r.revoked = bool(row["revoked"])
+            r = Receipt.model_validate_json(row[0])
+            r.revoked = bool(row[1])
             out.append(r)
         return out
 
 
 def revoke_receipt(receipt_id: str) -> bool:
-    with _lock, _conn() as conn:
-        cur = conn.execute("UPDATE receipts SET revoked = 1 WHERE receipt_id = ?", (receipt_id,))
-        conn.commit()
-        return cur.rowcount > 0
+    with _lock, _engine.begin() as conn:
+        result = conn.execute(
+            update(receipts_table).where(receipts_table.c.receipt_id == receipt_id).values(revoked=1)
+        )
+        return result.rowcount > 0
 
 
 def revoke_by_agent(agent_id: str) -> int:
-    """Revoke all currently-unrevoked receipts for an agent — the
-    fleet/agent-scoped 'kill this agent now' operation."""
-    with _lock, _conn() as conn:
-        cur = conn.execute(
-            "UPDATE receipts SET revoked = 1 WHERE agent_id = ? AND revoked = 0", (agent_id,)
+    with _lock, _engine.begin() as conn:
+        result = conn.execute(
+            update(receipts_table)
+            .where(receipts_table.c.agent_id == agent_id, receipts_table.c.revoked == 0)
+            .values(revoked=1)
         )
-        conn.commit()
-        return cur.rowcount
+        return result.rowcount
 
 
 def save_evidence(pkg: EvidencePackage):
-    with _lock, _conn() as conn:
-        conn.execute(
-            "INSERT OR REPLACE INTO evidence (evidence_id, data) VALUES (?, ?)",
-            (pkg.evidence_id, pkg.model_dump_json()),
-        )
-        conn.commit()
+    with _lock, _engine.begin() as conn:
+        conn.execute(sa_delete(evidence_table).where(evidence_table.c.evidence_id == pkg.evidence_id))
+        conn.execute(insert(evidence_table).values(evidence_id=pkg.evidence_id, data=pkg.model_dump_json()))
 
 
 def get_evidence(evidence_id: str) -> Optional[EvidencePackage]:
-    with _lock, _conn() as conn:
-        row = conn.execute("SELECT data FROM evidence WHERE evidence_id = ?", (evidence_id,)).fetchone()
-        return EvidencePackage.model_validate_json(row["data"]) if row else None
+    with _lock, _engine.begin() as conn:
+        row = conn.execute(
+            select(evidence_table.c.data).where(evidence_table.c.evidence_id == evidence_id)
+        ).fetchone()
+        return EvidencePackage.model_validate_json(row[0]) if row else None
 
 
 def _last_hash(conn) -> str:
-    row = conn.execute("SELECT entry_hash FROM audit_log ORDER BY seq DESC LIMIT 1").fetchone()
-    return row["entry_hash"] if row else "genesis"
+    row = conn.execute(
+        select(audit_log_table.c.entry_hash).order_by(desc(audit_log_table.c.seq)).limit(1)
+    ).fetchone()
+    return row[0] if row else "genesis"
 
 
 def append_audit(event_type: str, detail: dict):
-    with _lock, _conn() as conn:
+    with _lock, _engine.begin() as conn:
         prev_hash = _last_hash(conn)
         timestamp = datetime.now(timezone.utc).isoformat()
         payload = json.dumps({"timestamp": timestamp, "event_type": event_type, "detail": detail}, sort_keys=True)
         entry_hash = hashlib.sha256((prev_hash + payload).encode()).hexdigest()
-        conn.execute(
-            "INSERT INTO audit_log (timestamp, event_type, detail, prev_hash, entry_hash) VALUES (?, ?, ?, ?, ?)",
-            (timestamp, event_type, json.dumps(detail), prev_hash, entry_hash),
-        )
-        conn.commit()
+        conn.execute(insert(audit_log_table).values(
+            timestamp=timestamp, event_type=event_type, detail=json.dumps(detail),
+            prev_hash=prev_hash, entry_hash=entry_hash,
+        ))
 
 
 def get_audit_log(limit: int = 200) -> list:
-    with _lock, _conn() as conn:
+    with _lock, _engine.begin() as conn:
         rows = conn.execute(
-            "SELECT seq, timestamp, event_type, detail, prev_hash, entry_hash FROM audit_log ORDER BY seq ASC LIMIT ?",
-            (limit,),
+            select(
+                audit_log_table.c.seq, audit_log_table.c.timestamp, audit_log_table.c.event_type,
+                audit_log_table.c.detail, audit_log_table.c.prev_hash, audit_log_table.c.entry_hash,
+            ).order_by(asc(audit_log_table.c.seq)).limit(limit)
         ).fetchall()
-        return [dict(r) for r in rows]
+        return [
+            {"seq": r[0], "timestamp": r[1], "event_type": r[2], "detail": r[3], "prev_hash": r[4], "entry_hash": r[5]}
+            for r in rows
+        ]
 
 
 def verify_audit_chain() -> bool:
-    with _lock, _conn() as conn:
+    with _lock, _engine.begin() as conn:
         rows = conn.execute(
-            "SELECT timestamp, event_type, detail, prev_hash, entry_hash FROM audit_log ORDER BY seq ASC"
+            select(
+                audit_log_table.c.timestamp, audit_log_table.c.event_type,
+                audit_log_table.c.detail, audit_log_table.c.prev_hash, audit_log_table.c.entry_hash,
+            ).order_by(asc(audit_log_table.c.seq))
         ).fetchall()
     prev_hash = "genesis"
     for row in rows:
         payload = json.dumps(
-            {"timestamp": row["timestamp"], "event_type": row["event_type"], "detail": json.loads(row["detail"])},
+            {"timestamp": row[0], "event_type": row[1], "detail": json.loads(row[2])},
             sort_keys=True,
         )
         expected = hashlib.sha256((prev_hash + payload).encode()).hexdigest()
-        if expected != row["entry_hash"] or row["prev_hash"] != prev_hash:
+        if expected != row[4] or row[3] != prev_hash:
             return False
-        prev_hash = row["entry_hash"]
+        prev_hash = row[4]
     return True
 
 
 def get_kill_switch() -> dict:
-    with _lock, _conn() as conn:
-        row = conn.execute("SELECT active, reason FROM kill_switch WHERE id = 1").fetchone()
-        return {"active": bool(row["active"]), "reason": row["reason"]}
+    with _lock, _engine.begin() as conn:
+        row = conn.execute(
+            select(kill_switch_table.c.active, kill_switch_table.c.reason)
+            .where(kill_switch_table.c.id == 1)
+        ).fetchone()
+        return {"active": bool(row[0]), "reason": row[1]}
 
 
 def set_kill_switch(active: bool, reason: Optional[str]):
-    with _lock, _conn() as conn:
-        conn.execute("UPDATE kill_switch SET active = ?, reason = ? WHERE id = 1", (int(active), reason))
-        conn.commit()
+    with _lock, _engine.begin() as conn:
+        conn.execute(
+            update(kill_switch_table).where(kill_switch_table.c.id == 1)
+            .values(active=int(active), reason=reason)
+        )
