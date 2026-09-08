@@ -198,31 +198,6 @@ def test_consequence_scoring_present_and_reasonable():
     assert high > low
 
 
-def test_kill_switch_blocks_attested_and_broker():
-    on = client.post("/v1/admin/kill-switch", json={"active": True, "reason": "test halt"},
-                      headers={"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"})
-    assert on.status_code == 200
-
-    blocked = client.post("/v1/attested/evaluate", json={
-        "agent_id": "agent-k", "action_type": "read_public_doc",
-        "consequence_class": "low_risk", "policy_pack": "generic", "payload": {}
-    })
-    assert blocked.status_code == 503
-
-    off = client.post("/v1/admin/kill-switch", json={"active": False, "reason": None},
-                       headers={"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"})
-    assert off.status_code == 200
-
-
-def test_audit_chain_is_valid_and_admin_gated():
-    unauth = client.get("/v1/admin/audit-log")
-    assert unauth.status_code == 401
-
-    r = client.get("/v1/admin/audit-log", headers={"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"})
-    assert r.status_code == 200
-    assert r.json()["chain_valid"] is True
-
-
 def _broker_test_request(agent_id="broker-test-agent"):
     return {
         "agent_id": agent_id,
@@ -457,3 +432,96 @@ def test_broker_action_mismatch_blocks_execution():
     assert body["executed"] is False
     assert body["reason"] == "action_binding_mismatch"
     assert fake_client.post.called is False
+
+
+def test_broker_rejects_private_ip_webhook():
+    """A caller-supplied webhook pointing at a private/reserved IP must be
+    rejected before any outbound request is attempted (SSRF protection)."""
+    req, receipt_id = _create_broker_test_receipt("broker-ssrf-private-ip")
+
+    fake_client = AsyncMock()
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return fake_client
+
+        async def __aexit__(self, *args):
+            pass
+
+    with patch("app.routers.broker.httpx.AsyncClient", FakeAsyncClient):
+        r = client.post(
+            "/v1/broker/execute",
+            params={
+                "receipt_id": receipt_id,
+                "execution_webhook": "https://169.254.169.254/latest/meta-data/",
+            },
+            json=req,
+        )
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["executed"] is False
+    assert "unsafe_execution_webhook" in body["reason"]
+    assert fake_client.post.called is False
+
+
+def test_broker_rejects_internal_railway_hostname():
+    """A caller-supplied webhook pointing at Railway's internal network
+    must be rejected before any outbound request is attempted."""
+    req, receipt_id = _create_broker_test_receipt("broker-ssrf-internal-host")
+
+    fake_client = AsyncMock()
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return fake_client
+
+        async def __aexit__(self, *args):
+            pass
+
+    with patch("app.routers.broker.httpx.AsyncClient", FakeAsyncClient):
+        r = client.post(
+            "/v1/broker/execute",
+            params={
+                "receipt_id": receipt_id,
+                "execution_webhook": "https://postgres.railway.internal/hook",
+            },
+            json=req,
+        )
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["executed"] is False
+    assert "unsafe_execution_webhook" in body["reason"]
+    assert fake_client.post.called is False
+
+
+def test_kill_switch_blocks_attested_and_broker():
+    on = client.post("/v1/admin/kill-switch", json={"active": True, "reason": "test halt"},
+                      headers={"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"})
+    assert on.status_code == 200
+
+    blocked = client.post("/v1/attested/evaluate", json={
+        "agent_id": "agent-k", "action_type": "read_public_doc",
+        "consequence_class": "low_risk", "policy_pack": "generic", "payload": {}
+    })
+    assert blocked.status_code == 503
+
+    off = client.post("/v1/admin/kill-switch", json={"active": False, "reason": None},
+                       headers={"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"})
+    assert off.status_code == 200
+
+
+def test_audit_chain_is_valid_and_admin_gated():
+    unauth = client.get("/v1/admin/audit-log")
+    assert unauth.status_code == 401
+
+    r = client.get("/v1/admin/audit-log", headers={"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"})
+    assert r.status_code == 200
+    assert r.json()["chain_valid"] is True
