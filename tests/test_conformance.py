@@ -4,8 +4,9 @@ import base64
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from fastapi.testclient import TestClient
+from unittest.mock import AsyncMock, patch
 from main import app
-from app import crypto
+from app import crypto, storage
 from verify_receipt import verify as standalone_verify
 
 client = TestClient(app)
@@ -107,6 +108,10 @@ def test_agent_scoped_revocation():
 
 def test_receipt_chaining_per_agent():
     agent_id = "agent-chain-1"
+    with storage._conn() as conn:
+        conn.execute("DELETE FROM agent_chain WHERE agent_id = ?", (agent_id,))
+        conn.execute("DELETE FROM receipts WHERE agent_id = ?", (agent_id,))
+        conn.commit()
     ev1 = client.post("/v1/attested/evaluate", json={
         "agent_id": agent_id, "action_type": "read_public_doc",
         "consequence_class": "low_risk", "policy_pack": "generic", "payload": {}
@@ -216,3 +221,239 @@ def test_audit_chain_is_valid_and_admin_gated():
     r = client.get("/v1/admin/audit-log", headers={"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"})
     assert r.status_code == 200
     assert r.json()["chain_valid"] is True
+
+
+def _broker_test_request(agent_id="broker-test-agent"):
+    return {
+        "agent_id": agent_id,
+        "principal": "test-principal",
+        "framework": "test",
+        "action_type": "test.broker",
+        "consequence_class": "low_risk",
+        "purpose": "broker regression test",
+        "consumer": "cyraduct-test",
+        "jurisdiction": "NG",
+        "payload": {"test": "broker"},
+        "policy_pack": "generic",
+        "evidence_refs": [],
+    }
+
+
+def _create_broker_test_receipt(agent_id="broker-test-agent"):
+    req = _broker_test_request(agent_id)
+    r = client.post("/v1/attested/evaluate", json=req)
+    assert r.status_code == 200
+    body = r.json()
+    assert body["receipt"] is not None
+    return req, body["receipt"]["receipt_id"]
+
+
+def test_broker_valid_receipt_allows_execution():
+    """A valid receipt must reach the execution client."""
+    req, receipt_id = _create_broker_test_receipt("broker-valid")
+
+    fake_response = type("Response", (), {
+        "status_code": 200,
+        "text": '{"sink_received":true}',
+    })()
+
+    fake_client = AsyncMock()
+    fake_client.post.return_value = fake_response
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return fake_client
+
+        async def __aexit__(self, *args):
+            pass
+
+    with patch("app.routers.broker.httpx.AsyncClient", FakeAsyncClient):
+        r = client.post(
+            "/v1/broker/execute",
+            params={
+                "receipt_id": receipt_id,
+                "execution_webhook": "http://fake-sink/sink",
+            },
+            json=req,
+        )
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["executed"] is True
+    assert body["receipt"]["receipt_id"] == receipt_id
+    assert fake_client.post.called is True
+
+
+def test_broker_revoked_receipt_blocks_execution():
+    """A revoked receipt must be rejected before the execution client is called."""
+    req, receipt_id = _create_broker_test_receipt("broker-revoked")
+
+    assert storage.revoke_receipt(receipt_id) is True
+
+    fake_client = AsyncMock()
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return fake_client
+
+        async def __aexit__(self, *args):
+            pass
+
+    with patch("app.routers.broker.httpx.AsyncClient", FakeAsyncClient):
+        r = client.post(
+            "/v1/broker/execute",
+            params={
+                "receipt_id": receipt_id,
+                "execution_webhook": "http://fake-sink/sink",
+            },
+            json=req,
+        )
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["executed"] is False
+    assert body["reason"] == "receipt_revoked"
+    assert fake_client.post.called is False
+
+
+def test_broker_missing_receipt_blocks_execution():
+    """A nonexistent receipt must never reach the execution client."""
+    req = _broker_test_request("broker-missing")
+
+    fake_client = AsyncMock()
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return fake_client
+
+        async def __aexit__(self, *args):
+            pass
+
+    with patch("app.routers.broker.httpx.AsyncClient", FakeAsyncClient):
+        r = client.post(
+            "/v1/broker/execute",
+            params={
+                "receipt_id": "rcpt_does_not_exist",
+                "execution_webhook": "http://fake-sink/sink",
+            },
+            json=req,
+        )
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["executed"] is False
+    assert body["reason"] == "receipt_not_found"
+    assert fake_client.post.called is False
+
+
+def test_broker_invalid_signature_blocks_execution():
+    """A cryptographically invalid receipt must never reach execution."""
+    req, receipt_id = _create_broker_test_receipt("broker-bad-signature")
+
+    fake_client = AsyncMock()
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return fake_client
+
+        async def __aexit__(self, *args):
+            pass
+
+    with patch("app.routers.broker.receipts.verify_signature", return_value=False):
+        with patch("app.routers.broker.httpx.AsyncClient", FakeAsyncClient):
+            r = client.post(
+                "/v1/broker/execute",
+                params={
+                    "receipt_id": receipt_id,
+                    "execution_webhook": "http://fake-sink/sink",
+                },
+                json=req,
+            )
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["executed"] is False
+    assert body["reason"] == "signature_invalid"
+    assert fake_client.post.called is False
+
+
+def test_broker_expired_receipt_blocks_execution():
+    """An expired receipt must never reach the execution client."""
+    req, receipt_id = _create_broker_test_receipt("broker-expired")
+
+    fake_client = AsyncMock()
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return fake_client
+
+        async def __aexit__(self, *args):
+            pass
+
+    with patch("app.routers.broker.receipts.is_expired", return_value=True):
+        with patch("app.routers.broker.httpx.AsyncClient", FakeAsyncClient):
+            r = client.post(
+                "/v1/broker/execute",
+                params={
+                    "receipt_id": receipt_id,
+                    "execution_webhook": "http://fake-sink/sink",
+                },
+                json=req,
+            )
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["executed"] is False
+    assert body["reason"] == "receipt_expired"
+    assert fake_client.post.called is False
+
+
+def test_broker_action_mismatch_blocks_execution():
+    """A receipt for one action must not authorize a different action."""
+    req, receipt_id = _create_broker_test_receipt("broker-mismatch")
+
+    mismatched_req = dict(req)
+    mismatched_req["action_type"] = "different.action"
+
+    fake_client = AsyncMock()
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return fake_client
+
+        async def __aexit__(self, *args):
+            pass
+
+    with patch("app.routers.broker.httpx.AsyncClient", FakeAsyncClient):
+        r = client.post(
+            "/v1/broker/execute",
+            params={
+                "receipt_id": receipt_id,
+                "execution_webhook": "http://fake-sink/sink",
+            },
+            json=mismatched_req,
+        )
+
+    assert r.status_code == 200
+    body = r.json()
+    assert body["executed"] is False
+    assert body["reason"] == "action_binding_mismatch"
+    assert fake_client.post.called is False

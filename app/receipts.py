@@ -41,6 +41,17 @@ def _action_hash(req: ActionRequest, action_id: str) -> str:
     return hashlib.sha256(canonical.encode()).hexdigest()
 
 
+def verify_action_binding(receipt: Receipt, req: ActionRequest) -> bool:
+    """Return True only when the presented request matches the signed receipt."""
+    expected_hash = _action_hash(req, receipt.action_id)
+    return (
+        receipt.agent.agent_id == req.agent_id
+        and receipt.action.type == req.action_type
+        and receipt.action.consequence_class == req.consequence_class
+        and receipt.action_hash == expected_hash
+    )
+
+
 def expiry_for(consequence_class: str) -> int:
     return CONSEQUENCE_CLASS_EXPIRY_SECONDS.get(consequence_class, DEFAULT_EXPIRY_SECONDS)
 
