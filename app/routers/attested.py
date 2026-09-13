@@ -9,8 +9,7 @@ deployments (see positioning language).
 from fastapi import APIRouter, HTTPException, Header
 from typing import Optional
 from ..models import ActionRequest, VerifyResult, new_id
-from .. import policy_engine, receipts, storage
-from ..config import ADMIN_API_KEY
+from .. import policy_engine, receipts, storage, auth
 
 router = APIRouter(prefix="/v1/attested", tags=["attested"])
 
@@ -69,8 +68,17 @@ def verify(receipt_id: str):
 
 @router.post("/revoke/{receipt_id}")
 def revoke(receipt_id: str, x_cyraduct_admin_key: Optional[str] = Header(None)):
-    if x_cyraduct_admin_key != ADMIN_API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid or missing admin key")
+    """Full admin key: may revoke any receipt. Test key: may only revoke
+    a receipt whose agent_id is in the test namespace (see app/auth.py)."""
+    existing = storage.get_receipt(receipt_id)
+    if not existing:
+        # Still enforce auth before revealing not-found, to avoid using this
+        # endpoint as an unauthenticated receipt-existence oracle.
+        auth.require_admin_or_scoped_test(x_cyraduct_admin_key, target_agent_id="")
+        raise HTTPException(status_code=404, detail="Receipt not found")
+
+    auth.require_admin_or_scoped_test(x_cyraduct_admin_key, target_agent_id=existing.agent.agent_id)
+
     ok = storage.revoke_receipt(receipt_id)
     if not ok:
         raise HTTPException(status_code=404, detail="Receipt not found")
@@ -81,11 +89,9 @@ def revoke(receipt_id: str, x_cyraduct_admin_key: Optional[str] = Header(None)):
 @router.post("/revoke-agent/{agent_id}")
 def revoke_agent(agent_id: str, reason: Optional[str] = None, x_cyraduct_admin_key: Optional[str] = Header(None)):
     """Fleet/agent-scoped revocation: invalidate every currently-active
-    receipt this agent holds. This is the 'kill this agent now' operation —
-    a sink checking /verify on any of that agent's receipts will see them
-    as revoked immediately."""
-    if x_cyraduct_admin_key != ADMIN_API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid or missing admin key")
+    receipt this agent holds. Full admin key: any agent. Test key: only
+    agents in the test namespace."""
+    auth.require_admin_or_scoped_test(x_cyraduct_admin_key, target_agent_id=agent_id)
     count = storage.revoke_by_agent(agent_id)
     storage.append_audit("receipt_revoked", {"agent_id": agent_id, "scope": "agent", "count": count, "reason": reason})
     return {"agent_id": agent_id, "revoked_count": count, "reason": reason}
