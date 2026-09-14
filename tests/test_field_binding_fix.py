@@ -13,6 +13,11 @@ never in the hashed/signed content.
 
 These tests reproduce that exact finding against the pre-fix behavior
 description, and confirm the fix closes it.
+
+Tagged SB-01/02/03 (semantic-binding) for reference in future field-binding
+work, following a naming convention suggested during review of this fix.
+No broader test taxonomy or registry is implied by the tag alone — add one
+only if a second real semantic-binding gap actually surfaces.
 """
 import os
 import sys
@@ -36,7 +41,7 @@ def _base_request(**overrides) -> ActionRequest:
     return ActionRequest(**defaults)
 
 
-def test_changing_purpose_now_changes_the_action_hash():
+def test_changing_purpose_now_changes_the_action_hash():  # SB-01
     """This is Jake's exact reproduction: 'changing only the purpose left
     the action hash unchanged.' Confirms that's no longer true."""
     req_a = _base_request(purpose="vendor settlement")
@@ -48,7 +53,7 @@ def test_changing_purpose_now_changes_the_action_hash():
     assert hash_a != hash_b, "purpose change must change the action hash (this was the reported gap)"
 
 
-def test_changing_jurisdiction_now_changes_the_action_hash():
+def test_changing_jurisdiction_now_changes_the_action_hash():  # SB-02
     """Same class of bug as purpose — jurisdiction also participates in
     policy decisions (jurisdiction_in / jurisdiction_missing conditions)
     and had the identical gap."""
@@ -61,7 +66,7 @@ def test_changing_jurisdiction_now_changes_the_action_hash():
     assert hash_a != hash_b, "jurisdiction change must change the action hash"
 
 
-def test_changing_policy_pack_now_changes_the_action_hash():
+def test_changing_policy_pack_now_changes_the_action_hash():  # SB-03
     req_a = _base_request(policy_pack="generic")
     req_b = _base_request(policy_pack="banking")
 
@@ -84,7 +89,7 @@ def test_amount_change_still_changes_the_hash_as_before():
     assert hash_a != hash_b
 
 
-def test_verify_action_binding_rejects_purpose_swap_post_issuance():
+def test_verify_action_binding_rejects_purpose_swap_post_issuance():  # SB-01 (end-to-end)
     """End-to-end version of the finding: issue a receipt with one
     purpose, then present it at 'execution time' with a different
     purpose but everything else identical. Must be rejected."""
@@ -103,7 +108,7 @@ def test_verify_action_binding_rejects_purpose_swap_post_issuance():
     assert verify_action_binding(receipt, original_req) is True
 
 
-def test_verify_action_binding_rejects_jurisdiction_swap_post_issuance():
+def test_verify_action_binding_rejects_jurisdiction_swap_post_issuance():  # SB-02 (end-to-end)
     original_req = _base_request(jurisdiction="US")
     receipt = issue_receipt(
         original_req, action_id="act_binding_test_2", decision="allow",
@@ -116,7 +121,7 @@ def test_verify_action_binding_rejects_jurisdiction_swap_post_issuance():
     assert verify_action_binding(receipt, original_req) is True
 
 
-def test_verify_action_binding_rejects_policy_pack_swap_post_issuance():
+def test_verify_action_binding_rejects_policy_pack_swap_post_issuance():  # SB-03 (end-to-end)
     original_req = _base_request(policy_pack="generic")
     receipt = issue_receipt(
         original_req, action_id="act_binding_test_3", decision="allow",
