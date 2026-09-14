@@ -28,12 +28,39 @@ def _parameters_hash(payload: dict) -> str:
 
 
 def _action_hash(req: ActionRequest, action_id: str) -> str:
+    """
+    Hashes every field that can influence a policy decision, not just the
+    ones that happen to be structurally prominent. This was previously
+    incomplete: purpose, jurisdiction, and policy_pack could all
+    participate in the ALLOW/DENY/CONDITIONAL decision at issuance (see
+    policy_engine.py — purpose_missing, jurisdiction_in/missing, and the
+    policy_pack itself all gate or shape the decision) without being
+    part of what the receipt cryptographically bound at execution time.
+
+    That gap was found and reported by an external adversarial reviewer
+    (credited: Jake Macdonald) — a receipt issued partly on the strength
+    of a stated purpose or jurisdiction could be presented at broker
+    execution with a *different* purpose or jurisdiction and still pass
+    verify_action_binding(), because those fields were never in the hash
+    the signature covers. Fixed by binding the full decision-relevant
+    surface, not just the fields that happened to be checked first.
+
+    principal, framework, consumer, and evidence_refs are deliberately
+    NOT included: none of them currently participate in any policy
+    condition (see policy_engine.py's condition matcher), so binding them
+    would be over-binding without a corresponding integrity claim. If a
+    future policy pack gains a condition on any of these, they must be
+    added here in the same change.
+    """
     canonical = json.dumps(
         {
             "action_id": action_id,
             "agent_id": req.agent_id,
             "action_type": req.action_type,
             "consequence_class": req.consequence_class,
+            "purpose": req.purpose,
+            "jurisdiction": req.jurisdiction,
+            "policy_pack": req.policy_pack,
             "payload": req.payload,
         },
         sort_keys=True,
@@ -41,19 +68,26 @@ def _action_hash(req: ActionRequest, action_id: str) -> str:
     return hashlib.sha256(canonical.encode()).hexdigest()
 
 
+def expiry_for(consequence_class: str) -> int:
+    return CONSEQUENCE_CLASS_EXPIRY_SECONDS.get(consequence_class, DEFAULT_EXPIRY_SECONDS)
+
+
 def verify_action_binding(receipt: Receipt, req: ActionRequest) -> bool:
-    """Return True only when the presented request matches the signed receipt."""
+    """Return True only when the presented request matches the signed receipt
+    on every policy-relevant field. This stops a receipt issued for one
+    action from being replayed against a different action that happens to
+    share the same receipt_id — including the case where action_type,
+    consequence_class, and payload are unchanged but a field that
+    influenced the original policy decision (purpose, jurisdiction,
+    policy_pack) has been swapped post-issuance."""
     expected_hash = _action_hash(req, receipt.action_id)
     return (
         receipt.agent.agent_id == req.agent_id
         and receipt.action.type == req.action_type
         and receipt.action.consequence_class == req.consequence_class
+        and receipt.policy.policy_pack == req.policy_pack
         and receipt.action_hash == expected_hash
     )
-
-
-def expiry_for(consequence_class: str) -> int:
-    return CONSEQUENCE_CLASS_EXPIRY_SECONDS.get(consequence_class, DEFAULT_EXPIRY_SECONDS)
 
 
 def issue_receipt(req: ActionRequest, action_id: str, decision: str,
