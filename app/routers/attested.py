@@ -6,16 +6,18 @@ Cyraduct is not in the execution path, but a compliant sink MUST call
 This is the recommended default tier for most consequential-action
 deployments (see positioning language).
 """
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Request
 from typing import Optional
 from ..models import ActionRequest, VerifyResult, new_id
 from .. import policy_engine, receipts, storage, auth
+from ..rate_limit import limiter
 
 router = APIRouter(prefix="/v1/attested", tags=["attested"])
 
 
 @router.post("/evaluate")
-def evaluate(req: ActionRequest):
+@limiter.limit("60/minute")
+def evaluate(request: Request, req: ActionRequest):
     kill = storage.get_kill_switch()
     if kill["active"]:
         storage.append_audit("attested_blocked_kill_switch", {"agent_id": req.agent_id, "reason": kill["reason"]})
@@ -46,9 +48,12 @@ def evaluate(req: ActionRequest):
 
 
 @router.get("/verify/{receipt_id}", response_model=VerifyResult)
-def verify(receipt_id: str):
+@limiter.limit("300/minute")
+def verify(request: Request, receipt_id: str):
     """Called by the sink (bank API, infra control plane, EHR, etc.) before
     it executes the action. This is the actual enforcement point in Tier 2.
+    Higher limit than /evaluate since a real sink may call this on every
+    single downstream action it handles, not just once per agent decision.
     Verification uses this instance's own key by default; an external,
     independent verifier should instead fetch /v1/public-key and check the
     signature itself (see verify_receipt.py)."""
@@ -67,7 +72,8 @@ def verify(receipt_id: str):
 
 
 @router.post("/revoke/{receipt_id}")
-def revoke(receipt_id: str, x_cyraduct_admin_key: Optional[str] = Header(None)):
+@limiter.limit("30/minute")
+def revoke(request: Request, receipt_id: str, x_cyraduct_admin_key: Optional[str] = Header(None)):
     """Full admin key: may revoke any receipt. Test key: may only revoke
     a receipt whose agent_id is in the test namespace (see app/auth.py)."""
     existing = storage.get_receipt(receipt_id)
@@ -87,7 +93,8 @@ def revoke(receipt_id: str, x_cyraduct_admin_key: Optional[str] = Header(None)):
 
 
 @router.post("/revoke-agent/{agent_id}")
-def revoke_agent(agent_id: str, reason: Optional[str] = None, x_cyraduct_admin_key: Optional[str] = Header(None)):
+@limiter.limit("30/minute")
+def revoke_agent(request: Request, agent_id: str, reason: Optional[str] = None, x_cyraduct_admin_key: Optional[str] = Header(None)):
     """Fleet/agent-scoped revocation: invalidate every currently-active
     receipt this agent holds. Full admin key: any agent. Test key: only
     agents in the test namespace."""

@@ -8,9 +8,10 @@ language). This router exposes the fixture set and a live run against it.
 """
 import json
 import os
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from ..models import ActionRequest
 from .. import policy_engine
+from ..rate_limit import limiter
 
 router = APIRouter(prefix="/v1/conformance", tags=["conformance"])
 
@@ -28,7 +29,8 @@ def list_fixtures():
 
 
 @router.post("/run")
-def run_conformance():
+@limiter.limit("30/minute")
+def run_conformance(request: Request):
     fixtures = _load_fixtures()
     results = []
     passed = 0

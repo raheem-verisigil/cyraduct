@@ -6,15 +6,17 @@ execution path. Nothing here stops the action from happening if the
 caller ignores the response — that is the defining, documented limit
 of this tier (see non-goals).
 """
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from ..models import ActionRequest, PolicyDecision, new_id
 from .. import policy_engine, storage
+from ..rate_limit import limiter
 
 router = APIRouter(prefix="/v1/advisory", tags=["advisory"])
 
 
 @router.post("/evaluate", response_model=PolicyDecision)
-def evaluate(req: ActionRequest):
+@limiter.limit("60/minute")
+def evaluate(request: Request, req: ActionRequest):
     action_id = new_id("act")
     decision = policy_engine.evaluate(req)
     storage.append_audit("advisory_evaluate", {

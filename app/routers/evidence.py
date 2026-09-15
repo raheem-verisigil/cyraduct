@@ -14,15 +14,17 @@ not built here — registering evidence today lets a receipt reference it;
 it does not yet automatically change what a policy pack allows.
 """
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from ..models import EvidenceRegisterRequest, EvidencePackage, new_id
 from .. import storage
+from ..rate_limit import limiter
 
 router = APIRouter(prefix="/v1/evidence", tags=["evidence"])
 
 
 @router.post("", response_model=EvidencePackage)
-def register_evidence(req: EvidenceRegisterRequest):
+@limiter.limit("30/minute")
+def register_evidence(request: Request, req: EvidenceRegisterRequest):
     pkg = EvidencePackage(
         evidence_id=new_id("ev"),
         label=req.label,

@@ -11,12 +11,16 @@ Run locally:
 
 Deploy: see README.md for Railway instructions.
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from app.routers import advisory, attested, broker, conformance, admin, evidence, receipts as receipts_router
 from app.storage import init_db
 from app import crypto
+from app.rate_limit import limiter
 
 app = FastAPI(
     title="Cyraduct",
@@ -27,8 +31,12 @@ app = FastAPI(
         "See /v1/conformance/fixtures for published test vectors, "
         "including cases the protocol must refuse."
     ),
-    version="0.2.0",
+    version="0.2.1",
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -59,7 +67,7 @@ def on_startup():
 def root():
     return {
         "service": "cyraduct",
-        "version": "0.2.0",
+        "version": "0.2.1",
         "tiers": ["advisory", "attested", "broker"],
         "docs": "/docs",
         "public_key": "/v1/public-key",

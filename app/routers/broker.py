@@ -28,17 +28,20 @@ time. See app/url_safety.py for the full threat model and residual risk.
 """
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from ..models import ActionRequest
 from .. import receipts, storage, url_safety
+from ..rate_limit import limiter
 
 
 router = APIRouter(prefix="/v1/broker", tags=["broker"])
 
 
 @router.post("/execute")
+@limiter.limit("20/minute")
 async def execute(
+    request: Request,
     req: ActionRequest,
     receipt_id: str,
     execution_webhook: str,
