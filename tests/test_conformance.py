@@ -109,18 +109,35 @@ def test_agent_scoped_revocation():
 
 def test_receipt_chaining_per_agent():
     agent_id = "agent-chain-1"
-    with storage._conn() as conn:
-        conn.execute("DELETE FROM agent_chain WHERE agent_id = ?", (agent_id,))
-        conn.execute("DELETE FROM receipts WHERE agent_id = ?", (agent_id,))
-        conn.commit()
+
+    with storage._engine.begin() as conn:
+        conn.execute(
+            delete(storage.agent_chain_table).where(
+                storage.agent_chain_table.c.agent_id == agent_id
+            )
+        )
+        conn.execute(
+            delete(storage.receipts_table).where(
+                storage.receipts_table.c.agent_id == agent_id
+            )
+        )
+
     ev1 = client.post("/v1/attested/evaluate", json={
-        "agent_id": agent_id, "action_type": "read_public_doc",
-        "consequence_class": "low_risk", "policy_pack": "generic", "payload": {}
+        "agent_id": agent_id,
+        "action_type": "read_public_doc",
+        "consequence_class": "low_risk",
+        "policy_pack": "generic",
+        "payload": {}
     }).json()
+
     ev2 = client.post("/v1/attested/evaluate", json={
-        "agent_id": agent_id, "action_type": "read_public_doc",
-        "consequence_class": "low_risk", "policy_pack": "generic", "payload": {}
+        "agent_id": agent_id,
+        "action_type": "read_public_doc",
+        "consequence_class": "low_risk",
+        "policy_pack": "generic",
+        "payload": {}
     }).json()
+
     assert ev1["receipt"]["prev_receipt_hash"] is None
     assert ev2["receipt"]["prev_receipt_hash"] == ev1["receipt"]["action_hash"]
 
