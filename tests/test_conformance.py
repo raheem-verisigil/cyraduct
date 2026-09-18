@@ -6,7 +6,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 from main import app
-from app import crypto, storage
+from app import crypto, storage, policy_engine
+from app.models import ActionRequest
 from verify_receipt import verify as standalone_verify
 
 client = TestClient(app)
@@ -525,3 +526,20 @@ def test_audit_chain_is_valid_and_admin_gated():
     r = client.get("/v1/admin/audit-log", headers={"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"})
     assert r.status_code == 200
     assert r.json()["chain_valid"] is True
+
+def test_huge_financial_amount_denied():
+    req = ActionRequest(
+        agent_id="test-huge-amount",
+        action_type="wire_transfer",
+        consequence_class="financial_transfer",
+        purpose="payroll",
+        policy_pack="generic",
+        payload={"amount": 10**100000},
+    )
+
+    result = policy_engine.evaluate(req)
+
+    assert result.decision == "deny"
+    assert result.reasons == [
+        "financial_transfer_amount_must_be_finite"
+    ]
