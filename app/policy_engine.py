@@ -139,8 +139,11 @@ def _validate_financial_transfer(req: ActionRequest) -> Optional[str]:
     if not isinstance(amount, (int, float)):
         return "financial_transfer_amount_must_be_numeric"
 
+    try:
     if not math.isfinite(amount):
         return "financial_transfer_amount_must_be_finite"
+except OverflowError:
+    return "financial_transfer_amount_must_be_finite"
 
     if amount <= 0:
         return "financial_transfer_amount_must_be_positive"
