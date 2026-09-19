@@ -10,7 +10,7 @@ every decision — "vendor-neutral" is a checkable property, not a claim.
 import json
 import math
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from .models import ActionRequest, PolicyDecision
 from .config import (
@@ -140,10 +140,10 @@ def _validate_financial_transfer(req: ActionRequest) -> Optional[str]:
         return "financial_transfer_amount_must_be_numeric"
 
     try:
-    if not math.isfinite(amount):
+        if not math.isfinite(amount):
+            return "financial_transfer_amount_must_be_finite"
+    except OverflowError:
         return "financial_transfer_amount_must_be_finite"
-except OverflowError:
-    return "financial_transfer_amount_must_be_finite"
 
     if amount <= 0:
         return "financial_transfer_amount_must_be_positive"

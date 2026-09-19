@@ -5,6 +5,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
+from sqlalchemy import delete
 from main import app
 from app import crypto, storage, policy_engine
 from app.models import ActionRequest
@@ -268,7 +269,7 @@ def test_broker_valid_receipt_allows_execution():
             "/v1/broker/execute",
             params={
                 "receipt_id": receipt_id,
-                "execution_webhook": "http://fake-sink/sink",
+                "execution_webhook": "https://example.com/sink",
             },
             json=req,
         )
