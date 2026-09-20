@@ -162,8 +162,10 @@ class Receipt(BaseModel):
 
     Verification does not require trusting Cyraduct's server: fetch the
     public key from /v1/public-key and verify `signature.value` against
-    the canonical hash of {receipt_id, action_hash, expires_at} yourself
-    (see verify_receipt.py in the repo root for a standalone example).
+    the canonical hash of {receipt_id, action_hash, expires_at,
+    prev_receipt_hash} (pipe-joined, empty string if prev_receipt_hash is
+    None — see app/receipts.py:issue_receipt and verify_receipt.py, which
+    is the authoritative reference for the exact message format) yourself.
     """
     receipt_id: str
     action_id: str
