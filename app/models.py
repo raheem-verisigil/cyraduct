@@ -180,6 +180,7 @@ class Receipt(BaseModel):
     prev_receipt_hash: Optional[str] = None
     signature: SignatureInfo
     revoked: bool = False
+    consumed_at: Optional[str] = None  # set on first successful broker execution; see app/routers/broker.py
 
 
 class VerifyResult(BaseModel):

@@ -28,6 +28,7 @@ time. See app/url_safety.py for the full threat model and residual risk.
 """
 
 import httpx
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Request
 
 from ..models import ActionRequest
@@ -159,7 +160,36 @@ async def execute(
             "receipt": receipt.model_dump(),
         }
 
-    # 8. Only after ALL checks pass may execution occur.
+    # 8. Single-use claim. Atomic (storage.mark_receipt_consumed only ever
+    #    transitions consumed_at from NULL to a timestamp, guarded by a
+    #    WHERE clause on the database), so this also closes the narrower
+    #    race where two execute calls for the same receipt arrive nearly
+    #    simultaneously -- at most one can win the claim.
+    #
+    #    Deliberate tradeoff: this consumes the receipt on the ATTEMPT,
+    #    not only on a successful webhook response. A receipt whose
+    #    webhook call fails cannot be retried with the same receipt --
+    #    a new evaluate() call is required. That's the conservative
+    #    choice: the alternative (claim only after success) reopens a
+    #    window where two near-simultaneous attempts could both succeed
+    #    before either is marked consumed.
+    claim_timestamp = datetime.now(timezone.utc).isoformat()
+    if not storage.mark_receipt_consumed(receipt_id, claim_timestamp):
+        storage.append_audit(
+            "broker_blocked_receipt_already_consumed",
+            {
+                "agent_id": req.agent_id,
+                "receipt_id": receipt_id,
+            },
+        )
+        return {
+            "executed": False,
+            "reason": "receipt_already_consumed",
+            "receipt": receipt.model_dump(),
+        }
+
+    # 9. Only after ALL checks pass, AND the single-use claim succeeds,
+    #    may execution occur.
     execution_result = None
     executed = False
 
@@ -190,6 +220,7 @@ async def execute(
         execution_result = {"error": str(e)}
         executed = False
 
+    receipt.consumed_at = claim_timestamp
     storage.append_audit(
         "broker_executed",
         {

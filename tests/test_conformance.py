@@ -561,3 +561,101 @@ def test_huge_financial_amount_denied():
     assert result.reasons == [
         "financial_transfer_amount_must_be_finite"
     ]
+
+
+def test_broker_replay_of_the_same_receipt_is_refused():
+    """A valid receipt that has already been used for execution must be
+    refused on a second attempt -- confirmed as a real, previously-open
+    gap (nothing tracked receipt consumption before this test existed).
+    The webhook itself must only be called once: a second call would mean
+    the real-world consequence (payment, etc.) happened twice."""
+    req, receipt_id = _create_broker_test_receipt("broker-replay")
+
+    fake_response = type("Response", (), {
+        "status_code": 200,
+        "text": '{"sink_received":true}',
+    })()
+
+    fake_client = AsyncMock()
+    fake_client.post.return_value = fake_response
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return fake_client
+
+        async def __aexit__(self, *args):
+            pass
+
+    with patch("app.routers.broker.httpx.AsyncClient", FakeAsyncClient):
+        first = client.post(
+            "/v1/broker/execute",
+            params={"receipt_id": receipt_id, "execution_webhook": "https://example.com/sink"},
+            json=req,
+        )
+        second = client.post(
+            "/v1/broker/execute",
+            params={"receipt_id": receipt_id, "execution_webhook": "https://example.com/sink"},
+            json=req,
+        )
+
+    assert first.json()["executed"] is True
+    second_body = second.json()
+    assert second_body["executed"] is False
+    assert second_body["reason"] == "receipt_already_consumed"
+    assert fake_client.post.call_count == 1, "the webhook must not be called a second time for a replayed receipt"
+
+
+def test_consumed_at_column_migrates_onto_an_existing_database():
+    """The live Railway database predates the consumed_at column --
+    storage.init_db() must add it via ALTER TABLE without losing any
+    existing data, not assume every deployment is starting fresh."""
+    import tempfile
+    from sqlalchemy import create_engine, MetaData, Table, Column, String, Integer, Text, insert as sa_insert
+
+    with tempfile.TemporaryDirectory() as tmp:
+        db_path = f"{tmp}/pre_migration.db"
+        old_metadata = MetaData()
+        old_receipts = Table(
+            "receipts", old_metadata,
+            Column("receipt_id", String, primary_key=True),
+            Column("agent_id", String, nullable=False),
+            Column("issued_at", String, nullable=False),
+            Column("consequence_class", String),
+            Column("data", Text, nullable=False),
+            Column("revoked", Integer, nullable=False, default=0),
+            # deliberately NO consumed_at column -- simulates the old schema
+        )
+        engine = create_engine(f"sqlite:///{db_path}", future=True)
+        old_metadata.create_all(engine)
+        with engine.begin() as conn:
+            conn.execute(sa_insert(old_receipts).values(
+                receipt_id="rcpt_pre_existing", agent_id="agent-pre-existing",
+                issued_at="2026-01-01T00:00:00+00:00", consequence_class="test",
+                data="{}", revoked=0,
+            ))
+        engine.dispose()
+
+        import importlib
+        import app.storage as storage_module
+        old_url = os.environ.get("CYRADUCT_DATABASE_URL")
+        os.environ["CYRADUCT_DATABASE_URL"] = f"sqlite:///{db_path}"
+        try:
+            importlib.reload(storage_module)
+            storage_module.init_db()
+            with storage_module._engine.begin() as conn:
+                from sqlalchemy import select
+                row = conn.execute(
+                    select(storage_module.receipts_table.c.receipt_id, storage_module.receipts_table.c.consumed_at)
+                    .where(storage_module.receipts_table.c.receipt_id == "rcpt_pre_existing")
+                ).fetchone()
+            assert row is not None, "pre-existing row must survive the migration"
+            assert row[1] is None, "consumed_at should default to NULL for pre-existing rows"
+        finally:
+            if old_url is not None:
+                os.environ["CYRADUCT_DATABASE_URL"] = old_url
+            else:
+                os.environ.pop("CYRADUCT_DATABASE_URL", None)
+            importlib.reload(storage_module)

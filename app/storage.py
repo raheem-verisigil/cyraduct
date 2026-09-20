@@ -50,6 +50,7 @@ receipts_table = Table(
     Column("consequence_class", String),
     Column("data", Text, nullable=False),
     Column("revoked", Integer, nullable=False, default=0),
+    Column("consumed_at", String, nullable=True),
 )
 
 audit_log_table = Table(
@@ -84,12 +85,33 @@ agent_chain_table = Table(
 
 def init_db():
     metadata.create_all(_engine)
+    _migrate_add_consumed_at_column()
     with _engine.begin() as conn:
         exists = conn.execute(
             select(kill_switch_table.c.id).where(kill_switch_table.c.id == 1)
         ).fetchone()
         if not exists:
             conn.execute(insert(kill_switch_table).values(id=1, active=0, reason=None))
+
+
+def _migrate_add_consumed_at_column():
+    """metadata.create_all() only creates missing TABLES, never adds
+    columns to a table that already exists -- so a pre-existing
+    deployment's receipts table (e.g. the live Railway database) needs
+    this column added explicitly. ALTER TABLE ... ADD COLUMN is
+    supported identically by SQLite and Postgres, so one statement
+    covers both backends.
+
+    Safe to run on every startup: if the table was just freshly created
+    by create_all() above, it already has this column and the ALTER
+    fails with "duplicate column" (SQLite) or a similar error
+    (Postgres) -- that failure is the expected, normal case after the
+    first successful migration, so it's swallowed rather than raised."""
+    try:
+        with _engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE receipts ADD COLUMN consumed_at VARCHAR")
+    except Exception:
+        pass
 
 
 def _upsert_agent_chain(conn, agent_id: str, last_hash: str):
@@ -131,14 +153,32 @@ def get_last_receipt_hash(agent_id: str) -> Optional[str]:
 def get_receipt(receipt_id: str) -> Optional[Receipt]:
     with _lock, _engine.begin() as conn:
         row = conn.execute(
-            select(receipts_table.c.data, receipts_table.c.revoked)
+            select(receipts_table.c.data, receipts_table.c.revoked, receipts_table.c.consumed_at)
             .where(receipts_table.c.receipt_id == receipt_id)
         ).fetchone()
         if not row:
             return None
         r = Receipt.model_validate_json(row[0])
         r.revoked = bool(row[1])
+        r.consumed_at = row[2]
         return r
+
+
+def mark_receipt_consumed(receipt_id: str, consumed_at: str) -> bool:
+    """Records that a receipt has been used for a successful broker
+    execution. Only ever transitions None -> a timestamp -- the WHERE
+    clause requiring consumed_at IS NULL makes this atomic against a
+    race between two near-simultaneous execute calls for the same
+    receipt: at most one of them can be the row that actually updates,
+    which is what makes this a real replay guard rather than a
+    best-effort check with a race window."""
+    with _lock, _engine.begin() as conn:
+        result = conn.execute(
+            update(receipts_table)
+            .where(receipts_table.c.receipt_id == receipt_id, receipts_table.c.consumed_at.is_(None))
+            .values(consumed_at=consumed_at)
+        )
+        return result.rowcount > 0
 
 
 def query_receipts(agent_id: Optional[str] = None, since: Optional[str] = None,
