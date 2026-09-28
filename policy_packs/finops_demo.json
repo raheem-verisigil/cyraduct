@@ -1,0 +1,24 @@
+{
+  "name": "finops_demo",
+  "version": "0.1.0",
+  "signed_by": "demo placeholder (unsigned) - replace with a real domain-authority signature",
+  "description": "Demo pack for the finance-ops agent scenario. Facts like payee_on_allowlist are computed by trusted guard code, never by the model.",
+  "rules": [
+    { "id": "finops.deny.payee_not_on_allowlist",
+      "when": { "action_type": "wire_transfer", "payee_on_allowlist": false },
+      "effect": "deny",
+      "reason": "Payee is not on the approved vendor list" },
+    { "id": "finops.deny.amount_ceiling",
+      "when": { "action_type": "wire_transfer", "amount_gt": 1000000 },
+      "effect": "deny",
+      "reason": "Amount exceeds the ceiling for agent-initiated wires" },
+    { "id": "finops.deny.no_purpose",
+      "when": { "consequence_class": "financial_transfer", "purpose_missing": true },
+      "effect": "deny",
+      "reason": "Financial transfer submitted without a stated purpose" },
+    { "id": "finops.conditional.needs_human_approval",
+      "when": { "action_type": "wire_transfer", "amount_gt": 50000 },
+      "effect": "conditional",
+      "reason": "Transfers above 50,000 require human approval before execution" }
+  ]
+}
