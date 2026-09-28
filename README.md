@@ -4,10 +4,22 @@ An open, vendor-neutral **reliance and consequence-boundary protocol** for AI ag
 Cyraduct converts governance and assurance evidence into machine-enforceable reliance limits,
 with independent Ed25519-signed receipts, revocation, evidence registration, and conformance testing.
 
-This repository is the reference implementation. It is intentionally an MVP: the protocol
+This repository is the reference implementation. Its first commercial reference application is **Finance Guard**: a fail-closed boundary for vendor-master changes and AI-assisted payments. It is intentionally an MVP: the protocol
 concepts (tiers, receipts, expiry, conformance fixtures, tamper-evident audit log) are real
 and tested; the storage layer (SQLite) and broker execution (webhook proxy) are placeholders
 meant to be swapped for production-grade infrastructure.
+
+## Finance Guard: the first buyer-facing wedge
+
+Finance Guard protects `update_vendor_bank_details`, `update_vendor_remittance_details`,
+`initiate_ach_payment`, and `initiate_wire_transfer` without moving money or replacing an ERP.
+An adapter collects trusted evidence, Cyraduct evaluates the action, a human or trusted process
+approves it, and the downstream sink verifies a signed, time-limited receipt before acting.
+
+Read the [Finance Guard integration guide](docs/FINANCE_GUARD.md) and try the payload in
+[`examples/finance_vendor_change.json`](examples/finance_vendor_change.json). The
+`finance_vendor_change_v1` policy pack fails closed when required facts are absent and keeps
+the protocol honest: an email, requester, or LLM cannot assert that a callback or approval happened.
 
 ## The three enforcement tiers
 
@@ -80,7 +92,8 @@ cyraduct/
 │ ├── generic.json
 │ ├── banking.json
 │ ├── healthcare.json
-│ └── fixtures.json # Positive AND negative conformance cases
+│ ├── finance_vendor_change_v1.json # Finance Guard vendor/payment policy
+│ ├── fixtures.json # Positive AND negative conformance cases
 ├── tests/
 │ └── test_conformance.py
 ├── LICENSE # Apache 2.0
@@ -89,12 +102,18 @@ cyraduct/
 ├── Procfile
 └── .env.example
 
+docs/
+└── FINANCE_GUARD.md # AP/ERP/payment-sink integration guide
+
+examples/
+└── finance_vendor_change.json # Example action request
+
 
 ## Run locally
 
 ```bash
 python -m venv venv
-source venv/Scripts/activate   # Windows Git Bash; use "source venv/bin/activate" on Mac/Linux
+source venv/bin/activate       # Linux/macOS; use venv\\Scripts\\activate on Windows
 pip install -r requirements.txt
 cp .env.example .env   # edit secrets before any real use
 uvicorn main:app --reload
