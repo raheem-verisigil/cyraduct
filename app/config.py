@@ -18,6 +18,7 @@ CONSEQUENCE_CLASS_EXPIRY_SECONDS = {
     "infra_change": 3600,               # 1 hour
     "health_record_access": 900,        # 15 minutes
     "generic_tool_call": 1800,          # 30 minutes
+    "vendor_master_change": 900,        # 15 minutes: bank/remittance detail changes
     "low_risk": 86400,                  # 24 hours
 }
 

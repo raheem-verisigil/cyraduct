@@ -72,6 +72,18 @@ def _condition_matches(
             if purpose_is_missing != expected:
                 return False
 
+        elif key.endswith("_missing"):
+            # Generic fail-closed building block for payload fields:
+            # "<field>_missing": true matches when the field is absent
+            # or null. Lets a pack deny when a required fact was never
+            # supplied, instead of silently not matching (which would
+            # fall through to default-allow). purpose_missing and
+            # jurisdiction_missing are handled explicitly above.
+            field = key[:-8]
+            field_is_missing = req.payload.get(field) is None
+            if field_is_missing != expected:
+                return False
+
         elif key.endswith("_gt"):
             field = key[:-3]
             val = req.payload.get(field)
