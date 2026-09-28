@@ -19,10 +19,11 @@ _BASE_SCORE_BY_CLASS = {
     "health_record_access": 0.55,
     "infra_change": 0.6,
     "financial_transfer": 0.5,
+    "vendor_master_change": 0.55,
 }
 
 _IRREVERSIBLE_ACTION_TYPES = {
-    "delete_vm", "wire_transfer", "bulk_record_export", "delete_database",
+    "delete_vm", "wire_transfer", "initiate_wire_transfer", "bulk_record_export", "delete_database",
     "revoke_access_all", "record_transfer",
 }
 
