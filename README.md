@@ -1,8 +1,14 @@
 # Cyraduct
 
+![Cyraduct logo](logo.png)
+
 An open, vendor-neutral **reliance and consequence-boundary protocol** for AI agent actions.
 Cyraduct converts governance and assurance evidence into machine-enforceable reliance limits,
 with independent Ed25519-signed receipts, revocation, evidence registration, and conformance testing.
+
+**Self-host it. Inspect the protocol. Verify receipts independently.** Cyraduct is designed so a
+compliant downstream sink can verify the published Ed25519 signature, action binding, expiry, and
+revocation state instead of trusting a dashboard or a hidden provider decision.
 
 This repository is the reference implementation. Its first commercial reference application is **Finance Guard**: a fail-closed boundary for vendor-master changes and AI-assisted payments. It is intentionally an MVP: the protocol
 concepts (tiers, receipts, expiry, conformance fixtures, tamper-evident audit log) are real
