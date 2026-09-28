@@ -654,6 +654,7 @@ def test_consumed_at_column_migrates_onto_an_existing_database():
             assert row is not None, "pre-existing row must survive the migration"
             assert row[1] is None, "consumed_at should default to NULL for pre-existing rows"
         finally:
+            storage_module._engine.dispose()
             if old_url is not None:
                 os.environ["CYRADUCT_DATABASE_URL"] = old_url
             else:
