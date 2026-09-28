@@ -68,6 +68,12 @@ curl https://api.cyraduct.com/v1/attested/verify/<receipt_id>
 
 For independent verification, fetch the public key once from `/v1/public-key` and use the standalone `verify_receipt.py` verifier. For in-path pilots, use `/v1/broker/execute` only with an allowlisted, controlled execution webhook. The current broker is a reference webhook proxy, not a production banking terminator.
 
+For a self-hosted sink integration, copy the small [`examples/sink_guard.py`](../examples/sink_guard.py)
+helper into the ERP, bank adapter, or payment service. It verifies the receipt signature, expiry,
+and optional expected action hash locally. A deployment that needs revocation freshness must also
+consume a current revocation source or call the attested verification endpoint; no system should
+pretend that a cached signature alone proves current revocation state.
+
 ## Pilot boundaries
 
 Start read-only or approval-gated. Do not:
