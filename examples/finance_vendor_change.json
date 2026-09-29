@@ -1,0 +1,22 @@
+{
+  "agent_id": "ap-agent-acme",
+  "principal": "org:acme:finance",
+  "framework": "custom",
+  "action_type": "update_vendor_bank_details",
+  "consequence_class": "vendor_master_change",
+  "purpose": "supplier payment-account update",
+  "consumer": "erp:acme-payables",
+  "jurisdiction": "US",
+  "policy_pack": "finance_vendor_change_v1",
+  "payload": {
+    "vendor_id": "vendor_1842",
+    "old_account_fingerprint": "sha256:old-account",
+    "new_account_fingerprint": "sha256:new-account",
+    "callback_verified": true,
+    "callback_channel_preexisting": true,
+    "reviewer_id": "user_391",
+    "new_beneficiary": true,
+    "dual_approval": true,
+    "sender_domain_match": true
+  }
+}

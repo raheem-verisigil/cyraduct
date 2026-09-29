@@ -19,6 +19,7 @@ from .models import (
     ActionRequest, Receipt, AgentInfo, ActionInfo, PolicyInfo,
     EvidenceInfo, SignatureInfo, new_id,
 )
+from .runtime import RuntimeActionRequest, RuntimeDecision
 from . import crypto, consequence
 
 
@@ -70,6 +71,123 @@ def _action_hash(req: ActionRequest, action_id: str) -> str:
 
 def expiry_for(consequence_class: str) -> int:
     return CONSEQUENCE_CLASS_EXPIRY_SECONDS.get(consequence_class, DEFAULT_EXPIRY_SECONDS)
+
+
+def _runtime_binding(req: RuntimeActionRequest, action_id: str) -> dict:
+    return {
+        "action_id": action_id,
+        "agent_id": req.agent_id,
+        "action_type": req.action_type,
+        "consequence_class": req.consequence_class,
+        "target": req.target,
+        "resource": req.resource,
+        "reversibility": req.reversibility,
+        "authority": req.authority,
+        "authorization_expires_at": req.authorization_expires_at,
+        "authorized_state_version": req.authorized_state_version,
+        "current_state_version": req.current_state_version,
+        "policy_pack": req.policy_pack,
+        "purpose": req.purpose,
+        "payload": req.payload,
+        "idempotency_key": req.idempotency_key,
+    }
+
+
+def _runtime_action_hash(req: RuntimeActionRequest, action_id: str) -> str:
+    canonical = json.dumps(_runtime_binding(req, action_id), sort_keys=True)
+    return hashlib.sha256(canonical.encode()).hexdigest()
+
+
+def _signature_message(receipt: Receipt) -> bytes:
+    message = (
+        f"{receipt.receipt_id}|{receipt.action_hash}|"
+        f"{receipt.expires_at}|{receipt.prev_receipt_hash or ''}"
+    )
+    if receipt.authorization_type == "runtime":
+        message += f"|runtime|{receipt.runtime_decision or ''}"
+    return message.encode()
+
+
+def issue_runtime_receipt(
+    req: RuntimeActionRequest,
+    decision: RuntimeDecision,
+    prev_receipt_hash: str = None,
+) -> Receipt:
+    if decision.decision != "allow":
+        raise ValueError("Only runtime allow decisions receive an execution authorization")
+
+    now = datetime.now(timezone.utc)
+    expires_at = now + timedelta(seconds=expiry_for(req.consequence_class))
+
+    if req.authorization_expires_at:
+        normalized = (
+            req.authorization_expires_at[:-1] + "+00:00"
+            if req.authorization_expires_at.endswith("Z")
+            else req.authorization_expires_at
+        )
+        supplied_expiry = datetime.fromisoformat(normalized)
+        if supplied_expiry.tzinfo is None:
+            supplied_expiry = supplied_expiry.replace(tzinfo=timezone.utc)
+        if supplied_expiry < expires_at:
+            expires_at = supplied_expiry
+
+    action_id = decision.action_id
+    action_hash = _runtime_action_hash(req, action_id)
+    score_result = consequence.score(
+        req.consequence_class, req.action_type, req.payload
+    )
+
+    receipt = Receipt(
+        receipt_id=new_id("rcpt"),
+        action_id=action_id,
+        decision="allow",
+        agent=AgentInfo(
+            agent_id=req.agent_id,
+            principal=req.principal,
+            framework=req.framework,
+        ),
+        action=ActionInfo(
+            type=req.action_type,
+            consequence_class=req.consequence_class,
+            consequence_score=score_result["consequence_score"],
+            score_factors=score_result["factors"],
+            parameters_hash=_parameters_hash(req.payload),
+        ),
+        policy=PolicyInfo(
+            policy_pack=req.policy_pack,
+            policy_pack_version="runtime-v1",
+            matched_rules=[],
+            reasons=decision.reasons,
+        ),
+        evidence=EvidenceInfo(evidence_refs=req.evidence_refs),
+        issued_at=now.isoformat(),
+        expires_at=expires_at.isoformat(),
+        action_hash=action_hash,
+        prev_receipt_hash=prev_receipt_hash,
+        signature=SignatureInfo(key_id=crypto.key_id(), value=""),
+        authorization_type="runtime",
+        runtime_decision="allow",
+    )
+    receipt.signature.value = crypto.sign(_signature_message(receipt))
+    return receipt
+
+
+def verify_runtime_binding(
+    receipt: Receipt,
+    req: RuntimeActionRequest,
+) -> bool:
+    if receipt.authorization_type != "runtime" or receipt.runtime_decision != "allow":
+        return False
+    if req.action_id != receipt.action_id:
+        return False
+    expected_hash = _runtime_action_hash(req, receipt.action_id)
+    return (
+        receipt.agent.agent_id == req.agent_id
+        and receipt.action.type == req.action_type
+        and receipt.action.consequence_class == req.consequence_class
+        and receipt.policy.policy_pack == req.policy_pack
+        and receipt.action_hash == expected_hash
+    )
 
 
 def verify_action_binding(receipt: Receipt, req: ActionRequest) -> bool:
@@ -140,8 +258,11 @@ def issue_receipt(req: ActionRequest, action_id: str, decision: str,
 
 
 def verify_signature(receipt: Receipt, public_key_b64: str = None) -> bool:
-    msg = f"{receipt.receipt_id}|{receipt.action_hash}|{receipt.expires_at}|{receipt.prev_receipt_hash or ''}".encode()
-    return crypto.verify(msg, receipt.signature.value, public_key_b64)
+    return crypto.verify(
+        _signature_message(receipt),
+        receipt.signature.value,
+        public_key_b64,
+    )
 
 
 def is_expired(receipt: Receipt) -> bool:
