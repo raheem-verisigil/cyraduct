@@ -29,6 +29,7 @@ from sqlalchemy import (
     create_engine, MetaData, Table, Column, String, Integer, Text, select,
     insert, update, delete as sa_delete, desc, asc,
 )
+from sqlalchemy.pool import NullPool
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
@@ -36,9 +37,24 @@ from .models import Receipt, EvidencePackage
 
 _DATABASE_URL = os.environ.get("CYRADUCT_DATABASE_URL", "sqlite:///./cyraduct.db")
 
-_engine = create_engine(_DATABASE_URL, future=True)
+_engine_kwargs = {
+    "future": True,
+}
+
+if _DATABASE_URL.startswith("sqlite"):
+    _engine_kwargs["connect_args"] = {
+        "check_same_thread": False,
+    }
+    # Important on Windows test environments:
+    # prevents pooled SQLite file handles keeping temp DB files locked.
+    from sqlalchemy.pool import NullPool
+    _engine_kwargs["poolclass"] = NullPool
+
+_engine = create_engine(_DATABASE_URL, **_engine_kwargs)
+
 _is_sqlite = _engine.dialect.name == "sqlite"
-_lock = threading.Lock()  # SQLite has no real concurrent-writer story; harmless no-op contention under Postgres
+
+_lock = threading.Lock()
 
 metadata = MetaData()
 
