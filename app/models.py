@@ -181,6 +181,8 @@ class Receipt(BaseModel):
     signature: SignatureInfo
     revoked: bool = False
     consumed_at: Optional[str] = None  # set on first successful broker execution; see app/routers/broker.py
+    authorization_type: Literal["policy", "runtime"] = "policy"
+    runtime_decision: Optional[Literal["allow"]] = None
 
 
 class VerifyResult(BaseModel):

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from app import storage
+from app import receipts, storage
 from app.runtime import RuntimeActionRequest, RuntimeDecision, evaluate
 
 router = APIRouter(prefix="/v1/runtime", tags=["runtime"])
@@ -16,6 +16,15 @@ def evaluate_runtime(req: RuntimeActionRequest):
         raise HTTPException(status_code=503, detail="kill_switch_active")
 
     decision = evaluate(req)
+
+    if decision.decision == "allow":
+        prev_hash = storage.get_last_receipt_hash(req.agent_id)
+        authorization = receipts.issue_runtime_receipt(
+            req, decision, prev_receipt_hash=prev_hash
+        )
+        storage.save_receipt(authorization)
+        decision.authorization = authorization
+
     storage.append_audit(
         "runtime_evaluate",
         {
@@ -27,6 +36,11 @@ def evaluate_runtime(req: RuntimeActionRequest):
             "decision": decision.decision,
             "reasons": decision.reasons,
             "signals": decision.signals,
+            "authorization_id": (
+                decision.authorization.receipt_id
+                if decision.authorization
+                else None
+            ),
         },
     )
     return decision

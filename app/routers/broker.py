@@ -1,40 +1,12 @@
-"""
-Tier 3 — Broker-Enforced.
-
-An integrated action must present a valid Cyraduct receipt before execution.
-
-Enforcement invariant:
-
-    presented receipt
-        -> exists
-        -> not revoked
-        -> signature valid
-        -> not expired
-        -> action/agent binding valid
-        -> execution webhook destination is safe (SSRF check)
-        -> execution webhook
-
-Any failed check blocks execution before the webhook is called.
-
-This reference implementation uses a caller-supplied webhook as the execution
-sink. A production broker may terminate provider-specific protocols directly
-(MCP, A2A, HTTP tool calls, etc.).
-
-SSRF note: execution_webhook is caller-supplied, so it is validated via
-url_safety.validate_webhook_url() before any request is made, and the
-HTTP client below disables redirect-following — a URL that passes
-validation could otherwise redirect to an internal address at request
-time. See app/url_safety.py for the full threat model and residual risk.
-"""
-
+# Tier 3 — Broker-Enforced.
+# Runtime authorizations reuse the existing signed Receipt.
 import httpx
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Request
 
-from ..models import ActionRequest
+from ..runtime import RuntimeActionRequest
 from .. import receipts, storage, url_safety
 from ..rate_limit import limiter
-
 
 router = APIRouter(prefix="/v1/broker", tags=["broker"])
 
@@ -43,116 +15,88 @@ router = APIRouter(prefix="/v1/broker", tags=["broker"])
 @limiter.limit("20/minute")
 async def execute(
     request: Request,
-    req: ActionRequest,
+    req: RuntimeActionRequest,
     receipt_id: str,
     execution_webhook: str,
 ):
-    # 1. Global emergency stop must always take precedence.
     kill = storage.get_kill_switch()
     if kill["active"]:
         storage.append_audit(
             "broker_blocked_kill_switch",
-            {
-                "agent_id": req.agent_id,
-                "receipt_id": receipt_id,
-                "reason": kill["reason"],
-            },
+            {"agent_id": req.agent_id, "receipt_id": receipt_id, "reason": kill["reason"]},
         )
         raise HTTPException(
             status_code=503,
             detail=f"Cyraduct kill switch is active: {kill['reason']}",
         )
 
-    # 2. The broker does NOT create a new authorization receipt.
-    #    The caller must present an existing receipt.
     receipt = storage.get_receipt(receipt_id)
-
     if not receipt:
         storage.append_audit(
             "broker_blocked_receipt_not_found",
-            {
-                "agent_id": req.agent_id,
-                "receipt_id": receipt_id,
-            },
+            {"agent_id": req.agent_id, "receipt_id": receipt_id},
         )
-        return {
-            "executed": False,
-            "reason": "receipt_not_found",
-            "receipt_id": receipt_id,
-        }
+        return {"executed": False, "reason": "receipt_not_found", "receipt_id": receipt_id}
 
-    # 3. Revocation check.
     if receipt.revoked:
         storage.append_audit(
             "broker_blocked_receipt_revoked",
-            {
-                "agent_id": req.agent_id,
-                "receipt_id": receipt_id,
-            },
+            {"agent_id": req.agent_id, "receipt_id": receipt_id},
         )
-        return {
-            "executed": False,
-            "reason": "receipt_revoked",
-            "receipt": receipt.model_dump(),
-        }
+        return {"executed": False, "reason": "receipt_revoked", "receipt": receipt.model_dump()}
 
-    # 4. Cryptographic integrity check.
     if not receipts.verify_signature(receipt):
         storage.append_audit(
             "broker_blocked_signature_invalid",
-            {
-                "agent_id": req.agent_id,
-                "receipt_id": receipt_id,
-            },
+            {"agent_id": req.agent_id, "receipt_id": receipt_id},
         )
-        return {
-            "executed": False,
-            "reason": "signature_invalid",
-            "receipt": receipt.model_dump(),
-        }
+        return {"executed": False, "reason": "signature_invalid", "receipt": receipt.model_dump()}
 
-    # 5. Time-bound validity check.
     if receipts.is_expired(receipt):
         storage.append_audit(
             "broker_blocked_receipt_expired",
-            {
-                "agent_id": req.agent_id,
-                "receipt_id": receipt_id,
-            },
+            {"agent_id": req.agent_id, "receipt_id": receipt_id},
         )
-        return {
-            "executed": False,
-            "reason": "receipt_expired",
-            "receipt": receipt.model_dump(),
-        }
+        return {"executed": False, "reason": "receipt_expired", "receipt": receipt.model_dump()}
 
-    # 6. Exact action/agent binding check.
-    if not receipts.verify_action_binding(receipt, req):
+    if receipt.authorization_type == "runtime":
+        if receipt.runtime_decision != "allow":
+            storage.append_audit(
+                "broker_blocked_runtime_non_allow",
+                {"agent_id": req.agent_id, "receipt_id": receipt_id},
+            )
+            return {
+                "executed": False,
+                "reason": "runtime_authorization_not_allow",
+                "receipt": receipt.model_dump(),
+            }
+        bound = receipts.verify_runtime_binding(receipt, req)
+        binding_reason = "runtime_binding_mismatch"
+    else:
+        bound = receipts.verify_action_binding(receipt, req)
+        binding_reason = "action_binding_mismatch"
+
+    if not bound:
         storage.append_audit(
             "broker_blocked_action_mismatch",
             {
                 "agent_id": req.agent_id,
                 "receipt_id": receipt_id,
                 "action_type": req.action_type,
+                "authorization_type": receipt.authorization_type,
             },
         )
         return {
             "executed": False,
-            "reason": "action_binding_mismatch",
+            "reason": binding_reason,
             "receipt": receipt.model_dump(),
         }
 
-    # 7. SSRF check — the execution_webhook is caller-supplied and must not
-    #    point at internal/private network infrastructure.
     is_safe, webhook_reason = url_safety.validate_webhook_url(execution_webhook)
     if not is_safe:
         storage.append_audit(
             "broker_blocked_unsafe_webhook",
-            {
-                "agent_id": req.agent_id,
-                "receipt_id": receipt_id,
-                "reason": webhook_reason,
-            },
+            {"agent_id": req.agent_id, "receipt_id": receipt_id, "reason": webhook_reason},
         )
         return {
             "executed": False,
@@ -160,27 +104,11 @@ async def execute(
             "receipt": receipt.model_dump(),
         }
 
-    # 8. Single-use claim. Atomic (storage.mark_receipt_consumed only ever
-    #    transitions consumed_at from NULL to a timestamp, guarded by a
-    #    WHERE clause on the database), so this also closes the narrower
-    #    race where two execute calls for the same receipt arrive nearly
-    #    simultaneously -- at most one can win the claim.
-    #
-    #    Deliberate tradeoff: this consumes the receipt on the ATTEMPT,
-    #    not only on a successful webhook response. A receipt whose
-    #    webhook call fails cannot be retried with the same receipt --
-    #    a new evaluate() call is required. That's the conservative
-    #    choice: the alternative (claim only after success) reopens a
-    #    window where two near-simultaneous attempts could both succeed
-    #    before either is marked consumed.
     claim_timestamp = datetime.now(timezone.utc).isoformat()
     if not storage.mark_receipt_consumed(receipt_id, claim_timestamp):
         storage.append_audit(
             "broker_blocked_receipt_already_consumed",
-            {
-                "agent_id": req.agent_id,
-                "receipt_id": receipt_id,
-            },
+            {"agent_id": req.agent_id, "receipt_id": receipt_id},
         )
         return {
             "executed": False,
@@ -188,17 +116,12 @@ async def execute(
             "receipt": receipt.model_dump(),
         }
 
-    # 9. Only after ALL checks pass, AND the single-use claim succeeds,
-    #    may execution occur.
     execution_result = None
     executed = False
-
     try:
-        # follow_redirects=False is deliberate: a webhook URL that passed
-        # the SSRF check above could still redirect to an internal address
-        # at request time. We refuse to follow any redirect rather than
-        # re-validating a moving target.
-        async with httpx.AsyncClient(timeout=10.0, follow_redirects=False) as client:
+        async with httpx.AsyncClient(
+            timeout=10.0, follow_redirects=False
+        ) as client:
             resp = await client.post(
                 execution_webhook,
                 json={
@@ -206,16 +129,18 @@ async def execute(
                     "receipt_id": receipt.receipt_id,
                     "agent_id": req.agent_id,
                     "action_type": req.action_type,
+                    "target": req.target,
+                    "resource": req.resource,
+                    "reversibility": req.reversibility,
+                    "authority": req.authority,
                     "payload": req.payload,
                 },
             )
-
             execution_result = {
                 "status_code": resp.status_code,
                 "body": resp.text[:2000],
             }
             executed = resp.status_code < 400
-
     except httpx.RequestError as e:
         execution_result = {"error": str(e)}
         executed = False
@@ -228,6 +153,7 @@ async def execute(
             "agent_id": req.agent_id,
             "receipt_id": receipt.receipt_id,
             "executed": executed,
+            "authorization_type": receipt.authorization_type,
         },
     )
 
