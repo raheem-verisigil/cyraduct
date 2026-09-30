@@ -209,3 +209,22 @@ class EvidenceRegisterRequest(BaseModel):
     label: str
     content_hash: str
     registered_by: Optional[str] = None
+
+
+class PartnerSubmission(BaseModel):
+    name: str = Field(..., min_length=1, max_length=160)
+    company: str = Field(..., min_length=1, max_length=200)
+    email: str = Field(..., min_length=3, max_length=320)
+    role: Optional[str] = Field(None, max_length=160)
+    partner_type: str = Field(..., min_length=1, max_length=80)
+    message: str = Field(..., min_length=20, max_length=5000)
+
+    @model_validator(mode="after")
+    def validate_contact_fields(self):
+        import re
+
+        if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", self.email):
+            raise ValueError("A valid work email is required")
+        if _contains_nul(self.model_dump()):
+            raise ValueError("NUL byte is not permitted")
+        return self

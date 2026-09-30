@@ -19,6 +19,10 @@ def test_health():
     assert r.status_code == 200
     assert r.json()["status"] == "ok"
 
+    draft_compatible = client.get("/health")
+    assert draft_compatible.status_code == 200
+    assert draft_compatible.json() == {"status": "ok", "service": "cyraduct", "environment": "production"}
+
 
 def test_conformance_fixtures_all_pass():
     """The published fixture set — including negative/deny cases — must
@@ -149,6 +153,9 @@ def test_public_key_and_standalone_verification():
     verifier script, no server trust involved after fetching the key."""
     pk = client.get("/v1/public-key").json()
     assert pk["alg"] == "Ed25519"
+    assert pk["algorithm"] == "Ed25519"
+    assert pk["public_key"] == pk["public_key_b64"]
+    assert pk["status"] == "active"
 
     ev = client.post("/v1/attested/evaluate", json={
         "agent_id": "agent-standalone", "action_type": "read_public_doc",

@@ -38,7 +38,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
-from .models import Receipt, EvidencePackage
+from .models import Receipt, EvidencePackage, PartnerSubmission, new_id
 
 _DATABASE_URL = os.environ.get("CYRADUCT_DATABASE_URL", "sqlite:///./cyraduct.db")
 
@@ -97,6 +97,19 @@ evidence_table = Table(
     Column("data", Text, nullable=False),
 )
 
+partners_table = Table(
+    "partners", metadata,
+    Column("id", String, primary_key=True),
+    Column("name", String, nullable=False),
+    Column("company", String, nullable=False),
+    Column("email", String, nullable=False, index=True),
+    Column("role", String, nullable=True),
+    Column("partner_type", String, nullable=False),
+    Column("message", Text, nullable=False),
+    Column("created_at", String, nullable=False, index=True),
+    Column("status", String, nullable=False, default="new"),
+)
+
 agent_chain_table = Table(
     "agent_chain", metadata,
     Column("agent_id", String, primary_key=True),
@@ -113,6 +126,26 @@ def init_db():
         ).fetchone()
         if not exists:
             conn.execute(insert(kill_switch_table).values(id=1, active=0, reason=None))
+
+
+def save_partner_submission(submission: PartnerSubmission) -> dict:
+    """Persist a partner request and return the notification-ready record."""
+    partner_id = new_id("partner")
+    created_at = datetime.now(timezone.utc).isoformat()
+    record = {
+        "id": partner_id,
+        "name": submission.name,
+        "company": submission.company,
+        "email": submission.email,
+        "role": submission.role,
+        "partner_type": submission.partner_type,
+        "message": submission.message,
+        "created_at": created_at,
+        "status": "new",
+    }
+    with _lock, _engine.begin() as conn:
+        conn.execute(insert(partners_table).values(**record))
+    return record
 
 
 def _migrate_add_consumed_at_column():
