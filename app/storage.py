@@ -38,7 +38,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
-from .models import Receipt, EvidencePackage, PartnerSubmission, new_id
+from .models import Receipt, EvidencePackage, PartnerSubmission, AnalyticsEvent, new_id
 
 _DATABASE_URL = os.environ.get("CYRADUCT_DATABASE_URL", "sqlite:///./cyraduct.db")
 
@@ -108,6 +108,19 @@ partners_table = Table(
     Column("message", Text, nullable=False),
     Column("created_at", String, nullable=False, index=True),
     Column("status", String, nullable=False, default="new"),
+    Column("utm_source", String, nullable=True),
+    Column("utm_medium", String, nullable=True),
+    Column("utm_campaign", String, nullable=True),
+    Column("utm_content", String, nullable=True),
+    Column("landing_path", String, nullable=True),
+)
+
+analytics_events_table = Table(
+    "analytics_events", metadata,
+    Column("id", String, primary_key=True),
+    Column("event", String, nullable=False, index=True),
+    Column("properties", Text, nullable=False),
+    Column("created_at", String, nullable=False, index=True),
 )
 
 agent_chain_table = Table(
@@ -120,6 +133,7 @@ agent_chain_table = Table(
 def init_db():
     metadata.create_all(_engine)
     _migrate_add_consumed_at_column()
+    _migrate_partner_attribution_columns()
     with _engine.begin() as conn:
         exists = conn.execute(
             select(kill_switch_table.c.id).where(kill_switch_table.c.id == 1)
@@ -142,10 +156,26 @@ def save_partner_submission(submission: PartnerSubmission) -> dict:
         "message": submission.message,
         "created_at": created_at,
         "status": "new",
+        "utm_source": submission.utm_source,
+        "utm_medium": submission.utm_medium,
+        "utm_campaign": submission.utm_campaign,
+        "utm_content": submission.utm_content,
+        "landing_path": submission.landing_path,
     }
     with _lock, _engine.begin() as conn:
         conn.execute(insert(partners_table).values(**record))
     return record
+
+
+def save_analytics_event(event: AnalyticsEvent) -> None:
+    record = {
+        "id": new_id("event"),
+        "event": event.event,
+        "properties": json.dumps(event.properties, separators=(",", ":"), sort_keys=True),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    with _lock, _engine.begin() as conn:
+        conn.execute(insert(analytics_events_table).values(**record))
 
 
 def _migrate_add_consumed_at_column():
@@ -166,6 +196,16 @@ def _migrate_add_consumed_at_column():
             conn.exec_driver_sql("ALTER TABLE receipts ADD COLUMN consumed_at VARCHAR")
     except Exception:
         pass
+
+
+def _migrate_partner_attribution_columns():
+    """Add nullable attribution fields to pre-existing partner tables."""
+    for column in ("utm_source", "utm_medium", "utm_campaign", "utm_content", "landing_path"):
+        try:
+            with _engine.begin() as conn:
+                conn.exec_driver_sql(f"ALTER TABLE partners ADD COLUMN {column} VARCHAR")
+        except Exception:
+            pass
 
 
 def _upsert_agent_chain(conn, agent_id: str, last_hash: str):

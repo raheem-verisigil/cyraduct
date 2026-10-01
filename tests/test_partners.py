@@ -15,6 +15,10 @@ def test_partner_submission_is_validated_and_persisted():
         "role": "CTO",
         "partner_type": "AI Platform",
         "message": "We want to evaluate action-bound receipts in our agent platform.",
+        "utm_source": "linkedin",
+        "utm_campaign": "hospitality_routing",
+        "utm_content": "finance_angle",
+        "landing_path": "/",
     }
     response = client.post("/api/partners", json=payload)
     assert response.status_code == 200
@@ -32,6 +36,9 @@ def test_partner_submission_is_validated_and_persisted():
     assert row is not None
     assert row.status == "new"
     assert row.company == payload["company"]
+    assert row.utm_source == payload["utm_source"]
+    assert row.utm_campaign == payload["utm_campaign"]
+    assert row.utm_content == payload["utm_content"]
 
     with storage._engine.begin() as conn:
         conn.execute(delete(storage.partners_table).where(storage.partners_table.c.email == payload["email"]))

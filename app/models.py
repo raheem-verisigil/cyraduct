@@ -218,6 +218,11 @@ class PartnerSubmission(BaseModel):
     role: Optional[str] = Field(None, max_length=160)
     partner_type: str = Field(..., min_length=1, max_length=80)
     message: str = Field(..., min_length=20, max_length=5000)
+    utm_source: Optional[str] = Field(None, max_length=80)
+    utm_medium: Optional[str] = Field(None, max_length=80)
+    utm_campaign: Optional[str] = Field(None, max_length=120)
+    utm_content: Optional[str] = Field(None, max_length=120)
+    landing_path: Optional[str] = Field(None, max_length=200)
 
     @model_validator(mode="after")
     def validate_contact_fields(self):
@@ -226,5 +231,37 @@ class PartnerSubmission(BaseModel):
         if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", self.email):
             raise ValueError("A valid work email is required")
         if _contains_nul(self.model_dump()):
+            raise ValueError("NUL byte is not permitted")
+        return self
+
+
+AnalyticsEventName = Literal[
+    "audience_route_click",
+    "finance_cta_click",
+    "technical_asset_click",
+    "verification_lab_start",
+    "partner_form_start",
+    "partner_form_submit",
+    "partner_form_error",
+    "outbound_click",
+]
+
+
+class AnalyticsEvent(BaseModel):
+    event: AnalyticsEventName
+    properties: Dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_event_properties(self):
+        allowed_keys = {
+            "audience", "destination", "cta", "asset", "action", "partner_type",
+            "form_version", "utm_source", "utm_medium", "utm_campaign", "utm_content",
+            "landing_path", "error_category", "source_section",
+        }
+        if len(self.properties) > 12 or any(key not in allowed_keys for key in self.properties):
+            raise ValueError("Unsupported analytics property")
+        if any(len(key) > 40 or len(value) > 160 for key, value in self.properties.items()):
+            raise ValueError("Analytics property is too long")
+        if _contains_nul(self.properties):
             raise ValueError("NUL byte is not permitted")
         return self
