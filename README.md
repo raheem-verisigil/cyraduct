@@ -27,31 +27,96 @@ prevented from reaching the execution path.
 It is infrastructure for controlling what AI agents are actually allowed to
 execute.
 
+## Why Cyraduct exists
+
+AI agents can increasingly propose and execute actions across enterprise systems. The
+authorization question is therefore no longer only:
+
+> “Did the agent decide to do this?”
+
+It is also:
+
+> “What evidence, policy, authorization, and consequence controls must be satisfied
+> before this action is allowed to reach the execution path?”
+
+Cyraduct separates **decision** from **permission to execute**.
+
+The protocol evaluates an action, records the conditions under which it may proceed,
+issues a signed authorization receipt when those conditions are satisfied, and gives a
+downstream enforcement point the ability to independently verify that receipt.
+
+This creates a control boundary between an agent and a consequential system without
+requiring Cyraduct to be the agent, ERP, payment processor, or source of truth for the
+underlying business data.
+
+## 60-second technical path
+
+If you are evaluating Cyraduct as an engineer, start here:
+
+1. **Understand the reference application**
+   Read `docs/FINANCE_GUARD.md` to see how the protocol is applied to consequential
+   finance actions.
+
+2. **Inspect a proposed action**
+   Open `examples/finance_vendor_change.json` to see the action structure used by the
+   reference implementation.
+
+3. **Trace authorization**
+   Follow the `/v1/attested/evaluate` flow to see how policy, evidence, consequence
+   evaluation, and receipt issuance fit together.
+
+4. **Verify independently**
+   Run `verify_receipt.py` to inspect the standalone Ed25519 receipt verification path.
+
+5. **Inspect enforcement**
+   Follow `/v1/broker/execute` to see how a downstream execution path validates the
+   receipt before calling the execution webhook.
+
+6. **Inspect the guarantees**
+   Read the conformance tests in `tests/` and the enforcement-tier documentation before
+   drawing conclusions about what the current MVP does and does not guarantee.
+
+### The core idea
+
+```text
+AI decision
+    ↓
+Proposed action
+    ↓
+Consequence + evidence + policy evaluation
+    ↓
+Signed authorization receipt
+    ↓
+Independent enforcement check
+    ├── valid → execute
+    └── invalid → reject
+```
+
 ### What is working today
 
 This repository contains a working technical reference implementation with:
 
-- Ed25519-signed authorization receipts
-- consequence evaluation
-- evidence registration
-- policy evaluation
-- receipt expiry
-- agent-scoped revocation
-- broker-side receipt validation
-- action/agent binding checks
-- tamper-evident audit logging
-- conformance testing with positive and negative cases
-- three enforcement tiers: Advisory, Attested, and Broker-Enforced
+* Ed25519-signed authorization receipts
+* consequence evaluation
+* evidence registration
+* policy evaluation
+* receipt expiry
+* agent-scoped revocation
+* broker-side receipt validation
+* action/agent binding checks
+* tamper-evident audit logging
+* conformance testing with positive and negative cases
+* three enforcement tiers: Advisory, Attested, and Broker-Enforced
 
 ### First enterprise reference application: Finance Guard
 
 Finance Guard demonstrates the protocol against high-consequence financial
 actions, including:
 
-- vendor bank-detail changes
-- vendor remittance-detail changes
-- ACH initiation
-- wire-transfer initiation
+* vendor bank-detail changes
+* vendor remittance-detail changes
+* ACH initiation
+* wire-transfer initiation
 
 Finance Guard does **not** move money or replace an ERP.
 
@@ -61,11 +126,11 @@ sink can then independently verify the receipt before acting.
 
 ### Start here
 
-- **Finance Guard:** `docs/FINANCE_GUARD.md`
-- **Example action:** `examples/finance_vendor_change.json`
-- **Standalone receipt verification:** `verify_receipt.py`
-- **API specification:** `openapi.json`
-- **Conformance tests:** `tests/`
+* **Finance Guard:** `docs/FINANCE_GUARD.md`
+* **Example action:** `examples/finance_vendor_change.json`
+* **Standalone receipt verification:** `verify_receipt.py`
+* **API specification:** `openapi.json`
+* **Conformance tests:** `tests/`
 
 ### Current status
 
@@ -79,20 +144,25 @@ roadmap work. See **Known limitations** below before deploying it.
 
 Cyraduct does not claim one enforcement guarantee — it offers three, explicitly:
 
-| Tier | Where it sits | What it guarantees | What it does NOT guarantee |
-|---|---|---|---|
-| **1. Advisory** | Outside the execution path | A documented decision trail | That a flagged action is actually stopped |
-| **2. Attested** | Outside the path, but sinks must check | No compliant sink acts without a valid, unexpired receipt | Protection if a sink ignores the receipt requirement |
-| **3. Broker-Enforced** | Inside the execution path | No bypass exists for integrated actions holding a valid receipt | Availability/latency now depend on Cyraduct uptime |
+| Tier                   | Where it sits                          | What it guarantees                                              | What it does NOT guarantee                           |
+| ---------------------- | -------------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------- |
+| **1. Advisory**        | Outside the execution path             | A documented decision trail                                     | That a flagged action is actually stopped            |
+| **2. Attested**        | Outside the path, but sinks must check | No compliant sink acts without a valid, unexpired receipt       | Protection if a sink ignores the receipt requirement |
+| **3. Broker-Enforced** | Inside the execution path              | No bypass exists for integrated actions holding a valid receipt | Availability/latency now depend on Cyraduct uptime   |
 
 **Broker mode is a two-step flow, not one call.** The broker does not mint its own
 authorization — it validates a receipt you already hold (from a prior `/v1/attested/evaluate`
 call) before executing:
-POST /v1/attested/evaluate → issues a signed receipt (if allowed)
+
+```text
+POST /v1/attested/evaluate
+→ issues a signed receipt (if allowed)
+
 POST /v1/broker/execute?receipt_id=<id>&execution_webhook=<url>
 → checks: exists → not revoked → signature valid → not expired
 → action/agent binding matches the presented request
 → only then calls the execution webhook
+```
 
 That last check — action/agent binding — exists specifically to stop a receipt issued
 for one action from being replayed against a different action with the same ID.
@@ -103,53 +173,56 @@ A receipt valid until explicitly revoked is treated as a design flaw, not a feat
 ## What's real vs. roadmap
 
 Built and tested in this repo:
-- **Ed25519-signed receipts**, independently verifiable with no server trust required (`verify_receipt.py` — runs standalone, air-gapped)
-- **Receipt chaining** per agent (`prev_receipt_hash`, covered by the signature)
-- **Rule-based consequence scoring** — transparent heuristic, not a black-box model (`app/consequence.py`)
-- **Evidence registration** — hash-referenced assurance packages a receipt can cite (`/v1/evidence`)
-- **Agent-scoped revocation** — kill every active receipt an agent holds in one call (`/v1/attested/revoke-agent/{agent_id}`)
-- **Queryable receipts** by agent and time range (`/v1/receipts`)
-- **Broker-side receipt validation** — full check sequence (existence, revocation, signature, expiry, action/agent binding) before any execution webhook is called
-- Three tiers, policy packs, tamper-evident hash-chained audit log, kill switch, conformance suite — 22 automated tests, including 6 broker-specific negative cases
+
+* **Ed25519-signed receipts**, independently verifiable with no server trust required (`verify_receipt.py` — runs standalone, air-gapped)
+* **Receipt chaining** per agent (`prev_receipt_hash`, covered by the signature)
+* **Rule-based consequence scoring** — transparent heuristic, not a black-box model (`app/consequence.py`)
+* **Evidence registration** — hash-referenced assurance packages a receipt can cite (`/v1/evidence`)
+* **Agent-scoped revocation** — kill every active receipt an agent holds in one call (`/v1/attested/revoke-agent/{agent_id}`)
+* **Queryable receipts** by agent and time range (`/v1/receipts`)
+* **Broker-side receipt validation** — full check sequence (existence, revocation, signature, expiry, action/agent binding) before any execution webhook is called
+* Three tiers, policy packs, tamper-evident hash-chained audit log, kill switch, conformance suite — 22 automated tests, including 6 broker-specific negative cases
 
 Explicitly **not** built here yet — real Phase 2/3 items, not implied by anything on the site:
-- Framework SDKs (LangChain, Semantic Kernel, Bedrock Agents, etc.)
-- A policy language / visual policy studio (policy packs are hand-written JSON)
-- OpenTelemetry / SIEM export
-- Federated multi-org broker mode
-- Evidence-to-limit automatic binding (evidence can be *referenced* on a receipt; it does not yet *change* what a policy allows)
-- A certification/marketplace program
+
+* Framework SDKs (LangChain, Semantic Kernel, Bedrock Agents, etc.)
+* A policy language / visual policy studio (policy packs are hand-written JSON)
+* OpenTelemetry / SIEM export
+* Federated multi-org broker mode
+* Evidence-to-limit automatic binding (evidence can be *referenced* on a receipt; it does not yet *change* what a policy allows)
+* A certification/marketplace program
 
 ## Project structure
 
+```text
 cyraduct/
 ├── main.py # FastAPI app entrypoint, public-key endpoint
 ├── generate_key.py # One-time signing keypair generator for deployment
 ├── verify_receipt.py # Standalone receipt verifier (no server trust required)
 ├── app/
-│ ├── config.py # Expiry policy, admin key
-│ ├── crypto.py # Ed25519 signing/verification
-│ ├── consequence.py # Transparent consequence scoring heuristic
-│ ├── models.py # Pydantic models: ActionRequest, Receipt, etc.
-│ ├── policy_engine.py # Loads + evaluates policy packs
-│ ├── receipts.py # Issues, hashes, chains, expires receipts
-│ ├── storage.py # SQLite: receipts, revocations, audit log, evidence, kill switch
-│ └── routers/
-│ ├── advisory.py # Tier 1
-│ ├── attested.py # Tier 2 (evaluate / verify / revoke / revoke-agent)
-│ ├── broker.py # Tier 3 (validates a receipt, then executes via webhook)
-│ ├── conformance.py # Published test-vector runner
-│ ├── evidence.py # Evidence package registration
-│ ├── receipts.py # Receipt querying by agent/time range
-│ └── admin.py # Kill switch + audit log
+│   ├── config.py # Expiry policy, admin key
+│   ├── crypto.py # Ed25519 signing/verification
+│   ├── consequence.py # Transparent consequence scoring heuristic
+│   ├── models.py # Pydantic models: ActionRequest, Receipt, etc.
+│   ├── policy_engine.py # Loads + evaluates policy packs
+│   ├── receipts.py # Issues, hashes, chains, expires receipts
+│   ├── storage.py # SQLite: receipts, revocations, audit log, evidence, kill switch
+│   └── routers/
+│       ├── advisory.py # Tier 1
+│       ├── attested.py # Tier 2 (evaluate / verify / revoke / revoke-agent)
+│       ├── broker.py # Tier 3 (validates a receipt, then executes via webhook)
+│       ├── conformance.py # Published test-vector runner
+│       ├── evidence.py # Evidence package registration
+│       ├── receipts.py # Receipt querying by agent/time range
+│       └── admin.py # Kill switch + audit log
 ├── policy_packs/
-│ ├── generic.json
-│ ├── banking.json
-│ ├── healthcare.json
-│ ├── finance_vendor_change_v1.json # Finance Guard vendor/payment policy
-│ ├── fixtures.json # Positive AND negative conformance cases
+│   ├── generic.json
+│   ├── banking.json
+│   ├── healthcare.json
+│   ├── finance_vendor_change_v1.json # Finance Guard vendor/payment policy
+│   └── fixtures.json # Positive AND negative conformance cases
 ├── tests/
-│ └── test_conformance.py
+│   └── test_conformance.py
 ├── LICENSE # Apache 2.0
 ├── requirements.txt
 ├── railway.json
@@ -161,13 +234,13 @@ docs/
 
 examples/
 └── finance_vendor_change.json # Example action request
-
+```
 
 ## Run locally
 
 ```bash
 python -m venv venv
-source venv/bin/activate       # Linux/macOS; use venv\\Scripts\\activate on Windows
+source venv/bin/activate       # Linux/macOS; use venv\Scripts\activate on Windows
 pip install -r requirements.txt
 cp .env.example .env   # edit secrets before any real use
 uvicorn main:app --reload
@@ -197,9 +270,12 @@ dev but means the signing identity resets on every redeploy on most PaaS platfor
 
 ```bash
 curl http://localhost:8000/v1/public-key | python -c "import json,sys; print(json.load(sys.stdin)['public_key_b64'])" > public_key.txt
-curl -X POST http://localhost:8000/v1/attested/evaluate -H "Content-Type: application/json" \
+
+curl -X POST http://localhost:8000/v1/attested/evaluate \
+  -H "Content-Type: application/json" \
   -d '{"agent_id":"agent-1","action_type":"read_public_doc","consequence_class":"low_risk","policy_pack":"generic","payload":{}}' \
   > receipt.json
+
 python verify_receipt.py receipt.json public_key.txt
 ```
 
@@ -238,24 +314,25 @@ curl -X POST http://localhost:8000/v1/conformance/run
 2. In Railway: **New Project → Deploy from GitHub repo** → select this repo.
 3. Railway auto-detects `railway.json` / `Procfile` and uses Nixpacks to build.
 4. Set environment variables in the Railway dashboard (Settings → Variables):
-   - `CYRADUCT_PRIVATE_KEY_B64` — from `python generate_key.py`, mark as secret. Keeps the
+
+   * `CYRADUCT_PRIVATE_KEY_B64` — from `python generate_key.py`, mark as secret. Keeps the
      signing identity stable across redeploys — do not skip this.
-   - `CYRADUCT_ADMIN_KEY` — long random string (gates kill switch, revocation, audit log)
-   - (optional) `CYRADUCT_KEY_ID` — a label for your key, e.g. `cyraduct-prod-1`
+   * `CYRADUCT_ADMIN_KEY` — long random string (gates kill switch, revocation, audit log)
+   * (optional) `CYRADUCT_KEY_ID` — a label for your key, e.g. `cyraduct-prod-1`
 5. Deploy. Railway assigns a public URL; `/docs` will be live there.
 
 ## Known limitations (MVP, by design)
 
-- **Storage is SQLite on local disk.** Fine for a pilot; on Railway this resets on
+* **Storage is SQLite on local disk.** Fine for a pilot; on Railway this resets on
   redeploy unless you attach a persistent volume or migrate to Postgres. Do not use
   this as-is for anything carrying real financial or health-record consequences.
-- **Broker execution is a generic webhook proxy**, not a real MCP/A2A/protocol
+* **Broker execution is a generic webhook proxy**, not a real MCP/A2A/protocol
   terminator. Treat `/v1/broker/execute` as a proof of the *pattern* (in-path
   enforcement with receipt validation), not a production broker.
-- **Policy packs are unsigned placeholders.** The `signed_by` field names where a
+* **Policy packs are unsigned placeholders.** The `signed_by` field names where a
   real domain-authority signature would go. Cryptographic pack signing is not yet
   implemented — see `app/policy_engine.py` for where to add it.
-- **No multi-tenant auth model yet.** One shared admin key. Fine for a single pilot
+* **No multi-tenant auth model yet.** One shared admin key. Fine for a single pilot
   deployment; not fine for multiple customers on one instance.
 
 These are the honest next steps, not hidden gaps — consistent with the project's
