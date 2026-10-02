@@ -2,6 +2,8 @@
 
 ### The consequence-control layer for AI agents.
 
+![Cyraduct architecture](docs/cyraduct-architecture.svg)
+
 AI agents are increasingly able to call APIs, modify enterprise data, change
 configurations, and initiate consequential workflows.
 
