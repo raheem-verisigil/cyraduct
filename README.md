@@ -144,7 +144,8 @@ cyraduct/
 │ ├── generic.json
 │ ├── banking.json
 │ ├── healthcare.json
-│ └── fixtures.json # Positive AND negative conformance cases
+│ ├── finance_vendor_change_v1.json # Finance Guard vendor/payment policy
+│ ├── fixtures.json # Positive AND negative conformance cases
 ├── tests/
 │ └── test_conformance.py
 ├── LICENSE # Apache 2.0
@@ -153,12 +154,18 @@ cyraduct/
 ├── Procfile
 └── .env.example
 
+docs/
+└── FINANCE_GUARD.md # AP/ERP/payment-sink integration guide
+
+examples/
+└── finance_vendor_change.json # Example action request
+
 
 ## Run locally
 
 ```bash
 python -m venv venv
-source venv/Scripts/activate   # Windows Git Bash; use "source venv/bin/activate" on Mac/Linux
+source venv/bin/activate       # Linux/macOS; use venv\\Scripts\\activate on Windows
 pip install -r requirements.txt
 cp .env.example .env   # edit secrets before any real use
 uvicorn main:app --reload

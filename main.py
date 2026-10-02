@@ -17,7 +17,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from app.routers import advisory, attested, broker, conformance, admin, evidence, receipts as receipts_router
+from app.routers import advisory, attested, broker, conformance, admin, evidence, receipts as receipts_router, runtime, partners, analytics
 from app.storage import init_db
 from app import crypto
 from app.rate_limit import limiter
@@ -52,6 +52,9 @@ app.include_router(conformance.router)
 app.include_router(admin.router)
 app.include_router(evidence.router)
 app.include_router(receipts_router.router)
+app.include_router(runtime.router)
+app.include_router(partners.router)
+app.include_router(analytics.router)
 
 # Initialize storage at import time so it's ready even under test clients
 # that don't trigger startup events (and again on startup for safety).
@@ -68,7 +71,7 @@ def root():
     return {
         "service": "cyraduct",
         "version": "0.2.1",
-        "tiers": ["advisory", "attested", "broker"],
+        "tiers": ["advisory", "attested", "broker", "runtime"],
         "docs": "/docs",
         "public_key": "/v1/public-key",
         "conformance_fixtures": "/v1/conformance/fixtures",
@@ -78,6 +81,11 @@ def root():
 @app.get("/healthz")
 def healthz():
     return {"status": "ok"}
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "cyraduct", "environment": "production"}
 
 
 @app.get("/v1/public-key")
@@ -90,4 +98,7 @@ def public_key():
         "key_id": crypto.key_id(),
         "alg": "Ed25519",
         "public_key_b64": crypto.public_key_b64(),
+        "algorithm": "Ed25519",
+        "public_key": crypto.public_key_b64(),
+        "status": "active",
     }

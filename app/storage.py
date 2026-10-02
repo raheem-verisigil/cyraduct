@@ -29,16 +29,37 @@ from sqlalchemy import (
     create_engine, MetaData, Table, Column, String, Integer, Text, select,
     insert, update, delete as sa_delete, desc, asc,
 )
+from sqlalchemy.pool import NullPool
+from sqlalchemy import (
+    create_engine, MetaData, Table, Column, String, Integer, Text, select,
+    insert, update, delete as sa_delete, desc, asc,
+)
+
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
-from .models import Receipt, EvidencePackage
+from .models import Receipt, EvidencePackage, PartnerSubmission, AnalyticsEvent, new_id
 
 _DATABASE_URL = os.environ.get("CYRADUCT_DATABASE_URL", "sqlite:///./cyraduct.db")
 
-_engine = create_engine(_DATABASE_URL, future=True)
+_engine_kwargs = {
+    "future": True,
+}
+
+if _DATABASE_URL.startswith("sqlite"):
+    _engine_kwargs["connect_args"] = {
+        "check_same_thread": False,
+    }
+    # Important on Windows test environments:
+    # prevents pooled SQLite file handles keeping temp DB files locked.
+    from sqlalchemy.pool import NullPool
+    _engine_kwargs["poolclass"] = NullPool
+
+_engine = create_engine(_DATABASE_URL, **_engine_kwargs)
+
 _is_sqlite = _engine.dialect.name == "sqlite"
-_lock = threading.Lock()  # SQLite has no real concurrent-writer story; harmless no-op contention under Postgres
+
+_lock = threading.Lock()
 
 metadata = MetaData()
 
@@ -50,6 +71,7 @@ receipts_table = Table(
     Column("consequence_class", String),
     Column("data", Text, nullable=False),
     Column("revoked", Integer, nullable=False, default=0),
+    Column("consumed_at", String, nullable=True),
 )
 
 audit_log_table = Table(
@@ -75,6 +97,32 @@ evidence_table = Table(
     Column("data", Text, nullable=False),
 )
 
+partners_table = Table(
+    "partners", metadata,
+    Column("id", String, primary_key=True),
+    Column("name", String, nullable=False),
+    Column("company", String, nullable=False),
+    Column("email", String, nullable=False, index=True),
+    Column("role", String, nullable=True),
+    Column("partner_type", String, nullable=False),
+    Column("message", Text, nullable=False),
+    Column("created_at", String, nullable=False, index=True),
+    Column("status", String, nullable=False, default="new"),
+    Column("utm_source", String, nullable=True),
+    Column("utm_medium", String, nullable=True),
+    Column("utm_campaign", String, nullable=True),
+    Column("utm_content", String, nullable=True),
+    Column("landing_path", String, nullable=True),
+)
+
+analytics_events_table = Table(
+    "analytics_events", metadata,
+    Column("id", String, primary_key=True),
+    Column("event", String, nullable=False, index=True),
+    Column("properties", Text, nullable=False),
+    Column("created_at", String, nullable=False, index=True),
+)
+
 agent_chain_table = Table(
     "agent_chain", metadata,
     Column("agent_id", String, primary_key=True),
@@ -84,12 +132,80 @@ agent_chain_table = Table(
 
 def init_db():
     metadata.create_all(_engine)
+    _migrate_add_consumed_at_column()
+    _migrate_partner_attribution_columns()
     with _engine.begin() as conn:
         exists = conn.execute(
             select(kill_switch_table.c.id).where(kill_switch_table.c.id == 1)
         ).fetchone()
         if not exists:
             conn.execute(insert(kill_switch_table).values(id=1, active=0, reason=None))
+
+
+def save_partner_submission(submission: PartnerSubmission) -> dict:
+    """Persist a partner request and return the notification-ready record."""
+    partner_id = new_id("partner")
+    created_at = datetime.now(timezone.utc).isoformat()
+    record = {
+        "id": partner_id,
+        "name": submission.name,
+        "company": submission.company,
+        "email": submission.email,
+        "role": submission.role,
+        "partner_type": submission.partner_type,
+        "message": submission.message,
+        "created_at": created_at,
+        "status": "new",
+        "utm_source": submission.utm_source,
+        "utm_medium": submission.utm_medium,
+        "utm_campaign": submission.utm_campaign,
+        "utm_content": submission.utm_content,
+        "landing_path": submission.landing_path,
+    }
+    with _lock, _engine.begin() as conn:
+        conn.execute(insert(partners_table).values(**record))
+    return record
+
+
+def save_analytics_event(event: AnalyticsEvent) -> None:
+    record = {
+        "id": new_id("event"),
+        "event": event.event,
+        "properties": json.dumps(event.properties, separators=(",", ":"), sort_keys=True),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    with _lock, _engine.begin() as conn:
+        conn.execute(insert(analytics_events_table).values(**record))
+
+
+def _migrate_add_consumed_at_column():
+    """metadata.create_all() only creates missing TABLES, never adds
+    columns to a table that already exists -- so a pre-existing
+    deployment's receipts table (e.g. the live Railway database) needs
+    this column added explicitly. ALTER TABLE ... ADD COLUMN is
+    supported identically by SQLite and Postgres, so one statement
+    covers both backends.
+
+    Safe to run on every startup: if the table was just freshly created
+    by create_all() above, it already has this column and the ALTER
+    fails with "duplicate column" (SQLite) or a similar error
+    (Postgres) -- that failure is the expected, normal case after the
+    first successful migration, so it's swallowed rather than raised."""
+    try:
+        with _engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE receipts ADD COLUMN consumed_at VARCHAR")
+    except Exception:
+        pass
+
+
+def _migrate_partner_attribution_columns():
+    """Add nullable attribution fields to pre-existing partner tables."""
+    for column in ("utm_source", "utm_medium", "utm_campaign", "utm_content", "landing_path"):
+        try:
+            with _engine.begin() as conn:
+                conn.exec_driver_sql(f"ALTER TABLE partners ADD COLUMN {column} VARCHAR")
+        except Exception:
+            pass
 
 
 def _upsert_agent_chain(conn, agent_id: str, last_hash: str):
@@ -131,14 +247,32 @@ def get_last_receipt_hash(agent_id: str) -> Optional[str]:
 def get_receipt(receipt_id: str) -> Optional[Receipt]:
     with _lock, _engine.begin() as conn:
         row = conn.execute(
-            select(receipts_table.c.data, receipts_table.c.revoked)
+            select(receipts_table.c.data, receipts_table.c.revoked, receipts_table.c.consumed_at)
             .where(receipts_table.c.receipt_id == receipt_id)
         ).fetchone()
         if not row:
             return None
         r = Receipt.model_validate_json(row[0])
         r.revoked = bool(row[1])
+        r.consumed_at = row[2]
         return r
+
+
+def mark_receipt_consumed(receipt_id: str, consumed_at: str) -> bool:
+    """Records that a receipt has been used for a successful broker
+    execution. Only ever transitions None -> a timestamp -- the WHERE
+    clause requiring consumed_at IS NULL makes this atomic against a
+    race between two near-simultaneous execute calls for the same
+    receipt: at most one of them can be the row that actually updates,
+    which is what makes this a real replay guard rather than a
+    best-effort check with a race window."""
+    with _lock, _engine.begin() as conn:
+        result = conn.execute(
+            update(receipts_table)
+            .where(receipts_table.c.receipt_id == receipt_id, receipts_table.c.consumed_at.is_(None))
+            .values(consumed_at=consumed_at)
+        )
+        return result.rowcount > 0
 
 
 def query_receipts(agent_id: Optional[str] = None, since: Optional[str] = None,
