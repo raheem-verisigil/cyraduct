@@ -1,13 +1,77 @@
 # Cyraduct
 
-An open, vendor-neutral **reliance and consequence-boundary protocol** for AI agent actions.
-Cyraduct converts governance and assurance evidence into machine-enforceable reliance limits,
-with independent Ed25519-signed receipts, revocation, evidence registration, and conformance testing.
+### The consequence-control layer for AI agents.
 
-This repository is the reference implementation. It is intentionally an MVP: the protocol
-concepts (tiers, receipts, expiry, conformance fixtures, tamper-evident audit log) are real
-and tested; the storage layer (SQLite) and broker execution (webhook proxy) are placeholders
-meant to be swapped for production-grade infrastructure.
+AI agents are increasingly able to call APIs, modify enterprise data, change
+configurations, and initiate consequential workflows.
+
+**Cyraduct creates an enforceable boundary between:**
+
+**AI agent decision → authorization → real-world execution**
+
+Cyraduct evaluates proposed agent actions against consequence rules, evidence,
+policy, and authorization requirements before execution.
+
+When an action is permitted, Cyraduct produces a cryptographically signed
+authorization receipt that a downstream system can independently verify.
+
+When required conditions are not satisfied, the action can be rejected or
+prevented from reaching the execution path.
+
+**Cyraduct is not an AI model.**
+**Cyraduct is not an ERP.**
+**Cyraduct does not move money.**
+
+It is infrastructure for controlling what AI agents are actually allowed to
+execute.
+
+### What is working today
+
+This repository contains a working technical reference implementation with:
+
+- Ed25519-signed authorization receipts
+- consequence evaluation
+- evidence registration
+- policy evaluation
+- receipt expiry
+- agent-scoped revocation
+- broker-side receipt validation
+- action/agent binding checks
+- tamper-evident audit logging
+- conformance testing with positive and negative cases
+- three enforcement tiers: Advisory, Attested, and Broker-Enforced
+
+### First enterprise reference application: Finance Guard
+
+Finance Guard demonstrates the protocol against high-consequence financial
+actions, including:
+
+- vendor bank-detail changes
+- vendor remittance-detail changes
+- ACH initiation
+- wire-transfer initiation
+
+Finance Guard does **not** move money or replace an ERP.
+
+Instead, an action is evaluated, required evidence and policy conditions are
+checked, and an authorization receipt can be issued. The downstream execution
+sink can then independently verify the receipt before acting.
+
+### Start here
+
+- **Finance Guard:** `docs/FINANCE_GUARD.md`
+- **Example action:** `examples/finance_vendor_change.json`
+- **Standalone receipt verification:** `verify_receipt.py`
+- **API specification:** `openapi.json`
+- **Conformance tests:** `tests/`
+
+### Current status
+
+Cyraduct is an **MVP/reference implementation**, not a claim of production
+readiness for real financial or other high-consequence workloads.
+
+The repository deliberately documents what is implemented and what remains
+roadmap work. See **Known limitations** below before deploying it.
 
 ## The three enforcement tiers
 
