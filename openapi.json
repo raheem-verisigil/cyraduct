@@ -130,6 +130,13 @@
             "description": "Owning org/team, e.g. 'org:acme:finance'",
             "title": "Principal"
           },
+          "protocol_version": {
+            "default": "1.0",
+            "description": "Canonical Cyraduct action-envelope version",
+            "maxLength": 16,
+            "title": "Protocol Version",
+            "type": "string"
+          },
           "purpose": {
             "anyOf": [
               {
@@ -142,6 +149,19 @@
             ],
             "description": "Stated purpose/justification for the action",
             "title": "Purpose"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Caller-supplied idempotency/correlation identifier",
+            "title": "Request Id"
           }
         },
         "required": [
@@ -803,6 +823,13 @@
             "description": "Owning org/team, e.g. 'org:acme:finance'",
             "title": "Principal"
           },
+          "protocol_version": {
+            "default": "1.0",
+            "description": "Canonical Cyraduct action-envelope version",
+            "maxLength": 16,
+            "title": "Protocol Version",
+            "type": "string"
+          },
           "purpose": {
             "anyOf": [
               {
@@ -815,6 +842,19 @@
             ],
             "description": "Stated purpose/justification for the action",
             "title": "Purpose"
+          },
+          "request_id": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Caller-supplied idempotency/correlation identifier",
+            "title": "Request Id"
           },
           "resource": {
             "anyOf": [

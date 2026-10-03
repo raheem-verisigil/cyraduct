@@ -106,7 +106,7 @@ This repository contains a working technical reference implementation with:
 * action/agent binding checks
 * tamper-evident audit logging
 * conformance testing with positive and negative cases
-* three enforcement tiers: Advisory, Attested, and Broker-Enforced
+* four enforcement modes: Advisory, Attested, Broker-Enforced, and Runtime
 
 ### First enterprise reference application: Finance Guard
 
@@ -129,6 +129,7 @@ sink can then independently verify the receipt before acting.
 * **Finance Guard:** `docs/FINANCE_GUARD.md`
 * **Example action:** `examples/finance_vendor_change.json`
 * **Standalone receipt verification:** `verify_receipt.py`
+* **Canonical action envelope:** `docs/CANONICAL_ACTION_ENVELOPE.md`
 * **API specification:** `openapi.json`
 * **Conformance tests:** `tests/`
 
@@ -140,15 +141,16 @@ readiness for real financial or other high-consequence workloads.
 The repository deliberately documents what is implemented and what remains
 roadmap work. See **Known limitations** below before deploying it.
 
-## The three enforcement tiers
+## The four enforcement modes
 
-Cyraduct does not claim one enforcement guarantee — it offers three, explicitly:
+Cyraduct does not claim one enforcement guarantee — it offers four, explicitly:
 
 | Tier                   | Where it sits                          | What it guarantees                                              | What it does NOT guarantee                           |
 | ---------------------- | -------------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------- |
 | **1. Advisory**        | Outside the execution path             | A documented decision trail                                     | That a flagged action is actually stopped            |
 | **2. Attested**        | Outside the path, but sinks must check | No compliant sink acts without a valid, unexpired receipt       | Protection if a sink ignores the receipt requirement |
-| **3. Broker-Enforced** | Inside the execution path              | No bypass exists for integrated actions holding a valid receipt | Availability/latency now depend on Cyraduct uptime   |
+| **3. Broker-Enforced** | Inside the execution path             | No bypass exists for integrated actions holding a valid receipt | Availability/latency now depend on Cyraduct uptime   |
+| **4. Runtime**         | State-aware authorization boundary    | Runtime state, authority, expiry, and idempotency are checked before a signed runtime receipt is enforced | It still depends on the integrated sink enforcing the receipt |
 
 **Broker mode is a two-step flow, not one call.** The broker does not mint its own
 authorization — it validates a receipt you already hold (from a prior `/v1/attested/evaluate`
@@ -181,7 +183,7 @@ Built and tested in this repo:
 * **Agent-scoped revocation** — kill every active receipt an agent holds in one call (`/v1/attested/revoke-agent/{agent_id}`)
 * **Queryable receipts** by agent and time range (`/v1/receipts`)
 * **Broker-side receipt validation** — full check sequence (existence, revocation, signature, expiry, action/agent binding) before any execution webhook is called
-* Three tiers, policy packs, tamper-evident hash-chained audit log, kill switch, conformance suite — 22 automated tests, including 6 broker-specific negative cases
+* Four modes, policy packs, canonical action-envelope hashing, tamper-evident hash-chained audit log, kill switch, conformance suite — 104 automated tests
 
 Explicitly **not** built here yet — real Phase 2/3 items, not implied by anything on the site:
 
@@ -323,9 +325,9 @@ curl -X POST http://localhost:8000/v1/conformance/run
 
 ## Known limitations (MVP, by design)
 
-* **Storage is SQLite on local disk.** Fine for a pilot; on Railway this resets on
-  redeploy unless you attach a persistent volume or migrate to Postgres. Do not use
-  this as-is for anything carrying real financial or health-record consequences.
+* **Storage is SQLite locally and should be Postgres in production.** Configure
+  `CYRADUCT_DATABASE_URL` to a managed Postgres instance before carrying real
+  financial or health-record consequences.
 * **Broker execution is a generic webhook proxy**, not a real MCP/A2A/protocol
   terminator. Treat `/v1/broker/execute` as a proof of the *pattern* (in-path
   enforcement with receipt validation), not a production broker.

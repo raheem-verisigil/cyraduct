@@ -27,6 +27,18 @@ def _contains_nul(value: Any) -> bool:
 class ActionRequest(BaseModel):
     """A proposed agent action submitted for evaluation."""
 
+    protocol_version: str = Field(
+        "1.0",
+        max_length=16,
+        description="Canonical Cyraduct action-envelope version",
+    )
+
+    request_id: Optional[str] = Field(
+        None,
+        max_length=128,
+        description="Caller-supplied idempotency/correlation identifier",
+    )
+
     agent_id: str = Field(
         ...,
         max_length=256,
@@ -98,6 +110,8 @@ class ActionRequest(BaseModel):
     def reject_unsafe_strings(self):
         """Reject NUL bytes anywhere in request-controlled data."""
         values_to_check = (
+            self.protocol_version,
+            self.request_id,
             self.agent_id,
             self.principal,
             self.framework,
