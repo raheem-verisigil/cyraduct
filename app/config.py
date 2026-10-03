@@ -7,6 +7,8 @@ gap"). Do not let receipts default to indefinite validity.
 """
 import os
 
+ENVIRONMENT = os.environ.get("CYRADUCT_ENV", "development").lower()
+
 # Signing secret for receipts. In production this MUST come from a secrets
 # manager / environment variable, never committed to source.
 SIGNING_SECRET = os.environ.get("CYRADUCT_SIGNING_SECRET", "dev-insecure-secret-change-me")
@@ -47,3 +49,15 @@ TEST_ADMIN_KEY = os.environ.get("CYRADUCT_TEST_ADMIN_KEY", "")
 TEST_AGENT_PREFIX = os.environ.get("CYRADUCT_TEST_AGENT_PREFIX", "test-")
 
 POLICY_PACK_DIR = os.environ.get("CYRADUCT_POLICY_DIR", "policy_packs")
+
+
+def validate_startup() -> None:
+    """Fail closed when a production process is using development secrets."""
+    if ENVIRONMENT != "production":
+        return
+    if ADMIN_API_KEY in {"", "dev-insecure-admin-key"}:
+        raise RuntimeError("CYRADUCT_ADMIN_KEY must be set to a non-default value in production")
+    if SIGNING_SECRET in {"", "dev-insecure-secret-change-me"}:
+        raise RuntimeError("CYRADUCT_SIGNING_SECRET must be set to a non-default value in production")
+    if not os.environ.get("CYRADUCT_PRIVATE_KEY_B64"):
+        raise RuntimeError("CYRADUCT_PRIVATE_KEY_B64 must be set in production")

@@ -21,7 +21,7 @@ def test_health():
 
     draft_compatible = client.get("/health")
     assert draft_compatible.status_code == 200
-    assert draft_compatible.json() == {"status": "ok", "service": "cyraduct", "environment": "production"}
+    assert draft_compatible.json() == {"status": "ok", "service": "cyraduct", "environment": "development"}
 
 
 def test_conformance_fixtures_all_pass():

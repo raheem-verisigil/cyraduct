@@ -22,23 +22,24 @@ import hashlib
 import json
 import os
 import threading
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 
 from sqlalchemy import (
     create_engine, MetaData, Table, Column, String, Integer, Text, select,
-    insert, update, delete as sa_delete, desc, asc,
+    insert, update, delete as sa_delete, desc, asc, text,
 )
 from sqlalchemy.pool import NullPool
 from sqlalchemy import (
     create_engine, MetaData, Table, Column, String, Integer, Text, select,
-    insert, update, delete as sa_delete, desc, asc,
+    insert, update, delete as sa_delete, desc, asc, text,
 )
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from .models import Receipt, EvidencePackage, PartnerSubmission, AnalyticsEvent, new_id
+from .audit_anchor import anchor_latest_hash
 
 _DATABASE_URL = os.environ.get("CYRADUCT_DATABASE_URL", "sqlite:///./cyraduct.db")
 
@@ -113,6 +114,9 @@ partners_table = Table(
     Column("utm_campaign", String, nullable=True),
     Column("utm_content", String, nullable=True),
     Column("landing_path", String, nullable=True),
+    Column("notification_status", String, nullable=False, default="pending"),
+    Column("notified_at", String, nullable=True),
+    Column("notification_error", Text, nullable=True),
 )
 
 analytics_events_table = Table(
@@ -161,10 +165,40 @@ def save_partner_submission(submission: PartnerSubmission) -> dict:
         "utm_campaign": submission.utm_campaign,
         "utm_content": submission.utm_content,
         "landing_path": submission.landing_path,
+        "notification_status": "pending",
+        "notified_at": None,
+        "notification_error": None,
     }
     with _lock, _engine.begin() as conn:
         conn.execute(insert(partners_table).values(**record))
     return record
+
+
+def update_partner_notification(partner_id: str, status: str, error: Optional[str] = None) -> None:
+    with _lock, _engine.begin() as conn:
+        conn.execute(
+            update(partners_table).where(partners_table.c.id == partner_id).values(
+                notification_status=status,
+                notified_at=datetime.now(timezone.utc).isoformat() if status == "sent" else None,
+                notification_error=error[:1000] if error else None,
+            )
+        )
+
+
+def list_partner_submissions(limit: int = 100) -> list[dict]:
+    with _lock, _engine.begin() as conn:
+        rows = conn.execute(
+            select(partners_table).order_by(desc(partners_table.c.created_at)).limit(max(1, min(limit, 500)))
+        ).mappings().all()
+    return [dict(row) for row in rows]
+
+
+def purge_expired_partner_data(retention_days: int) -> dict[str, int]:
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=retention_days)).isoformat()
+    with _lock, _engine.begin() as conn:
+        partner_result = conn.execute(sa_delete(partners_table).where(partners_table.c.created_at < cutoff))
+        event_result = conn.execute(sa_delete(analytics_events_table).where(analytics_events_table.c.created_at < cutoff))
+    return {"partners_deleted": partner_result.rowcount or 0, "analytics_events_deleted": event_result.rowcount or 0}
 
 
 def save_analytics_event(event: AnalyticsEvent) -> None:
@@ -200,12 +234,19 @@ def _migrate_add_consumed_at_column():
 
 def _migrate_partner_attribution_columns():
     """Add nullable attribution fields to pre-existing partner tables."""
-    for column in ("utm_source", "utm_medium", "utm_campaign", "utm_content", "landing_path"):
+    for column in ("utm_source", "utm_medium", "utm_campaign", "utm_content", "landing_path", "notification_status", "notified_at", "notification_error"):
         try:
             with _engine.begin() as conn:
                 conn.exec_driver_sql(f"ALTER TABLE partners ADD COLUMN {column} VARCHAR")
         except Exception:
             pass
+    try:
+        with _engine.begin() as conn:
+            conn.execute(
+                text("UPDATE partners SET notification_status = 'pending' WHERE notification_status IS NULL")
+            )
+    except Exception:
+        pass
 
 
 def _upsert_agent_chain(conn, agent_id: str, last_hash: str):
@@ -341,10 +382,12 @@ def append_audit(event_type: str, detail: dict):
         timestamp = datetime.now(timezone.utc).isoformat()
         payload = json.dumps({"timestamp": timestamp, "event_type": event_type, "detail": detail}, sort_keys=True)
         entry_hash = hashlib.sha256((prev_hash + payload).encode()).hexdigest()
-        conn.execute(insert(audit_log_table).values(
+        result = conn.execute(insert(audit_log_table).values(
             timestamp=timestamp, event_type=event_type, detail=json.dumps(detail),
             prev_hash=prev_hash, entry_hash=entry_hash,
         ))
+        sequence = result.inserted_primary_key[0] if result.inserted_primary_key else None
+    anchor_latest_hash(entry_hash, sequence)
 
 
 def get_audit_log(limit: int = 200) -> list:

@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete, select
 
 from app import storage
+from app import partner_notification
 
 client = TestClient(app)
 
@@ -60,3 +61,34 @@ def test_partner_submission_rejects_invalid_email():
     }
     response = client.post("/api/partners", json=payload)
     assert response.status_code == 422
+
+
+def test_partner_submission_notifies_and_is_visible_to_admin(monkeypatch):
+    class Response:
+        def raise_for_status(self):
+            return None
+
+    calls = []
+    monkeypatch.setenv("RESEND_API_KEY", "test-resend-key")
+    monkeypatch.setenv("PARTNER_NOTIFICATION_FROM", "Cyraduct <test@example.com>")
+    monkeypatch.setattr(
+        partner_notification.httpx,
+        "post",
+        lambda *args, **kwargs: (calls.append(kwargs) or Response()),
+    )
+    payload = {
+        "name": "Grace Hopper", "company": "Compilers Inc", "email": "grace@example.com",
+        "role": "Platform Lead", "partner_type": "Enterprise AI",
+        "message": "We need a reviewable boundary for payment actions.",
+    }
+    response = client.post("/api/partners", json=payload)
+    assert response.status_code == 200
+    assert calls and calls[0]["json"]["to"] == ["hello@cyraduct.com"]
+
+    rows = client.get("/api/partners", headers={"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"})
+    assert rows.status_code == 200
+    record = next(item for item in rows.json()["items"] if item["email"] == payload["email"])
+    assert record["notification_status"] == "sent"
+
+    with storage._engine.begin() as conn:
+        conn.execute(delete(storage.partners_table).where(storage.partners_table.c.email == payload["email"]))

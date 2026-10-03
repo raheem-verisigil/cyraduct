@@ -92,6 +92,17 @@ async def execute(
             "receipt": receipt.model_dump(),
         }
 
+    if receipt.decision == "conditional":
+        storage.append_audit(
+            "broker_blocked_conditional_requires_human",
+            {"agent_id": req.agent_id, "receipt_id": receipt_id},
+        )
+        return {
+            "executed": False,
+            "reason": "conditional_receipt_requires_human_approval",
+            "receipt": receipt.model_dump(),
+        }
+
     is_safe, webhook_reason = url_safety.validate_webhook_url(execution_webhook)
     if not is_safe:
         storage.append_audit(

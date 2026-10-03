@@ -11,6 +11,7 @@ Run locally:
 
 Deploy: see README.md for Railway instructions.
 """
+import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -19,7 +20,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from app.routers import advisory, attested, broker, conformance, admin, evidence, receipts as receipts_router, runtime, partners, analytics
 from app.storage import init_db
-from app import crypto
+from app import crypto, config
 from app.rate_limit import limiter
 
 app = FastAPI(
@@ -40,7 +41,7 @@ app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten before production
+    allow_origins=[origin.strip() for origin in os.getenv("CYRADUCT_ALLOWED_ORIGINS", "https://cyraduct.com").split(",") if origin.strip()],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -59,6 +60,7 @@ app.include_router(analytics.router)
 # Initialize storage at import time so it's ready even under test clients
 # that don't trigger startup events (and again on startup for safety).
 init_db()
+config.validate_startup()
 
 
 @app.on_event("startup")
@@ -85,7 +87,7 @@ def healthz():
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "cyraduct", "environment": "production"}
+    return {"status": "ok", "service": "cyraduct", "environment": config.ENVIRONMENT}
 
 
 @app.get("/v1/public-key")
