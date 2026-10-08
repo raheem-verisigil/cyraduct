@@ -1,8 +1,8 @@
 {
   "name": "indepora_sandbox_v1",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "signed_by": "cyraduct-sandbox-fixture (synthetic test only)",
-  "description": "Synthetic INDEPORA/Cyraduct boundary experiment. Cyraduct consumes a verified Continuity Record but does not judge evidence independence.",
+  "description": "Synthetic Evidence Reliance Boundary experiment. Cyraduct consumes a verified Continuity Record but does not judge evidence independence.",
   "rules": [
     {
       "id": "indepora.sandbox.deny.record_missing",
@@ -20,19 +20,39 @@
       "id": "indepora.sandbox.deny.sandbox_flag_false",
       "when": { "sandbox_only": false },
       "effect": "deny",
-      "reason": "Production execution is prohibited for the evidence-lineage experiment"
+      "reason": "Production execution is prohibited for the evidence-reliance experiment"
     },
     {
-      "id": "indepora.sandbox.allow.boundary_test",
+      "id": "indepora.sandbox.deny.insufficient_origins",
+      "when": { "indepora_candidate_origin_count_lt": 2 },
+      "effect": "deny",
+      "reason": "Evidence reliance boundary has fewer than two candidate origins"
+    },
+    {
+      "id": "indepora.sandbox.deny.conflicting_origins",
+      "when": { "indepora_conflict_count_gt": 0 },
+      "effect": "deny",
+      "reason": "Evidence reliance boundary contains conflicting origins"
+    },
+    {
+      "id": "indepora.sandbox.conditional.unknown_lineage",
+      "when": { "indepora_unknown_relationship_count_gt": 0 },
+      "effect": "conditional",
+      "reason": "Unknown lineage requires qualification or human review"
+    },
+    {
+      "id": "indepora.sandbox.allow.reliance_boundary",
       "when": {
         "action_type": "publish_sandbox_decision",
         "consequence_class": "generic_tool_call",
         "sandbox_only": true,
         "execution_mode": "sandbox_only",
-        "indepora_standing": ["insufficient", "sufficient", "insufficient_for_independence_claim"]
+        "indepora_candidate_origin_count_gt": 2,
+        "indepora_unknown_relationship_count": 0,
+        "indepora_conflict_count": 0
       },
       "effect": "allow",
-      "reason": "Declared sandbox policy permits this exact action under the verified INDEPORA evidence state"
+      "reason": "Declared sandbox policy permits this exact action under the verified evidence reliance state"
     }
   ]
 }

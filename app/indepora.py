@@ -35,6 +35,8 @@ class EvidenceAssuranceBinding(BaseModel):
     record_hash: str = Field(..., max_length=128)
     schema_name: str = Field(INDEPORA_SCHEMA, alias="schema")
     standing: str = Field(..., max_length=80)
+    charter_id: Optional[str] = Field(default=None, max_length=256)
+    charter_hash: Optional[str] = Field(default=None, max_length=128)
     candidate_origin_count: int = Field(..., ge=0)
     unknown_relationship_count: int = Field(..., ge=0)
     conflict_count: int = Field(..., ge=0)
@@ -138,6 +140,8 @@ def verify_and_bind(
             record_hash=record_hash,
             schema=record["schema"],
             standing=status,
+            charter_id=(record.get("charter") or {}).get("id"),
+            charter_hash=(record.get("charter") or {}).get("hash"),
             candidate_origin_count=int(assessment["candidate_origin_count"]),
             unknown_relationship_count=int(assessment.get("unknown_relationship_count", 0)),
             conflict_count=int(assessment.get("conflict_count", 0)),

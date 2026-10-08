@@ -74,7 +74,7 @@
           "evidence_assurance": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/EvidenceAssuranceBinding"
+                "$ref": "#/components/schemas/EvidenceAssuranceBinding-Input"
               },
               {
                 "type": "null"
@@ -260,13 +260,37 @@
         "title": "AnalyticsEvent",
         "type": "object"
       },
-      "EvidenceAssuranceBinding": {
+      "EvidenceAssuranceBinding-Input": {
         "description": "Allowlisted facts derived from a verified INDEPORA record.",
         "properties": {
           "candidate_origin_count": {
             "minimum": 0.0,
             "title": "Candidate Origin Count",
             "type": "integer"
+          },
+          "charter_hash": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Charter Hash"
+          },
+          "charter_id": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Charter Id"
           },
           "conflict_count": {
             "minimum": 0.0,
@@ -338,6 +362,11 @@
           "valid_until",
           "verification_key_id"
         ],
+        "title": "EvidenceAssuranceBinding",
+        "type": "object"
+      },
+      "EvidenceAssuranceBinding-Output": {
+        "description": "Allowlisted facts derived from a verified INDEPORA record.",
         "title": "EvidenceAssuranceBinding",
         "type": "object"
       },
@@ -705,7 +734,7 @@
           "evidence_assurance": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/EvidenceAssuranceBinding"
+                "$ref": "#/components/schemas/EvidenceAssuranceBinding-Output"
               },
               {
                 "type": "null"
@@ -870,7 +899,7 @@
           "evidence_assurance": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/EvidenceAssuranceBinding"
+                "$ref": "#/components/schemas/EvidenceAssuranceBinding-Input"
               },
               {
                 "type": "null"

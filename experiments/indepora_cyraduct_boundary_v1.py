@@ -41,25 +41,36 @@ from app.canonical import sha256_hex  # noqa: E402
 from app import url_safety  # noqa: E402
 
 
-def make_record(private: Ed25519PrivateKey) -> dict[str, Any]:
+def make_record(
+    private: Ed25519PrivateKey,
+    *,
+    record_id: str = "icr_test_001",
+    candidate_origins: int = 4,
+    unknown_relationships: int = 0,
+    conflicts: int = 0,
+    standing: str = "sufficient",
+    expired: bool = False,
+    superseded: bool = False,
+) -> dict[str, Any]:
     now = datetime.now(timezone.utc)
+    charter = {"id": "financial_action_v1", "version": "1", "hash": sha256_hex({"id": "financial_action_v1", "version": "1"})}
     body: dict[str, Any] = {
         "schema": "indepora.evidence_continuity_record.v1",
-        "record_id": "icr_test_001",
+        "record_id": record_id,
         "subject": {"claim_id": "claim_test_001"},
         "evidence_refs": [f"ev-{i:03d}" for i in range(1, 9)],
         "lineage_snapshot": {"apparent_evidence_count": 8},
         "origin_assessment": {
-            "candidate_origin_count": 2,
-            "unknown_relationship_count": 1,
-            "conflict_count": 0,
-            "independence_status": "insufficient",
+            "candidate_origin_count": candidate_origins,
+            "unknown_relationship_count": unknown_relationships,
+            "conflict_count": conflicts,
+            "independence_status": standing,
         },
-        "standing": {"status": "insufficient", "scope": "sandbox"},
-        "charter": {"id": "indepora_sandbox_v1", "version": "1"},
+        "standing": {"status": standing, "scope": "sandbox"},
+        "charter": charter,
         "issued_at": now.isoformat(),
-        "valid_until": (now + timedelta(minutes=15)).isoformat(),
-        "continuity": {"record_sequence": 1, "superseded": False},
+        "valid_until": (now - timedelta(seconds=1) if expired else now + timedelta(minutes=15)).isoformat(),
+        "continuity": {"record_sequence": 1, "superseded": superseded},
         "sandbox_only": True,
     }
     record_hash = sha256_hex(body)
@@ -174,13 +185,39 @@ with TestClient(app) as client:
     second = client.post("/v1/attested/evaluate", json=request_body(record, publication_label="second-action"))
     cases.append(case("T08_same_evidence_different_action", "new receipt and different action hash", {"receipt_id": second.json()["receipt"]["receipt_id"], "action_hash": second.json()["receipt"]["action_hash"], "different_from_first": second.json()["receipt"]["action_hash"] != receipt["action_hash"]}))
 
+    # Evidence Reliance Boundary matrix requested by INDEPORA/Datrisk.
+    matrix = [
+        ("A_four_origins_clean", make_record(private, record_id="icr_case_a", candidate_origins=4), "allow"),
+        ("B_one_origin_repeated", make_record(private, record_id="icr_case_b", candidate_origins=1), "deny"),
+        ("C_unknown_lineage", make_record(private, record_id="icr_case_c", candidate_origins=2, unknown_relationships=1, standing="insufficient"), "conditional"),
+        ("D_conflicting_origins", make_record(private, record_id="icr_case_d", candidate_origins=4, conflicts=1), "deny"),
+        ("E_expired_record", make_record(private, record_id="icr_case_e_expired", candidate_origins=4, expired=True), "deny:indepora_record_expired"),
+        ("E_superseded_record", make_record(private, record_id="icr_case_e_superseded", candidate_origins=4, superseded=True), "deny:indepora_record_superseded"),
+    ]
+    for name, fixture, expected in matrix:
+        response = client.post("/v1/attested/evaluate", json=request_body(fixture))
+        body = response.json()
+        cases.append(case(name, expected, {"status_code": response.status_code, "decision": body.get("decision"), "receipt_issued": bool(body.get("receipt")), "record_id": fixture["record_id"], "origin_assessment": fixture["origin_assessment"]}))
+
+    # Each signed field mutation must fail the reliance verification boundary.
+    for field, mutate in [
+        ("standing", lambda r: r["standing"].update(status="insufficient")),
+        ("charter_hash", lambda r: r["charter"].update(hash="sha256:changed")),
+        ("valid_until", lambda r: r.update(valid_until=(datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat())),
+        ("record_id", lambda r: r.update(record_id="icr_changed")),
+    ]:
+        mutated = copy.deepcopy(record)
+        mutate(mutated)
+        response = client.post("/v1/indepora/verify", json=mutated)
+        cases.append(case(f"M_{field}_changed_after_seal", "verification failure", {"status_code": response.status_code, "detail": response.json().get("detail")}))
+
 report = {
     "experiment": "indepora-cyraduct-boundary-v1",
     "scope": "synthetic, sandbox-only, local controlled sink; no production data or external execution",
     "record": {"schema": record["schema"], "record_id": record["record_id"], "record_hash": record["record_hash"], "standing": record["standing"], "candidate_origin_count": record["origin_assessment"]["candidate_origin_count"], "unknown_relationship_count": record["origin_assessment"]["unknown_relationship_count"]},
     "cases": cases,
     "sink_calls": sink_calls,
-    "success_criteria": {"signed_record_verified": True, "agent_override_rejected": True, "mutation_rejected": True, "replay_rejected": True, "different_action_gets_new_hash": True},
+    "success_criteria": {"signed_record_verified": True, "matrix_cases_exercised": 6, "agent_override_rejected": True, "mutation_rejected": True, "replay_rejected": True, "different_action_gets_new_hash": True},
 }
 out = ROOT / "experiments/indepora_cyraduct_boundary_v1_report.json"
 out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n")

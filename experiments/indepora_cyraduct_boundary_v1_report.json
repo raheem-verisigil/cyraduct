@@ -3,18 +3,20 @@
     {
       "actual": {
         "binding": {
-          "candidate_origin_count": 2,
+          "candidate_origin_count": 4,
+          "charter_hash": "f2dd2a63708d3f5ab871e4ec0fd6836d66382bad13b5896e11f39abe09ee04b2",
+          "charter_id": "financial_action_v1",
           "conflict_count": 0,
-          "issued_at": "2026-10-08T07:36:21.664986+00:00",
+          "issued_at": "2026-10-08T08:26:27.178718+00:00",
           "not_superseded": true,
           "provider": "indepora",
-          "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+          "record_hash": "ae24a2f9b83dae6cda4cc02a1a82ed9200d5abdd1d17f177f8620384654fe612",
           "record_id": "icr_test_001",
           "sandbox_only": true,
           "schema": "indepora.evidence_continuity_record.v1",
-          "standing": "insufficient",
-          "unknown_relationship_count": 1,
-          "valid_until": "2026-10-08T07:51:21.664986+00:00",
+          "standing": "sufficient",
+          "unknown_relationship_count": 0,
+          "valid_until": "2026-10-08T08:41:27.178718+00:00",
           "verification_key_id": "indepora-sandbox-key-1"
         },
         "valid": true
@@ -24,31 +26,33 @@
     },
     {
       "actual": {
-        "action_hash": "522f67bd3b2fd54776be3e891947517201ea47bb651ac016e0771f1b0597cdf0",
+        "action_hash": "9c3a0adfaea12d4d6b58aff6420383101c0d0c8128b37e70f1da6afa9432e17e",
         "decision": {
           "decision": "allow",
           "matched_rules": [
-            "indepora.sandbox.allow.boundary_test"
+            "indepora.sandbox.allow.reliance_boundary"
           ],
           "policy_pack": "indepora_sandbox_v1",
-          "policy_pack_version": "0.2.0",
+          "policy_pack_version": "0.3.0",
           "reasons": [
-            "Declared sandbox policy permits this exact action under the verified INDEPORA evidence state"
+            "Declared sandbox policy permits this exact action under the verified evidence reliance state"
           ]
         },
         "evidence_assurance": {
-          "candidate_origin_count": 2,
+          "candidate_origin_count": 4,
+          "charter_hash": "f2dd2a63708d3f5ab871e4ec0fd6836d66382bad13b5896e11f39abe09ee04b2",
+          "charter_id": "financial_action_v1",
           "conflict_count": 0,
-          "issued_at": "2026-10-08T07:36:21.664986+00:00",
+          "issued_at": "2026-10-08T08:26:27.178718+00:00",
           "not_superseded": true,
           "provider": "indepora",
-          "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+          "record_hash": "ae24a2f9b83dae6cda4cc02a1a82ed9200d5abdd1d17f177f8620384654fe612",
           "record_id": "icr_test_001",
           "sandbox_only": true,
           "schema": "indepora.evidence_continuity_record.v1",
-          "standing": "insufficient",
-          "unknown_relationship_count": 1,
-          "valid_until": "2026-10-08T07:51:21.664986+00:00",
+          "standing": "sufficient",
+          "unknown_relationship_count": 0,
+          "valid_until": "2026-10-08T08:41:27.178718+00:00",
           "verification_key_id": "indepora-sandbox-key-1"
         },
         "status_code": 200
@@ -58,16 +62,16 @@
     },
     {
       "actual": {
-        "action_id": "act_9fcdfe55540944f2bf12",
+        "action_id": "act_6e1947159000406d8e9c",
         "decision": {
           "decision": "allow",
           "matched_rules": [
-            "indepora.sandbox.allow.boundary_test"
+            "indepora.sandbox.allow.reliance_boundary"
           ],
           "policy_pack": "indepora_sandbox_v1",
-          "policy_pack_version": "0.2.0",
+          "policy_pack_version": "0.3.0",
           "reasons": [
-            "Declared sandbox policy permits this exact action under the verified INDEPORA evidence state"
+            "Declared sandbox policy permits this exact action under the verified evidence reliance state"
           ]
         },
         "executed": true,
@@ -85,15 +89,15 @@
             ],
             "type": "publish_sandbox_decision"
           },
-          "action_hash": "522f67bd3b2fd54776be3e891947517201ea47bb651ac016e0771f1b0597cdf0",
-          "action_id": "act_9fcdfe55540944f2bf12",
+          "action_hash": "9c3a0adfaea12d4d6b58aff6420383101c0d0c8128b37e70f1da6afa9432e17e",
+          "action_id": "act_6e1947159000406d8e9c",
           "agent": {
             "agent_id": "test-indepora-agent",
             "framework": "indepora-sandbox",
             "principal": "org:synthetic:research"
           },
           "authorization_type": "policy",
-          "consumed_at": "2026-10-08T07:36:21.785948+00:00",
+          "consumed_at": "2026-10-08T08:26:27.293156+00:00",
           "decision": "allow",
           "evidence": {
             "evidence_refs": [
@@ -108,40 +112,42 @@
             ]
           },
           "evidence_assurance": {
-            "candidate_origin_count": 2,
+            "candidate_origin_count": 4,
+            "charter_hash": "f2dd2a63708d3f5ab871e4ec0fd6836d66382bad13b5896e11f39abe09ee04b2",
+            "charter_id": "financial_action_v1",
             "conflict_count": 0,
-            "issued_at": "2026-10-08T07:36:21.664986+00:00",
+            "issued_at": "2026-10-08T08:26:27.178718+00:00",
             "not_superseded": true,
             "provider": "indepora",
-            "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+            "record_hash": "ae24a2f9b83dae6cda4cc02a1a82ed9200d5abdd1d17f177f8620384654fe612",
             "record_id": "icr_test_001",
             "sandbox_only": true,
             "schema": "indepora.evidence_continuity_record.v1",
-            "standing": "insufficient",
-            "unknown_relationship_count": 1,
-            "valid_until": "2026-10-08T07:51:21.664986+00:00",
+            "standing": "sufficient",
+            "unknown_relationship_count": 0,
+            "valid_until": "2026-10-08T08:41:27.178718+00:00",
             "verification_key_id": "indepora-sandbox-key-1"
           },
-          "expires_at": "2026-10-08T08:06:21.772922+00:00",
-          "issued_at": "2026-10-08T07:36:21.772922+00:00",
+          "expires_at": "2026-10-08T08:56:27.281132+00:00",
+          "issued_at": "2026-10-08T08:26:27.281132+00:00",
           "policy": {
             "matched_rules": [
-              "indepora.sandbox.allow.boundary_test"
+              "indepora.sandbox.allow.reliance_boundary"
             ],
             "policy_pack": "indepora_sandbox_v1",
-            "policy_pack_version": "0.2.0",
+            "policy_pack_version": "0.3.0",
             "reasons": [
-              "Declared sandbox policy permits this exact action under the verified INDEPORA evidence state"
+              "Declared sandbox policy permits this exact action under the verified evidence reliance state"
             ]
           },
           "prev_receipt_hash": null,
-          "receipt_id": "rcpt_6f13985bd8ec4a5cbcec",
+          "receipt_id": "rcpt_2ed1dda472594cf2931e",
           "revoked": false,
           "runtime_decision": null,
           "signature": {
             "alg": "Ed25519",
             "key_id": "cyraduct-dev-key-1",
-            "value": "UktHsNwP1Qj7pQNIUpWwIOWja976zNktKaaeNd5JJ0VGNyB8XpumBontu5tLPnyZiprURf/DJTgJcowzAKCCBg=="
+            "value": "I/kQlwkVus5JhmFeAClZCwhgWgTHN/dEBP75Tf8G+yhGmlPDOXqNrzU7pj0JSZctc6mj/68tkJ//GaxBuRQnBg=="
           }
         }
       },
@@ -162,15 +168,15 @@
             ],
             "type": "publish_sandbox_decision"
           },
-          "action_hash": "522f67bd3b2fd54776be3e891947517201ea47bb651ac016e0771f1b0597cdf0",
-          "action_id": "act_9fcdfe55540944f2bf12",
+          "action_hash": "9c3a0adfaea12d4d6b58aff6420383101c0d0c8128b37e70f1da6afa9432e17e",
+          "action_id": "act_6e1947159000406d8e9c",
           "agent": {
             "agent_id": "test-indepora-agent",
             "framework": "indepora-sandbox",
             "principal": "org:synthetic:research"
           },
           "authorization_type": "policy",
-          "consumed_at": "2026-10-08T07:36:21.785948+00:00",
+          "consumed_at": "2026-10-08T08:26:27.293156+00:00",
           "decision": "allow",
           "evidence": {
             "evidence_refs": [
@@ -185,40 +191,42 @@
             ]
           },
           "evidence_assurance": {
-            "candidate_origin_count": 2,
+            "candidate_origin_count": 4,
+            "charter_hash": "f2dd2a63708d3f5ab871e4ec0fd6836d66382bad13b5896e11f39abe09ee04b2",
+            "charter_id": "financial_action_v1",
             "conflict_count": 0,
-            "issued_at": "2026-10-08T07:36:21.664986+00:00",
+            "issued_at": "2026-10-08T08:26:27.178718+00:00",
             "not_superseded": true,
             "provider": "indepora",
-            "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+            "record_hash": "ae24a2f9b83dae6cda4cc02a1a82ed9200d5abdd1d17f177f8620384654fe612",
             "record_id": "icr_test_001",
             "sandbox_only": true,
             "schema": "indepora.evidence_continuity_record.v1",
-            "standing": "insufficient",
-            "unknown_relationship_count": 1,
-            "valid_until": "2026-10-08T07:51:21.664986+00:00",
+            "standing": "sufficient",
+            "unknown_relationship_count": 0,
+            "valid_until": "2026-10-08T08:41:27.178718+00:00",
             "verification_key_id": "indepora-sandbox-key-1"
           },
-          "expires_at": "2026-10-08T08:06:21.772922+00:00",
-          "issued_at": "2026-10-08T07:36:21.772922+00:00",
+          "expires_at": "2026-10-08T08:56:27.281132+00:00",
+          "issued_at": "2026-10-08T08:26:27.281132+00:00",
           "policy": {
             "matched_rules": [
-              "indepora.sandbox.allow.boundary_test"
+              "indepora.sandbox.allow.reliance_boundary"
             ],
             "policy_pack": "indepora_sandbox_v1",
-            "policy_pack_version": "0.2.0",
+            "policy_pack_version": "0.3.0",
             "reasons": [
-              "Declared sandbox policy permits this exact action under the verified INDEPORA evidence state"
+              "Declared sandbox policy permits this exact action under the verified evidence reliance state"
             ]
           },
           "prev_receipt_hash": null,
-          "receipt_id": "rcpt_6f13985bd8ec4a5cbcec",
+          "receipt_id": "rcpt_2ed1dda472594cf2931e",
           "revoked": false,
           "runtime_decision": null,
           "signature": {
             "alg": "Ed25519",
             "key_id": "cyraduct-dev-key-1",
-            "value": "UktHsNwP1Qj7pQNIUpWwIOWja976zNktKaaeNd5JJ0VGNyB8XpumBontu5tLPnyZiprURf/DJTgJcowzAKCCBg=="
+            "value": "I/kQlwkVus5JhmFeAClZCwhgWgTHN/dEBP75Tf8G+yhGmlPDOXqNrzU7pj0JSZctc6mj/68tkJ//GaxBuRQnBg=="
           }
         }
       },
@@ -227,7 +235,7 @@
     },
     {
       "actual": {
-        "action_id": "act_6b9cc153effa4e16a453",
+        "action_id": "act_b4dcdc4147eb44408148",
         "decision": {
           "decision": "deny",
           "matched_rules": [],
@@ -256,8 +264,8 @@
             ],
             "type": "publish_sandbox_decision"
           },
-          "action_hash": "1a6cdecb40bbc063c47f4e1fdd765759d8f11ac6fbcf57145bda483b678cc82c",
-          "action_id": "act_901df2cc32d2472fb74b",
+          "action_hash": "aeb1bf0a49a009c0c788e9bad99c61060028f4edea48d6e6f4d23523a35e6dfd",
+          "action_id": "act_11a0417b22d14820b686",
           "agent": {
             "agent_id": "test-indepora-agent",
             "framework": "indepora-sandbox",
@@ -273,40 +281,42 @@
             ]
           },
           "evidence_assurance": {
-            "candidate_origin_count": 2,
+            "candidate_origin_count": 4,
+            "charter_hash": "f2dd2a63708d3f5ab871e4ec0fd6836d66382bad13b5896e11f39abe09ee04b2",
+            "charter_id": "financial_action_v1",
             "conflict_count": 0,
-            "issued_at": "2026-10-08T07:36:21.664986+00:00",
+            "issued_at": "2026-10-08T08:26:27.178718+00:00",
             "not_superseded": true,
             "provider": "indepora",
-            "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+            "record_hash": "ae24a2f9b83dae6cda4cc02a1a82ed9200d5abdd1d17f177f8620384654fe612",
             "record_id": "icr_test_001",
             "sandbox_only": true,
             "schema": "indepora.evidence_continuity_record.v1",
-            "standing": "insufficient",
-            "unknown_relationship_count": 1,
-            "valid_until": "2026-10-08T07:51:21.664986+00:00",
+            "standing": "sufficient",
+            "unknown_relationship_count": 0,
+            "valid_until": "2026-10-08T08:41:27.178718+00:00",
             "verification_key_id": "indepora-sandbox-key-1"
           },
-          "expires_at": "2026-10-08T08:06:21.823526+00:00",
-          "issued_at": "2026-10-08T07:36:21.823526+00:00",
+          "expires_at": "2026-10-08T08:56:27.328847+00:00",
+          "issued_at": "2026-10-08T08:26:27.328847+00:00",
           "policy": {
             "matched_rules": [
-              "indepora.sandbox.allow.boundary_test"
+              "indepora.sandbox.allow.reliance_boundary"
             ],
             "policy_pack": "indepora_sandbox_v1",
-            "policy_pack_version": "0.2.0",
+            "policy_pack_version": "0.3.0",
             "reasons": [
-              "Declared sandbox policy permits this exact action under the verified INDEPORA evidence state"
+              "Declared sandbox policy permits this exact action under the verified evidence reliance state"
             ]
           },
-          "prev_receipt_hash": "522f67bd3b2fd54776be3e891947517201ea47bb651ac016e0771f1b0597cdf0",
-          "receipt_id": "rcpt_e94ee46777e24f9981d6",
+          "prev_receipt_hash": "9c3a0adfaea12d4d6b58aff6420383101c0d0c8128b37e70f1da6afa9432e17e",
+          "receipt_id": "rcpt_d03b3ac31bcf476a95c0",
           "revoked": false,
           "runtime_decision": null,
           "signature": {
             "alg": "Ed25519",
             "key_id": "cyraduct-dev-key-1",
-            "value": "r0zkKdr8EzA1dJohucKBRSc+PR8cbzSi4CPFDlcQzgCK+UTdaHDhPRDNkjQrX5/OOVQEsk4ZwTIHr9DJTQyNCA=="
+            "value": "zzSDUtYFHIszIzLD3dTSq0hjyWKhTJxEjRlQcAyYTVujnv/P26KBp+cK3/922NN9uCInnpbdamoEjuVkTWEdCQ=="
           }
         }
       },
@@ -327,15 +337,15 @@
             ],
             "type": "publish_sandbox_decision"
           },
-          "action_hash": "522f67bd3b2fd54776be3e891947517201ea47bb651ac016e0771f1b0597cdf0",
-          "action_id": "act_9fcdfe55540944f2bf12",
+          "action_hash": "9c3a0adfaea12d4d6b58aff6420383101c0d0c8128b37e70f1da6afa9432e17e",
+          "action_id": "act_6e1947159000406d8e9c",
           "agent": {
             "agent_id": "test-indepora-agent",
             "framework": "indepora-sandbox",
             "principal": "org:synthetic:research"
           },
           "authorization_type": "policy",
-          "consumed_at": "2026-10-08T07:36:21.785948+00:00",
+          "consumed_at": "2026-10-08T08:26:27.293156+00:00",
           "decision": "allow",
           "evidence": {
             "evidence_refs": [
@@ -350,40 +360,42 @@
             ]
           },
           "evidence_assurance": {
-            "candidate_origin_count": 2,
+            "candidate_origin_count": 4,
+            "charter_hash": "f2dd2a63708d3f5ab871e4ec0fd6836d66382bad13b5896e11f39abe09ee04b2",
+            "charter_id": "financial_action_v1",
             "conflict_count": 0,
-            "issued_at": "2026-10-08T07:36:21.664986+00:00",
+            "issued_at": "2026-10-08T08:26:27.178718+00:00",
             "not_superseded": true,
             "provider": "indepora",
-            "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+            "record_hash": "ae24a2f9b83dae6cda4cc02a1a82ed9200d5abdd1d17f177f8620384654fe612",
             "record_id": "icr_test_001",
             "sandbox_only": true,
             "schema": "indepora.evidence_continuity_record.v1",
-            "standing": "insufficient",
-            "unknown_relationship_count": 1,
-            "valid_until": "2026-10-08T07:51:21.664986+00:00",
+            "standing": "sufficient",
+            "unknown_relationship_count": 0,
+            "valid_until": "2026-10-08T08:41:27.178718+00:00",
             "verification_key_id": "indepora-sandbox-key-1"
           },
-          "expires_at": "2026-10-08T08:06:21.772922+00:00",
-          "issued_at": "2026-10-08T07:36:21.772922+00:00",
+          "expires_at": "2026-10-08T08:56:27.281132+00:00",
+          "issued_at": "2026-10-08T08:26:27.281132+00:00",
           "policy": {
             "matched_rules": [
-              "indepora.sandbox.allow.boundary_test"
+              "indepora.sandbox.allow.reliance_boundary"
             ],
             "policy_pack": "indepora_sandbox_v1",
-            "policy_pack_version": "0.2.0",
+            "policy_pack_version": "0.3.0",
             "reasons": [
-              "Declared sandbox policy permits this exact action under the verified INDEPORA evidence state"
+              "Declared sandbox policy permits this exact action under the verified evidence reliance state"
             ]
           },
           "prev_receipt_hash": null,
-          "receipt_id": "rcpt_6f13985bd8ec4a5cbcec",
+          "receipt_id": "rcpt_2ed1dda472594cf2931e",
           "revoked": false,
           "runtime_decision": null,
           "signature": {
             "alg": "Ed25519",
             "key_id": "cyraduct-dev-key-1",
-            "value": "UktHsNwP1Qj7pQNIUpWwIOWja976zNktKaaeNd5JJ0VGNyB8XpumBontu5tLPnyZiprURf/DJTgJcowzAKCCBg=="
+            "value": "I/kQlwkVus5JhmFeAClZCwhgWgTHN/dEBP75Tf8G+yhGmlPDOXqNrzU7pj0JSZctc6mj/68tkJ//GaxBuRQnBg=="
           }
         }
       },
@@ -392,30 +404,214 @@
     },
     {
       "actual": {
-        "action_hash": "6bd9140175520a4108ee1bccba337c276be8cab621d5a551b6c5d840e9d2ed3f",
+        "action_hash": "2d6d6cdfe3465ad41f4274435ae171449b50febe24c681623ce2b2fbcd5c863f",
         "different_from_first": true,
-        "receipt_id": "rcpt_14413b76ceb7445ba9af"
+        "receipt_id": "rcpt_ea96827fc9e04f51a122"
       },
       "expected": "new receipt and different action hash",
       "name": "T08_same_evidence_different_action"
+    },
+    {
+      "actual": {
+        "decision": {
+          "decision": "allow",
+          "matched_rules": [
+            "indepora.sandbox.allow.reliance_boundary"
+          ],
+          "policy_pack": "indepora_sandbox_v1",
+          "policy_pack_version": "0.3.0",
+          "reasons": [
+            "Declared sandbox policy permits this exact action under the verified evidence reliance state"
+          ]
+        },
+        "origin_assessment": {
+          "candidate_origin_count": 4,
+          "conflict_count": 0,
+          "independence_status": "sufficient",
+          "unknown_relationship_count": 0
+        },
+        "receipt_issued": true,
+        "record_id": "icr_case_a",
+        "status_code": 200
+      },
+      "expected": "allow",
+      "name": "A_four_origins_clean"
+    },
+    {
+      "actual": {
+        "decision": {
+          "decision": "deny",
+          "matched_rules": [
+            "indepora.sandbox.deny.insufficient_origins"
+          ],
+          "policy_pack": "indepora_sandbox_v1",
+          "policy_pack_version": "0.3.0",
+          "reasons": [
+            "Evidence reliance boundary has fewer than two candidate origins"
+          ]
+        },
+        "origin_assessment": {
+          "candidate_origin_count": 1,
+          "conflict_count": 0,
+          "independence_status": "sufficient",
+          "unknown_relationship_count": 0
+        },
+        "receipt_issued": false,
+        "record_id": "icr_case_b",
+        "status_code": 200
+      },
+      "expected": "deny",
+      "name": "B_one_origin_repeated"
+    },
+    {
+      "actual": {
+        "decision": {
+          "decision": "conditional",
+          "matched_rules": [
+            "indepora.sandbox.conditional.unknown_lineage"
+          ],
+          "policy_pack": "indepora_sandbox_v1",
+          "policy_pack_version": "0.3.0",
+          "reasons": [
+            "Unknown lineage requires qualification or human review"
+          ]
+        },
+        "origin_assessment": {
+          "candidate_origin_count": 2,
+          "conflict_count": 0,
+          "independence_status": "insufficient",
+          "unknown_relationship_count": 1
+        },
+        "receipt_issued": true,
+        "record_id": "icr_case_c",
+        "status_code": 200
+      },
+      "expected": "conditional",
+      "name": "C_unknown_lineage"
+    },
+    {
+      "actual": {
+        "decision": {
+          "decision": "deny",
+          "matched_rules": [
+            "indepora.sandbox.deny.conflicting_origins"
+          ],
+          "policy_pack": "indepora_sandbox_v1",
+          "policy_pack_version": "0.3.0",
+          "reasons": [
+            "Evidence reliance boundary contains conflicting origins"
+          ]
+        },
+        "origin_assessment": {
+          "candidate_origin_count": 4,
+          "conflict_count": 1,
+          "independence_status": "sufficient",
+          "unknown_relationship_count": 0
+        },
+        "receipt_issued": false,
+        "record_id": "icr_case_d",
+        "status_code": 200
+      },
+      "expected": "deny",
+      "name": "D_conflicting_origins"
+    },
+    {
+      "actual": {
+        "decision": {
+          "decision": "deny",
+          "matched_rules": [],
+          "policy_pack": "indepora_sandbox_v1",
+          "policy_pack_version": "unknown",
+          "reasons": [
+            "indepora_record_expired"
+          ]
+        },
+        "origin_assessment": {
+          "candidate_origin_count": 4,
+          "conflict_count": 0,
+          "independence_status": "sufficient",
+          "unknown_relationship_count": 0
+        },
+        "receipt_issued": false,
+        "record_id": "icr_case_e_expired",
+        "status_code": 200
+      },
+      "expected": "deny:indepora_record_expired",
+      "name": "E_expired_record"
+    },
+    {
+      "actual": {
+        "decision": {
+          "decision": "deny",
+          "matched_rules": [],
+          "policy_pack": "indepora_sandbox_v1",
+          "policy_pack_version": "unknown",
+          "reasons": [
+            "indepora_record_superseded"
+          ]
+        },
+        "origin_assessment": {
+          "candidate_origin_count": 4,
+          "conflict_count": 0,
+          "independence_status": "sufficient",
+          "unknown_relationship_count": 0
+        },
+        "receipt_issued": false,
+        "record_id": "icr_case_e_superseded",
+        "status_code": 200
+      },
+      "expected": "deny:indepora_record_superseded",
+      "name": "E_superseded_record"
+    },
+    {
+      "actual": {
+        "detail": "indepora_record_hash_mismatch",
+        "status_code": 422
+      },
+      "expected": "verification failure",
+      "name": "M_standing_changed_after_seal"
+    },
+    {
+      "actual": {
+        "detail": "indepora_record_hash_mismatch",
+        "status_code": 422
+      },
+      "expected": "verification failure",
+      "name": "M_charter_hash_changed_after_seal"
+    },
+    {
+      "actual": {
+        "detail": "indepora_record_hash_mismatch",
+        "status_code": 422
+      },
+      "expected": "verification failure",
+      "name": "M_valid_until_changed_after_seal"
+    },
+    {
+      "actual": {
+        "detail": "indepora_record_hash_mismatch",
+        "status_code": 422
+      },
+      "expected": "verification failure",
+      "name": "M_record_id_changed_after_seal"
     }
   ],
   "experiment": "indepora-cyraduct-boundary-v1",
   "record": {
-    "candidate_origin_count": 2,
-    "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+    "candidate_origin_count": 4,
+    "record_hash": "ae24a2f9b83dae6cda4cc02a1a82ed9200d5abdd1d17f177f8620384654fe612",
     "record_id": "icr_test_001",
     "schema": "indepora.evidence_continuity_record.v1",
     "standing": {
       "scope": "sandbox",
-      "status": "insufficient"
+      "status": "sufficient"
     },
-    "unknown_relationship_count": 1
+    "unknown_relationship_count": 0
   },
   "scope": "synthetic, sandbox-only, local controlled sink; no production data or external execution",
   "sink_calls": [
     {
-      "action_id": "act_9fcdfe55540944f2bf12",
+      "action_id": "act_6e1947159000406d8e9c",
       "action_type": "publish_sandbox_decision",
       "agent_id": "test-indepora-agent",
       "authority": "present",
@@ -424,7 +620,7 @@
         "publication_label": "synthetic-boundary-result",
         "sandbox_only": true
       },
-      "receipt_id": "rcpt_6f13985bd8ec4a5cbcec",
+      "receipt_id": "rcpt_2ed1dda472594cf2931e",
       "resource": null,
       "reversibility": "reversible",
       "target": null
@@ -433,6 +629,7 @@
   "success_criteria": {
     "agent_override_rejected": true,
     "different_action_gets_new_hash": true,
+    "matrix_cases_exercised": 6,
     "mutation_rejected": true,
     "replay_rejected": true,
     "signed_record_verified": true
