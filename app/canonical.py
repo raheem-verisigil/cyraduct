@@ -61,6 +61,11 @@ def action_envelope(req: Any, action_id: str, mode: CanonicalMode = "policy") ->
             "pack": req.policy_pack,
         },
         "evidence_refs": list(req.evidence_refs),
+        "evidence_assurance": (
+            req.evidence_assurance.model_dump(exclude_none=True, by_alias=True)
+            if getattr(req, "evidence_assurance", None)
+            else None
+        ),
     }
 
     if mode == "runtime":

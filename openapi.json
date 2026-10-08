@@ -71,6 +71,17 @@
             "description": "Who/what receives the effect of this action",
             "title": "Consumer"
           },
+          "evidence_assurance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvidenceAssuranceBinding"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Trusted facts derived from a verified INDEPORA Continuity Record"
+          },
           "evidence_refs": {
             "description": "IDs of registered evidence packages this action relies on",
             "items": {
@@ -91,6 +102,18 @@
             ],
             "description": "Agent framework in use, e.g. 'langchain', 'custom'",
             "title": "Framework"
+          },
+          "indepora_record": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Signed INDEPORA Continuity Record. Cyraduct verifies it and derives evidence_assurance; callers must not supply assurance facts directly.",
+            "title": "Indepora Record"
           },
           "jurisdiction": {
             "anyOf": [
@@ -235,6 +258,87 @@
           "event"
         ],
         "title": "AnalyticsEvent",
+        "type": "object"
+      },
+      "EvidenceAssuranceBinding": {
+        "description": "Allowlisted facts derived from a verified INDEPORA record.",
+        "properties": {
+          "candidate_origin_count": {
+            "minimum": 0.0,
+            "title": "Candidate Origin Count",
+            "type": "integer"
+          },
+          "conflict_count": {
+            "minimum": 0.0,
+            "title": "Conflict Count",
+            "type": "integer"
+          },
+          "issued_at": {
+            "title": "Issued At",
+            "type": "string"
+          },
+          "not_superseded": {
+            "default": true,
+            "title": "Not Superseded",
+            "type": "boolean"
+          },
+          "provider": {
+            "default": "indepora",
+            "title": "Provider",
+            "type": "string"
+          },
+          "record_hash": {
+            "maxLength": 128,
+            "title": "Record Hash",
+            "type": "string"
+          },
+          "record_id": {
+            "maxLength": 256,
+            "title": "Record Id",
+            "type": "string"
+          },
+          "sandbox_only": {
+            "default": false,
+            "title": "Sandbox Only",
+            "type": "boolean"
+          },
+          "schema": {
+            "default": "indepora.evidence_continuity_record.v1",
+            "title": "Schema",
+            "type": "string"
+          },
+          "standing": {
+            "maxLength": 80,
+            "title": "Standing",
+            "type": "string"
+          },
+          "unknown_relationship_count": {
+            "minimum": 0.0,
+            "title": "Unknown Relationship Count",
+            "type": "integer"
+          },
+          "valid_until": {
+            "title": "Valid Until",
+            "type": "string"
+          },
+          "verification_key_id": {
+            "maxLength": 256,
+            "title": "Verification Key Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "record_id",
+          "record_hash",
+          "standing",
+          "candidate_origin_count",
+          "unknown_relationship_count",
+          "conflict_count",
+          "issued_at",
+          "valid_until",
+          "verification_key_id"
+        ],
+        "title": "EvidenceAssuranceBinding",
         "type": "object"
       },
       "EvidenceInfo": {
@@ -598,6 +702,16 @@
           "evidence": {
             "$ref": "#/components/schemas/EvidenceInfo"
           },
+          "evidence_assurance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvidenceAssuranceBinding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "expires_at": {
             "title": "Expires At",
             "type": "string"
@@ -753,6 +867,17 @@
             ],
             "title": "Current State Version"
           },
+          "evidence_assurance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EvidenceAssuranceBinding"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Trusted facts derived from a verified INDEPORA Continuity Record"
+          },
           "evidence_refs": {
             "description": "IDs of registered evidence packages this action relies on",
             "items": {
@@ -784,6 +909,18 @@
               }
             ],
             "title": "Idempotency Key"
+          },
+          "indepora_record": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Signed INDEPORA Continuity Record. Cyraduct verifies it and derives evidence_assurance; callers must not supply assurance facts directly.",
+            "title": "Indepora Record"
           },
           "jurisdiction": {
             "anyOf": [
@@ -1822,6 +1959,47 @@
         "summary": "Get Evidence",
         "tags": [
           "evidence"
+        ]
+      }
+    },
+    "/v1/indepora/verify": {
+      "post": {
+        "description": "Verify a signed INDEPORA Continuity Record.\n\nThe response is intentionally limited to allowlisted facts that Cyraduct\ncan bind into an action envelope. It does not decide whether the evidence\nis true or whether a business action should be authorized.",
+        "operationId": "verify_continuity_record_v1_indepora_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Record",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Continuity Record",
+        "tags": [
+          "indepora"
         ]
       }
     },

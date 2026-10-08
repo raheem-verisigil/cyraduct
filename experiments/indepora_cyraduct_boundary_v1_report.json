@@ -1,0 +1,440 @@
+{
+  "cases": [
+    {
+      "actual": {
+        "binding": {
+          "candidate_origin_count": 2,
+          "conflict_count": 0,
+          "issued_at": "2026-10-08T07:36:21.664986+00:00",
+          "not_superseded": true,
+          "provider": "indepora",
+          "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+          "record_id": "icr_test_001",
+          "sandbox_only": true,
+          "schema": "indepora.evidence_continuity_record.v1",
+          "standing": "insufficient",
+          "unknown_relationship_count": 1,
+          "valid_until": "2026-10-08T07:51:21.664986+00:00",
+          "verification_key_id": "indepora-sandbox-key-1"
+        },
+        "valid": true
+      },
+      "expected": "valid=true",
+      "name": "T01_valid_record"
+    },
+    {
+      "actual": {
+        "action_hash": "522f67bd3b2fd54776be3e891947517201ea47bb651ac016e0771f1b0597cdf0",
+        "decision": {
+          "decision": "allow",
+          "matched_rules": [
+            "indepora.sandbox.allow.boundary_test"
+          ],
+          "policy_pack": "indepora_sandbox_v1",
+          "policy_pack_version": "0.2.0",
+          "reasons": [
+            "Declared sandbox policy permits this exact action under the verified INDEPORA evidence state"
+          ]
+        },
+        "evidence_assurance": {
+          "candidate_origin_count": 2,
+          "conflict_count": 0,
+          "issued_at": "2026-10-08T07:36:21.664986+00:00",
+          "not_superseded": true,
+          "provider": "indepora",
+          "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+          "record_id": "icr_test_001",
+          "sandbox_only": true,
+          "schema": "indepora.evidence_continuity_record.v1",
+          "standing": "insufficient",
+          "unknown_relationship_count": 1,
+          "valid_until": "2026-10-08T07:51:21.664986+00:00",
+          "verification_key_id": "indepora-sandbox-key-1"
+        },
+        "status_code": 200
+      },
+      "expected": "allow with record_hash and standing bound",
+      "name": "T02_exact_record_bound"
+    },
+    {
+      "actual": {
+        "action_id": "act_9fcdfe55540944f2bf12",
+        "decision": {
+          "decision": "allow",
+          "matched_rules": [
+            "indepora.sandbox.allow.boundary_test"
+          ],
+          "policy_pack": "indepora_sandbox_v1",
+          "policy_pack_version": "0.2.0",
+          "reasons": [
+            "Declared sandbox policy permits this exact action under the verified INDEPORA evidence state"
+          ]
+        },
+        "executed": true,
+        "execution_result": {
+          "body": "{\"status\":\"executed\",\"execution_id\":\"exec_001\",\"call_number\":1}",
+          "status_code": 200
+        },
+        "receipt": {
+          "action": {
+            "consequence_class": "generic_tool_call",
+            "consequence_score": 0.15,
+            "parameters_hash": "9c64afdc0082a1482f3ae4b2ebd8cc722ed8288334f1234fa281a743ceab3847",
+            "score_factors": [
+              "base_class:generic_tool_call=0.15"
+            ],
+            "type": "publish_sandbox_decision"
+          },
+          "action_hash": "522f67bd3b2fd54776be3e891947517201ea47bb651ac016e0771f1b0597cdf0",
+          "action_id": "act_9fcdfe55540944f2bf12",
+          "agent": {
+            "agent_id": "test-indepora-agent",
+            "framework": "indepora-sandbox",
+            "principal": "org:synthetic:research"
+          },
+          "authorization_type": "policy",
+          "consumed_at": "2026-10-08T07:36:21.785948+00:00",
+          "decision": "allow",
+          "evidence": {
+            "evidence_refs": [
+              "ev-001",
+              "ev-002",
+              "ev-003",
+              "ev-004",
+              "ev-005",
+              "ev-006",
+              "ev-007",
+              "ev-008"
+            ]
+          },
+          "evidence_assurance": {
+            "candidate_origin_count": 2,
+            "conflict_count": 0,
+            "issued_at": "2026-10-08T07:36:21.664986+00:00",
+            "not_superseded": true,
+            "provider": "indepora",
+            "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+            "record_id": "icr_test_001",
+            "sandbox_only": true,
+            "schema": "indepora.evidence_continuity_record.v1",
+            "standing": "insufficient",
+            "unknown_relationship_count": 1,
+            "valid_until": "2026-10-08T07:51:21.664986+00:00",
+            "verification_key_id": "indepora-sandbox-key-1"
+          },
+          "expires_at": "2026-10-08T08:06:21.772922+00:00",
+          "issued_at": "2026-10-08T07:36:21.772922+00:00",
+          "policy": {
+            "matched_rules": [
+              "indepora.sandbox.allow.boundary_test"
+            ],
+            "policy_pack": "indepora_sandbox_v1",
+            "policy_pack_version": "0.2.0",
+            "reasons": [
+              "Declared sandbox policy permits this exact action under the verified INDEPORA evidence state"
+            ]
+          },
+          "prev_receipt_hash": null,
+          "receipt_id": "rcpt_6f13985bd8ec4a5cbcec",
+          "revoked": false,
+          "runtime_decision": null,
+          "signature": {
+            "alg": "Ed25519",
+            "key_id": "cyraduct-dev-key-1",
+            "value": "UktHsNwP1Qj7pQNIUpWwIOWja976zNktKaaeNd5JJ0VGNyB8XpumBontu5tLPnyZiprURf/DJTgJcowzAKCCBg=="
+          }
+        }
+      },
+      "expected": "executed=true",
+      "name": "T03_controlled_sink"
+    },
+    {
+      "actual": {
+        "executed": false,
+        "reason": "indepora_record_hash_mismatch",
+        "receipt": {
+          "action": {
+            "consequence_class": "generic_tool_call",
+            "consequence_score": 0.15,
+            "parameters_hash": "9c64afdc0082a1482f3ae4b2ebd8cc722ed8288334f1234fa281a743ceab3847",
+            "score_factors": [
+              "base_class:generic_tool_call=0.15"
+            ],
+            "type": "publish_sandbox_decision"
+          },
+          "action_hash": "522f67bd3b2fd54776be3e891947517201ea47bb651ac016e0771f1b0597cdf0",
+          "action_id": "act_9fcdfe55540944f2bf12",
+          "agent": {
+            "agent_id": "test-indepora-agent",
+            "framework": "indepora-sandbox",
+            "principal": "org:synthetic:research"
+          },
+          "authorization_type": "policy",
+          "consumed_at": "2026-10-08T07:36:21.785948+00:00",
+          "decision": "allow",
+          "evidence": {
+            "evidence_refs": [
+              "ev-001",
+              "ev-002",
+              "ev-003",
+              "ev-004",
+              "ev-005",
+              "ev-006",
+              "ev-007",
+              "ev-008"
+            ]
+          },
+          "evidence_assurance": {
+            "candidate_origin_count": 2,
+            "conflict_count": 0,
+            "issued_at": "2026-10-08T07:36:21.664986+00:00",
+            "not_superseded": true,
+            "provider": "indepora",
+            "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+            "record_id": "icr_test_001",
+            "sandbox_only": true,
+            "schema": "indepora.evidence_continuity_record.v1",
+            "standing": "insufficient",
+            "unknown_relationship_count": 1,
+            "valid_until": "2026-10-08T07:51:21.664986+00:00",
+            "verification_key_id": "indepora-sandbox-key-1"
+          },
+          "expires_at": "2026-10-08T08:06:21.772922+00:00",
+          "issued_at": "2026-10-08T07:36:21.772922+00:00",
+          "policy": {
+            "matched_rules": [
+              "indepora.sandbox.allow.boundary_test"
+            ],
+            "policy_pack": "indepora_sandbox_v1",
+            "policy_pack_version": "0.2.0",
+            "reasons": [
+              "Declared sandbox policy permits this exact action under the verified INDEPORA evidence state"
+            ]
+          },
+          "prev_receipt_hash": null,
+          "receipt_id": "rcpt_6f13985bd8ec4a5cbcec",
+          "revoked": false,
+          "runtime_decision": null,
+          "signature": {
+            "alg": "Ed25519",
+            "key_id": "cyraduct-dev-key-1",
+            "value": "UktHsNwP1Qj7pQNIUpWwIOWja976zNktKaaeNd5JJ0VGNyB8XpumBontu5tLPnyZiprURf/DJTgJcowzAKCCBg=="
+          }
+        }
+      },
+      "expected": "reject before sink",
+      "name": "T04_record_mutation"
+    },
+    {
+      "actual": {
+        "action_id": "act_6b9cc153effa4e16a453",
+        "decision": {
+          "decision": "deny",
+          "matched_rules": [],
+          "policy_pack": "indepora_sandbox_v1",
+          "policy_pack_version": "unknown",
+          "reasons": [
+            "agent_supplied_assurance_fact_rejected"
+          ]
+        },
+        "receipt": null
+      },
+      "expected": "agent_supplied_assurance_fact_rejected",
+      "name": "T05_agent_override"
+    },
+    {
+      "actual": {
+        "executed": false,
+        "reason": "action_binding_mismatch",
+        "receipt": {
+          "action": {
+            "consequence_class": "generic_tool_call",
+            "consequence_score": 0.15,
+            "parameters_hash": "9c64afdc0082a1482f3ae4b2ebd8cc722ed8288334f1234fa281a743ceab3847",
+            "score_factors": [
+              "base_class:generic_tool_call=0.15"
+            ],
+            "type": "publish_sandbox_decision"
+          },
+          "action_hash": "1a6cdecb40bbc063c47f4e1fdd765759d8f11ac6fbcf57145bda483b678cc82c",
+          "action_id": "act_901df2cc32d2472fb74b",
+          "agent": {
+            "agent_id": "test-indepora-agent",
+            "framework": "indepora-sandbox",
+            "principal": "org:synthetic:research"
+          },
+          "authorization_type": "policy",
+          "consumed_at": null,
+          "decision": "allow",
+          "evidence": {
+            "evidence_refs": [
+              "ev-001",
+              "ev-999"
+            ]
+          },
+          "evidence_assurance": {
+            "candidate_origin_count": 2,
+            "conflict_count": 0,
+            "issued_at": "2026-10-08T07:36:21.664986+00:00",
+            "not_superseded": true,
+            "provider": "indepora",
+            "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+            "record_id": "icr_test_001",
+            "sandbox_only": true,
+            "schema": "indepora.evidence_continuity_record.v1",
+            "standing": "insufficient",
+            "unknown_relationship_count": 1,
+            "valid_until": "2026-10-08T07:51:21.664986+00:00",
+            "verification_key_id": "indepora-sandbox-key-1"
+          },
+          "expires_at": "2026-10-08T08:06:21.823526+00:00",
+          "issued_at": "2026-10-08T07:36:21.823526+00:00",
+          "policy": {
+            "matched_rules": [
+              "indepora.sandbox.allow.boundary_test"
+            ],
+            "policy_pack": "indepora_sandbox_v1",
+            "policy_pack_version": "0.2.0",
+            "reasons": [
+              "Declared sandbox policy permits this exact action under the verified INDEPORA evidence state"
+            ]
+          },
+          "prev_receipt_hash": "522f67bd3b2fd54776be3e891947517201ea47bb651ac016e0771f1b0597cdf0",
+          "receipt_id": "rcpt_e94ee46777e24f9981d6",
+          "revoked": false,
+          "runtime_decision": null,
+          "signature": {
+            "alg": "Ed25519",
+            "key_id": "cyraduct-dev-key-1",
+            "value": "r0zkKdr8EzA1dJohucKBRSc+PR8cbzSi4CPFDlcQzgCK+UTdaHDhPRDNkjQrX5/OOVQEsk4ZwTIHr9DJTQyNCA=="
+          }
+        }
+      },
+      "expected": "action_binding_mismatch",
+      "name": "T06_evidence_refs_changed"
+    },
+    {
+      "actual": {
+        "executed": false,
+        "reason": "receipt_already_consumed",
+        "receipt": {
+          "action": {
+            "consequence_class": "generic_tool_call",
+            "consequence_score": 0.15,
+            "parameters_hash": "9c64afdc0082a1482f3ae4b2ebd8cc722ed8288334f1234fa281a743ceab3847",
+            "score_factors": [
+              "base_class:generic_tool_call=0.15"
+            ],
+            "type": "publish_sandbox_decision"
+          },
+          "action_hash": "522f67bd3b2fd54776be3e891947517201ea47bb651ac016e0771f1b0597cdf0",
+          "action_id": "act_9fcdfe55540944f2bf12",
+          "agent": {
+            "agent_id": "test-indepora-agent",
+            "framework": "indepora-sandbox",
+            "principal": "org:synthetic:research"
+          },
+          "authorization_type": "policy",
+          "consumed_at": "2026-10-08T07:36:21.785948+00:00",
+          "decision": "allow",
+          "evidence": {
+            "evidence_refs": [
+              "ev-001",
+              "ev-002",
+              "ev-003",
+              "ev-004",
+              "ev-005",
+              "ev-006",
+              "ev-007",
+              "ev-008"
+            ]
+          },
+          "evidence_assurance": {
+            "candidate_origin_count": 2,
+            "conflict_count": 0,
+            "issued_at": "2026-10-08T07:36:21.664986+00:00",
+            "not_superseded": true,
+            "provider": "indepora",
+            "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+            "record_id": "icr_test_001",
+            "sandbox_only": true,
+            "schema": "indepora.evidence_continuity_record.v1",
+            "standing": "insufficient",
+            "unknown_relationship_count": 1,
+            "valid_until": "2026-10-08T07:51:21.664986+00:00",
+            "verification_key_id": "indepora-sandbox-key-1"
+          },
+          "expires_at": "2026-10-08T08:06:21.772922+00:00",
+          "issued_at": "2026-10-08T07:36:21.772922+00:00",
+          "policy": {
+            "matched_rules": [
+              "indepora.sandbox.allow.boundary_test"
+            ],
+            "policy_pack": "indepora_sandbox_v1",
+            "policy_pack_version": "0.2.0",
+            "reasons": [
+              "Declared sandbox policy permits this exact action under the verified INDEPORA evidence state"
+            ]
+          },
+          "prev_receipt_hash": null,
+          "receipt_id": "rcpt_6f13985bd8ec4a5cbcec",
+          "revoked": false,
+          "runtime_decision": null,
+          "signature": {
+            "alg": "Ed25519",
+            "key_id": "cyraduct-dev-key-1",
+            "value": "UktHsNwP1Qj7pQNIUpWwIOWja976zNktKaaeNd5JJ0VGNyB8XpumBontu5tLPnyZiprURf/DJTgJcowzAKCCBg=="
+          }
+        }
+      },
+      "expected": "receipt_already_consumed",
+      "name": "T07_receipt_replay"
+    },
+    {
+      "actual": {
+        "action_hash": "6bd9140175520a4108ee1bccba337c276be8cab621d5a551b6c5d840e9d2ed3f",
+        "different_from_first": true,
+        "receipt_id": "rcpt_14413b76ceb7445ba9af"
+      },
+      "expected": "new receipt and different action hash",
+      "name": "T08_same_evidence_different_action"
+    }
+  ],
+  "experiment": "indepora-cyraduct-boundary-v1",
+  "record": {
+    "candidate_origin_count": 2,
+    "record_hash": "9da8eaf5dfe1d54100aad725c70b92c434fe3dd64a7639de63ac56369387e5c5",
+    "record_id": "icr_test_001",
+    "schema": "indepora.evidence_continuity_record.v1",
+    "standing": {
+      "scope": "sandbox",
+      "status": "insufficient"
+    },
+    "unknown_relationship_count": 1
+  },
+  "scope": "synthetic, sandbox-only, local controlled sink; no production data or external execution",
+  "sink_calls": [
+    {
+      "action_id": "act_9fcdfe55540944f2bf12",
+      "action_type": "publish_sandbox_decision",
+      "agent_id": "test-indepora-agent",
+      "authority": "present",
+      "payload": {
+        "execution_mode": "sandbox_only",
+        "publication_label": "synthetic-boundary-result",
+        "sandbox_only": true
+      },
+      "receipt_id": "rcpt_6f13985bd8ec4a5cbcec",
+      "resource": null,
+      "reversibility": "reversible",
+      "target": null
+    }
+  ],
+  "success_criteria": {
+    "agent_override_rejected": true,
+    "different_action_gets_new_hash": true,
+    "mutation_rejected": true,
+    "replay_rejected": true,
+    "signed_record_verified": true
+  }
+}

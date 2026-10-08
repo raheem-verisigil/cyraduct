@@ -2,6 +2,8 @@ from typing import Optional, Literal, Dict, Any, List
 from pydantic import BaseModel, Field, model_validator
 import uuid
 
+from .indepora import EvidenceAssuranceBinding
+
 
 def new_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:20]}"
@@ -106,6 +108,19 @@ class ActionRequest(BaseModel):
         description="IDs of registered evidence packages this action relies on",
     )
 
+    indepora_record: Optional[Dict[str, Any]] = Field(
+        None,
+        description=(
+            "Signed INDEPORA Continuity Record. Cyraduct verifies it and derives "
+            "evidence_assurance; callers must not supply assurance facts directly."
+        ),
+    )
+
+    evidence_assurance: Optional[EvidenceAssuranceBinding] = Field(
+        None,
+        description="Trusted facts derived from a verified INDEPORA Continuity Record",
+    )
+
     @model_validator(mode="after")
     def reject_unsafe_strings(self):
         """Reject NUL bytes anywhere in request-controlled data."""
@@ -123,6 +138,8 @@ class ActionRequest(BaseModel):
             self.payload,
             self.policy_pack,
             self.evidence_refs,
+            self.indepora_record,
+            self.evidence_assurance.model_dump() if self.evidence_assurance else None,
         )
 
         if any(_contains_nul(value) for value in values_to_check):
@@ -188,6 +205,7 @@ class Receipt(BaseModel):
     action: ActionInfo
     policy: PolicyInfo
     evidence: EvidenceInfo
+    evidence_assurance: Optional[EvidenceAssuranceBinding] = None
     issued_at: str
     expires_at: str
     action_hash: str

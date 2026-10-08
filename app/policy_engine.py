@@ -13,6 +13,7 @@ import os
 from typing import Dict, Any, List, Optional
 
 from .models import ActionRequest, PolicyDecision
+from .indepora import IndeporaVerificationError, verify_and_bind
 from .config import (
     POLICY_PACK_DIR,
     CONSEQUENCE_CLASS_EXPIRY_SECONDS,
@@ -70,6 +71,32 @@ def _condition_matches(
         elif key == "purpose_missing":
             purpose_is_missing = not req.purpose
             if purpose_is_missing != expected:
+                return False
+
+        elif key.startswith("indepora_"):
+            binding = req.evidence_assurance
+            field = key[len("indepora_"):]
+            comparator = None
+            if field.endswith("_gt"):
+                field, comparator = field[:-3], "gt"
+            elif field.endswith("_lt"):
+                field, comparator = field[:-3], "lt"
+            elif field.endswith("_missing"):
+                field, comparator = field[:-8], "missing"
+            actual = getattr(binding, field, None) if binding is not None else None
+            if comparator == "missing":
+                if (actual is None) != expected:
+                    return False
+            elif comparator == "gt":
+                if actual is None or not actual > expected:
+                    return False
+            elif comparator == "lt":
+                if actual is None or not actual < expected:
+                    return False
+            elif isinstance(expected, list):
+                if actual not in expected:
+                    return False
+            elif actual != expected:
                 return False
 
         elif key.endswith("_missing"):
@@ -164,6 +191,19 @@ def _validate_financial_transfer(req: ActionRequest) -> Optional[str]:
 
 
 def evaluate(req: ActionRequest) -> PolicyDecision:
+    # A caller may submit a signed Continuity Record, but may not inject a
+    # fabricated assurance binding. The binding is derived only after the
+    # record hash and Ed25519 signature have been verified.
+    if req.indepora_record is not None:
+        if req.evidence_assurance is not None:
+            return _deny(req, "agent_supplied_assurance_fact_rejected")
+        try:
+            req.evidence_assurance = verify_and_bind(req.indepora_record)
+        except IndeporaVerificationError as exc:
+            return _deny(req, str(exc))
+    elif req.evidence_assurance is not None:
+        return _deny(req, "indepora_binding_requires_signed_record")
+
     # Unknown consequence classes must never silently enter the
     # default-allow path.
     if req.consequence_class not in CONSEQUENCE_CLASS_EXPIRY_SECONDS:

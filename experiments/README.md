@@ -5,13 +5,13 @@ This directory contains a synthetic, local-only contract experiment. It is **not
 ## Run
 
 ```bash
-python3 experiments/indepora_cyraduct_sandbox.py
+python3 experiments/indepora_cyraduct_boundary_v1.py
 ```
 
 The script writes the complete request/response artifact to:
 
 ```text
-experiments/indepora_cyraduct_sandbox_report.json
+experiments/indepora_cyraduct_boundary_v1_report.json
 ```
 
 ## Layers
@@ -21,8 +21,8 @@ experiments/indepora_cyraduct_sandbox_report.json
    - two from origin B;
    - one republication from origin A;
    - one unknown lineage.
-2. **Trusted adapter** verifies the HMAC-protected result and extracts only structured lineage facts.
-3. **Cyraduct** evaluates the exact action using `indepora_sandbox_v1`, computes the canonical action hash, and signs the receipt.
+2. **Trusted adapter** verifies the Ed25519-signed Continuity Record and extracts only structured lineage facts.
+3. **Cyraduct** evaluates the exact action using `indepora_sandbox_v1`, binds the record hash into the canonical action hash, and signs the receipt.
 4. **Local sink** receives a request only after the broker verifies the receipt and action binding.
 
 ## Expected outcome
@@ -43,4 +43,4 @@ The trusted adapter rejects an agent claim of eight independent origins. Cyraduc
 Evidence assurance → trusted adapter → canonical authorization → controlled execution
 ```
 
-The HMAC in this fixture represents an integrity-protected INDEPORA result reference only. A real integration should replace it with INDEPORA’s actual signed result/verification contract and key-management model.
+The Ed25519 key in this fixture is synthetic and local-only. A real integration should use INDEPORA’s authoritative issuer key distribution, canonicalization version, rotation, and supersession/revocation contract.
