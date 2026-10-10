@@ -1,0 +1,680 @@
+{
+  "generated": "2026-09-29T16:52:51+00:00",
+  "events": [
+    {
+      "scene": 1,
+      "title": "Legitimate vendor bank change (known domain, callback to pre-existing number, two humans)",
+      "steps": [
+        {
+          "label": "decision",
+          "outcome": "allow",
+          "detail": "receipt rcpt_5e7004c209654ea79968",
+          "as_expected": true
+        },
+        {
+          "label": "ERP applies change against receipt",
+          "outcome": "(True, 'ok')",
+          "detail": "",
+          "as_expected": true
+        },
+        {
+          "label": "receipt verifies offline with public key only",
+          "outcome": "True",
+          "detail": "",
+          "as_expected": true
+        }
+      ]
+    },
+    {
+      "scene": 2,
+      "title": "BEC attack: lookalike domain, callback to number from the email, one rushed reviewer",
+      "steps": [
+        {
+          "label": "decision",
+          "outcome": "deny",
+          "detail": "",
+          "as_expected": true
+        },
+        {
+          "label": "matched rules",
+          "outcome": "['fin.vendor.conditional.sender_domain_mismatch', 'fin.vendor.deny.callback_channel_from_request', 'fin.vendor.deny.new_beneficiary_no_dual_approval']",
+          "detail": "Callback used contact details supplied by the requester, not a pre-existing trusted channel; New beneficiary account requires dual approval; Request came from a domain that does not match the vendor master; escalate before acting",
+          "as_expected": true
+        },
+        {
+          "label": "ERP refuses change with no receipt",
+          "outcome": "(False, 'no_receipt_presented')",
+          "detail": "",
+          "as_expected": true
+        },
+        {
+          "label": "vendor master unchanged",
+          "outcome": "True",
+          "detail": "",
+          "as_expected": true
+        }
+      ]
+    },
+    {
+      "scene": 3,
+      "title": "Fail-closed: a caller omits the verification facts entirely",
+      "steps": [
+        {
+          "label": "decision",
+          "outcome": "deny",
+          "detail": "5 required facts missing",
+          "as_expected": true
+        },
+        {
+          "label": "no receipt issued",
+          "outcome": "None",
+          "detail": "",
+          "as_expected": true
+        }
+      ]
+    },
+    {
+      "scene": 4,
+      "title": "Payment right after a bank change is held for a human",
+      "steps": [
+        {
+          "label": "decision",
+          "outcome": "conditional",
+          "detail": "Vendor bank details changed within 3 days; hold for review",
+          "as_expected": true
+        },
+        {
+          "label": "bank refuses without escalation",
+          "outcome": "(False, 'conditional_receipt_requires_human_approval')",
+          "detail": "",
+          "as_expected": true
+        },
+        {
+          "label": "bank pays after named human escalation (stub)",
+          "outcome": "(True, 'ok')",
+          "detail": "",
+          "as_expected": true
+        }
+      ]
+    },
+    {
+      "scene": 5,
+      "title": "Normal payments flow; large wires need two people",
+      "steps": [
+        {
+          "label": "20,000 wire to long-standing vendor",
+          "outcome": "allow",
+          "detail": "",
+          "as_expected": true
+        },
+        {
+          "label": "150,000 wire, one approver",
+          "outcome": "deny",
+          "detail": "",
+          "as_expected": true
+        },
+        {
+          "label": "150,000 wire, two approvers",
+          "outcome": "allow",
+          "detail": "",
+          "as_expected": true
+        }
+      ]
+    },
+    {
+      "scene": 6,
+      "title": "Tampering: reuse the legitimate change receipt to redirect to a different account",
+      "steps": [
+        {
+          "label": "sink rejects altered action",
+          "outcome": "action_binding_mismatch",
+          "detail": "",
+          "as_expected": true
+        }
+      ]
+    }
+  ],
+  "receipts": [
+    {
+      "receipt_id": "rcpt_cc762ca3b3334536be3c",
+      "action_id": "act_caf2bf9643044b6391b1",
+      "decision": "allow",
+      "agent": {
+        "agent_id": "test-finance-guard",
+        "principal": "org:demo:finance",
+        "framework": "custom"
+      },
+      "action": {
+        "type": "initiate_wire_transfer",
+        "consequence_class": "financial_transfer",
+        "consequence_score": 0.95,
+        "score_factors": [
+          "base_class:financial_transfer=0.5",
+          "irreversible_action_type=+0.25",
+          "amount_band=+0.2"
+        ],
+        "parameters_hash": "3fd3f5b578ea53ff83a750de17ac77297b87dcebe2c135e3124b79d3b460a3ce"
+      },
+      "policy": {
+        "policy_pack": "finance_vendor_change_v1",
+        "policy_pack_version": "0.1.0",
+        "matched_rules": [],
+        "reasons": [
+          "no_rule_matched_default_allow"
+        ]
+      },
+      "evidence": {
+        "evidence_refs": []
+      },
+      "issued_at": "2026-09-29T16:52:51.488635+00:00",
+      "expires_at": "2026-09-29T16:54:51.488635+00:00",
+      "action_hash": "8250cb14ae69461f6a548c5d26cc6017e4284d52151a757c928ade8fda7cf5e9",
+      "prev_receipt_hash": "f8b4529f37102a7d04e7b35521ebfda313f65d3f1f1502119c61628ca994e947",
+      "signature": {
+        "alg": "Ed25519",
+        "key_id": "cyraduct-dev-key-1",
+        "value": "ekla9LtxdFFggiUFnWjhbk2Le7qe26xtdKbu7MQWR+SGOlWw8XykBaSAuTTgI06MuYc/qOpFnVNjdTHkyC8iCw=="
+      },
+      "revoked": false,
+      "consumed_at": null,
+      "authorization_type": "policy",
+      "runtime_decision": null
+    },
+    {
+      "receipt_id": "rcpt_f4e682dbfad14accaa01",
+      "action_id": "act_d487855058ea4329b219",
+      "decision": "allow",
+      "agent": {
+        "agent_id": "test-finance-guard",
+        "principal": "org:demo:finance",
+        "framework": "custom"
+      },
+      "action": {
+        "type": "initiate_wire_transfer",
+        "consequence_class": "financial_transfer",
+        "consequence_score": 0.85,
+        "score_factors": [
+          "base_class:financial_transfer=0.5",
+          "irreversible_action_type=+0.25",
+          "amount_band=+0.1"
+        ],
+        "parameters_hash": "d8b11737a6ddf681db23901cae017e677e0b5f2f849cc8530aac8dfddeb7b42b"
+      },
+      "policy": {
+        "policy_pack": "finance_vendor_change_v1",
+        "policy_pack_version": "0.1.0",
+        "matched_rules": [],
+        "reasons": [
+          "no_rule_matched_default_allow"
+        ]
+      },
+      "evidence": {
+        "evidence_refs": []
+      },
+      "issued_at": "2026-09-29T16:52:51.315792+00:00",
+      "expires_at": "2026-09-29T16:54:51.315792+00:00",
+      "action_hash": "f8b4529f37102a7d04e7b35521ebfda313f65d3f1f1502119c61628ca994e947",
+      "prev_receipt_hash": "b6fef0ea47bf4ed2661fe50ed0c8de1d280a87c600d5a874db06064f73786b59",
+      "signature": {
+        "alg": "Ed25519",
+        "key_id": "cyraduct-dev-key-1",
+        "value": "4BEiP0g2yd6SnKVfYgD8o73JxNm7+NBGTnYRLSBhdZwNwaIMpedX2XGgEv378IbIHsueBnGoR54oSwuhV4iMAA=="
+      },
+      "revoked": false,
+      "consumed_at": null,
+      "authorization_type": "policy",
+      "runtime_decision": null
+    },
+    {
+      "receipt_id": "rcpt_91a392b37730421baacb",
+      "action_id": "act_3e965ab65af94d5b9245",
+      "decision": "conditional",
+      "agent": {
+        "agent_id": "test-finance-guard",
+        "principal": "org:demo:finance",
+        "framework": "custom"
+      },
+      "action": {
+        "type": "initiate_wire_transfer",
+        "consequence_class": "financial_transfer",
+        "consequence_score": 0.85,
+        "score_factors": [
+          "base_class:financial_transfer=0.5",
+          "irreversible_action_type=+0.25",
+          "amount_band=+0.1"
+        ],
+        "parameters_hash": "132a5329b37c064a2add51850f2093f3a6f0336ed7131a02b0c8bbf318eabe0a"
+      },
+      "policy": {
+        "policy_pack": "finance_vendor_change_v1",
+        "policy_pack_version": "0.1.0",
+        "matched_rules": [
+          "fin.pay.conditional.recent_bank_change"
+        ],
+        "reasons": [
+          "Vendor bank details changed within 3 days; hold for review"
+        ]
+      },
+      "evidence": {
+        "evidence_refs": []
+      },
+      "issued_at": "2026-09-29T16:52:51.130642+00:00",
+      "expires_at": "2026-09-29T16:54:51.130642+00:00",
+      "action_hash": "b6fef0ea47bf4ed2661fe50ed0c8de1d280a87c600d5a874db06064f73786b59",
+      "prev_receipt_hash": "16f23e24e8c708a6fac434df82b0d731679cbd159a587afe2ea4d9990672b6c3",
+      "signature": {
+        "alg": "Ed25519",
+        "key_id": "cyraduct-dev-key-1",
+        "value": "hbjJALAczQ1NmNIR/7xuTJvIxER1CRO+IUB/Sqx/GRdFygUNZYLxWVhW9X8OFpHc7p3mqytdfTAOoMoRgQdbCQ=="
+      },
+      "revoked": false,
+      "consumed_at": null,
+      "authorization_type": "policy",
+      "runtime_decision": null
+    },
+    {
+      "receipt_id": "rcpt_5e7004c209654ea79968",
+      "action_id": "act_b5f9bfc206ae4746b487",
+      "decision": "allow",
+      "agent": {
+        "agent_id": "test-finance-guard",
+        "principal": "org:demo:finance",
+        "framework": "custom"
+      },
+      "action": {
+        "type": "update_vendor_bank_details",
+        "consequence_class": "vendor_master_change",
+        "consequence_score": 0.55,
+        "score_factors": [
+          "base_class:vendor_master_change=0.55"
+        ],
+        "parameters_hash": "0e490c8a90cfcf4f892fa615c13031e1578d90900114269e64d20ab5ac71635d"
+      },
+      "policy": {
+        "policy_pack": "finance_vendor_change_v1",
+        "policy_pack_version": "0.1.0",
+        "matched_rules": [],
+        "reasons": [
+          "no_rule_matched_default_allow"
+        ]
+      },
+      "evidence": {
+        "evidence_refs": []
+      },
+      "issued_at": "2026-09-29T16:52:50.803810+00:00",
+      "expires_at": "2026-09-29T17:07:50.803810+00:00",
+      "action_hash": "16f23e24e8c708a6fac434df82b0d731679cbd159a587afe2ea4d9990672b6c3",
+      "prev_receipt_hash": "e09773134da45b185d24e1cb0b9a58e9ea5fa66a8a92c186331ef84e25171153",
+      "signature": {
+        "alg": "Ed25519",
+        "key_id": "cyraduct-dev-key-1",
+        "value": "yBwzG8ful8kUunjA8fdmQpefR5ElbYBUYRzOK48W750HJ5NlLiFLrPFcQB4EDpYVSnMyg5P0sF0i7GbnuM4SDA=="
+      },
+      "revoked": false,
+      "consumed_at": null,
+      "authorization_type": "policy",
+      "runtime_decision": null
+    },
+    {
+      "receipt_id": "rcpt_24167baf390741f99b84",
+      "action_id": "act_cca3c6dc9c554e4e88f1",
+      "decision": "allow",
+      "agent": {
+        "agent_id": "test-finance-guard",
+        "principal": "org:demo:finance",
+        "framework": "custom"
+      },
+      "action": {
+        "type": "initiate_wire_transfer",
+        "consequence_class": "financial_transfer",
+        "consequence_score": 0.95,
+        "score_factors": [
+          "base_class:financial_transfer=0.5",
+          "irreversible_action_type=+0.25",
+          "amount_band=+0.2"
+        ],
+        "parameters_hash": "3fd3f5b578ea53ff83a750de17ac77297b87dcebe2c135e3124b79d3b460a3ce"
+      },
+      "policy": {
+        "policy_pack": "finance_vendor_change_v1",
+        "policy_pack_version": "0.1.0",
+        "matched_rules": [],
+        "reasons": [
+          "no_rule_matched_default_allow"
+        ]
+      },
+      "evidence": {
+        "evidence_refs": []
+      },
+      "issued_at": "2026-09-29T16:42:58.468110+00:00",
+      "expires_at": "2026-09-29T16:44:58.468110+00:00",
+      "action_hash": "e09773134da45b185d24e1cb0b9a58e9ea5fa66a8a92c186331ef84e25171153",
+      "prev_receipt_hash": "44bd54db7b03e9accd0f3351058b5dbe5210ee4073459a29cca3033fe4855aaa",
+      "signature": {
+        "alg": "Ed25519",
+        "key_id": "cyraduct-dev-key-1",
+        "value": "lhCN1k/BsQhr+CTdIcGdqbUiDhGEuwhGsD9TB84XHBvUcZMNGEuyhUMVQkGW5abl2rzA604zMIYXYxn5WzVHCw=="
+      },
+      "revoked": false,
+      "consumed_at": null,
+      "authorization_type": "policy",
+      "runtime_decision": null
+    },
+    {
+      "receipt_id": "rcpt_3e5de72b03f4441f8208",
+      "action_id": "act_5d3d5b5ea95448d88210",
+      "decision": "allow",
+      "agent": {
+        "agent_id": "test-finance-guard",
+        "principal": "org:demo:finance",
+        "framework": "custom"
+      },
+      "action": {
+        "type": "initiate_wire_transfer",
+        "consequence_class": "financial_transfer",
+        "consequence_score": 0.85,
+        "score_factors": [
+          "base_class:financial_transfer=0.5",
+          "irreversible_action_type=+0.25",
+          "amount_band=+0.1"
+        ],
+        "parameters_hash": "d8b11737a6ddf681db23901cae017e677e0b5f2f849cc8530aac8dfddeb7b42b"
+      },
+      "policy": {
+        "policy_pack": "finance_vendor_change_v1",
+        "policy_pack_version": "0.1.0",
+        "matched_rules": [],
+        "reasons": [
+          "no_rule_matched_default_allow"
+        ]
+      },
+      "evidence": {
+        "evidence_refs": []
+      },
+      "issued_at": "2026-09-29T16:42:58.288914+00:00",
+      "expires_at": "2026-09-29T16:44:58.288914+00:00",
+      "action_hash": "44bd54db7b03e9accd0f3351058b5dbe5210ee4073459a29cca3033fe4855aaa",
+      "prev_receipt_hash": "727c4fc3803b6f4ef7b2fd860428d9024ed23a0771f8823a737f0c82d06520f4",
+      "signature": {
+        "alg": "Ed25519",
+        "key_id": "cyraduct-dev-key-1",
+        "value": "ZdsQv3QTe/SrpPKWxjCSeB7V7zFd3oYlJVaRcASlSUIhqiN1z1HsBBEBoJvAJFMxxlNhLwzUxunq2lhn1FbdCg=="
+      },
+      "revoked": false,
+      "consumed_at": null,
+      "authorization_type": "policy",
+      "runtime_decision": null
+    },
+    {
+      "receipt_id": "rcpt_1ca8f23ea92649418fac",
+      "action_id": "act_a3874b9829404ded9250",
+      "decision": "conditional",
+      "agent": {
+        "agent_id": "test-finance-guard",
+        "principal": "org:demo:finance",
+        "framework": "custom"
+      },
+      "action": {
+        "type": "initiate_wire_transfer",
+        "consequence_class": "financial_transfer",
+        "consequence_score": 0.85,
+        "score_factors": [
+          "base_class:financial_transfer=0.5",
+          "irreversible_action_type=+0.25",
+          "amount_band=+0.1"
+        ],
+        "parameters_hash": "132a5329b37c064a2add51850f2093f3a6f0336ed7131a02b0c8bbf318eabe0a"
+      },
+      "policy": {
+        "policy_pack": "finance_vendor_change_v1",
+        "policy_pack_version": "0.1.0",
+        "matched_rules": [
+          "fin.pay.conditional.recent_bank_change"
+        ],
+        "reasons": [
+          "Vendor bank details changed within 3 days; hold for review"
+        ]
+      },
+      "evidence": {
+        "evidence_refs": []
+      },
+      "issued_at": "2026-09-29T16:42:58.117556+00:00",
+      "expires_at": "2026-09-29T16:44:58.117556+00:00",
+      "action_hash": "727c4fc3803b6f4ef7b2fd860428d9024ed23a0771f8823a737f0c82d06520f4",
+      "prev_receipt_hash": "e87ac401b7aa5818cc8b0454d6d08a55f947989f14b85050c541b6fbaa54937a",
+      "signature": {
+        "alg": "Ed25519",
+        "key_id": "cyraduct-dev-key-1",
+        "value": "uNisoLPFtgV6SY7qeksWOuUcEWN470LSuVBDjUjQ6HxIgJZWNyYyFDC76+FXR5HY6XVVteVfNaAg/ygdasI2Bw=="
+      },
+      "revoked": false,
+      "consumed_at": null,
+      "authorization_type": "policy",
+      "runtime_decision": null
+    },
+    {
+      "receipt_id": "rcpt_89ca473dfc944109a0ad",
+      "action_id": "act_4493b145df87401cb30f",
+      "decision": "allow",
+      "agent": {
+        "agent_id": "test-finance-guard",
+        "principal": "org:demo:finance",
+        "framework": "custom"
+      },
+      "action": {
+        "type": "update_vendor_bank_details",
+        "consequence_class": "vendor_master_change",
+        "consequence_score": 0.55,
+        "score_factors": [
+          "base_class:vendor_master_change=0.55"
+        ],
+        "parameters_hash": "0e490c8a90cfcf4f892fa615c13031e1578d90900114269e64d20ab5ac71635d"
+      },
+      "policy": {
+        "policy_pack": "finance_vendor_change_v1",
+        "policy_pack_version": "0.1.0",
+        "matched_rules": [],
+        "reasons": [
+          "no_rule_matched_default_allow"
+        ]
+      },
+      "evidence": {
+        "evidence_refs": []
+      },
+      "issued_at": "2026-09-29T16:42:57.816798+00:00",
+      "expires_at": "2026-09-29T16:57:57.816798+00:00",
+      "action_hash": "e87ac401b7aa5818cc8b0454d6d08a55f947989f14b85050c541b6fbaa54937a",
+      "prev_receipt_hash": "376564f0a12c1ee272f8f325ee012c560a3b4bfd271ea2e38d29dea75b2221f7",
+      "signature": {
+        "alg": "Ed25519",
+        "key_id": "cyraduct-dev-key-1",
+        "value": "VPnZC/s77Y96smwLWnUaBYscPZ5p+kBoiT53N6+PVVlGqmgTlhvZXhhXGU/+F9YPfPk2iHvcM2P6UkKMR6kDBw=="
+      },
+      "revoked": false,
+      "consumed_at": null,
+      "authorization_type": "policy",
+      "runtime_decision": null
+    },
+    {
+      "receipt_id": "rcpt_01fc29f3956b457695de",
+      "action_id": "act_8d44029554344fb39021",
+      "decision": "allow",
+      "agent": {
+        "agent_id": "test-finance-guard",
+        "principal": "org:demo:finance",
+        "framework": "custom"
+      },
+      "action": {
+        "type": "initiate_wire_transfer",
+        "consequence_class": "financial_transfer",
+        "consequence_score": 0.95,
+        "score_factors": [
+          "base_class:financial_transfer=0.5",
+          "irreversible_action_type=+0.25",
+          "amount_band=+0.2"
+        ],
+        "parameters_hash": "3fd3f5b578ea53ff83a750de17ac77297b87dcebe2c135e3124b79d3b460a3ce"
+      },
+      "policy": {
+        "policy_pack": "finance_vendor_change_v1",
+        "policy_pack_version": "0.1.0",
+        "matched_rules": [],
+        "reasons": [
+          "no_rule_matched_default_allow"
+        ]
+      },
+      "evidence": {
+        "evidence_refs": []
+      },
+      "issued_at": "2026-09-29T16:40:32.726549+00:00",
+      "expires_at": "2026-09-29T16:42:32.726549+00:00",
+      "action_hash": "376564f0a12c1ee272f8f325ee012c560a3b4bfd271ea2e38d29dea75b2221f7",
+      "prev_receipt_hash": "c17c554d3c5579a82c581a4ba79a83035679f9e49ff1b6b3a35df9aeeb4b6af3",
+      "signature": {
+        "alg": "Ed25519",
+        "key_id": "cyraduct-dev-key-1",
+        "value": "BEe5JOdg3KrOjyAWBcFOJ5MczyNiKcOPFRxsEQttvpJqtMh6brLEC+vvJ1/NHcJR/WyXexEXgz0r4jlklsRSDg=="
+      },
+      "revoked": false,
+      "consumed_at": null,
+      "authorization_type": "policy",
+      "runtime_decision": null
+    },
+    {
+      "receipt_id": "rcpt_9497622e7fd9465083dc",
+      "action_id": "act_5e128528f2944b66aec1",
+      "decision": "allow",
+      "agent": {
+        "agent_id": "test-finance-guard",
+        "principal": "org:demo:finance",
+        "framework": "custom"
+      },
+      "action": {
+        "type": "initiate_wire_transfer",
+        "consequence_class": "financial_transfer",
+        "consequence_score": 0.85,
+        "score_factors": [
+          "base_class:financial_transfer=0.5",
+          "irreversible_action_type=+0.25",
+          "amount_band=+0.1"
+        ],
+        "parameters_hash": "d8b11737a6ddf681db23901cae017e677e0b5f2f849cc8530aac8dfddeb7b42b"
+      },
+      "policy": {
+        "policy_pack": "finance_vendor_change_v1",
+        "policy_pack_version": "0.1.0",
+        "matched_rules": [],
+        "reasons": [
+          "no_rule_matched_default_allow"
+        ]
+      },
+      "evidence": {
+        "evidence_refs": []
+      },
+      "issued_at": "2026-09-29T16:40:32.594955+00:00",
+      "expires_at": "2026-09-29T16:42:32.594955+00:00",
+      "action_hash": "c17c554d3c5579a82c581a4ba79a83035679f9e49ff1b6b3a35df9aeeb4b6af3",
+      "prev_receipt_hash": "37e73d5c6a9369e002bafe69ebf260caf67fc414fef1f68af8ab8876cbcc9e44",
+      "signature": {
+        "alg": "Ed25519",
+        "key_id": "cyraduct-dev-key-1",
+        "value": "ExM9ny5dURb7tXSuKL/6wzYJtmcHJRmgvI9WLgJSGObpNV6SZUPdFTkLqSTND3ETmlRpfAHCYUaxz2wgh/SfBQ=="
+      },
+      "revoked": false,
+      "consumed_at": null,
+      "authorization_type": "policy",
+      "runtime_decision": null
+    },
+    {
+      "receipt_id": "rcpt_fca97996b5d04eebb9a9",
+      "action_id": "act_44b82eecc32643cdbc76",
+      "decision": "conditional",
+      "agent": {
+        "agent_id": "test-finance-guard",
+        "principal": "org:demo:finance",
+        "framework": "custom"
+      },
+      "action": {
+        "type": "initiate_wire_transfer",
+        "consequence_class": "financial_transfer",
+        "consequence_score": 0.85,
+        "score_factors": [
+          "base_class:financial_transfer=0.5",
+          "irreversible_action_type=+0.25",
+          "amount_band=+0.1"
+        ],
+        "parameters_hash": "132a5329b37c064a2add51850f2093f3a6f0336ed7131a02b0c8bbf318eabe0a"
+      },
+      "policy": {
+        "policy_pack": "finance_vendor_change_v1",
+        "policy_pack_version": "0.1.0",
+        "matched_rules": [
+          "fin.pay.conditional.recent_bank_change"
+        ],
+        "reasons": [
+          "Vendor bank details changed within 3 days; hold for review"
+        ]
+      },
+      "evidence": {
+        "evidence_refs": []
+      },
+      "issued_at": "2026-09-29T16:40:32.444283+00:00",
+      "expires_at": "2026-09-29T16:42:32.444283+00:00",
+      "action_hash": "37e73d5c6a9369e002bafe69ebf260caf67fc414fef1f68af8ab8876cbcc9e44",
+      "prev_receipt_hash": "5b6d6d869f0d8f230913dd0d31a9c7341e86514a66450b46b79ca980160eda2a",
+      "signature": {
+        "alg": "Ed25519",
+        "key_id": "cyraduct-dev-key-1",
+        "value": "OB3NC/xKxvsa0vKYpTV7Pb6a5YR6RZubnxK17uFK49GgTp2HxOknxRSrqXYKBeW+VKfilTHoARjKURZ/oS17Cg=="
+      },
+      "revoked": false,
+      "consumed_at": null,
+      "authorization_type": "policy",
+      "runtime_decision": null
+    },
+    {
+      "receipt_id": "rcpt_a0f52d57605d4570acdc",
+      "action_id": "act_a82b5a059bd644c1a6b6",
+      "decision": "allow",
+      "agent": {
+        "agent_id": "test-finance-guard",
+        "principal": "org:demo:finance",
+        "framework": "custom"
+      },
+      "action": {
+        "type": "update_vendor_bank_details",
+        "consequence_class": "vendor_master_change",
+        "consequence_score": 0.55,
+        "score_factors": [
+          "base_class:vendor_master_change=0.55"
+        ],
+        "parameters_hash": "0e490c8a90cfcf4f892fa615c13031e1578d90900114269e64d20ab5ac71635d"
+      },
+      "policy": {
+        "policy_pack": "finance_vendor_change_v1",
+        "policy_pack_version": "0.1.0",
+        "matched_rules": [],
+        "reasons": [
+          "no_rule_matched_default_allow"
+        ]
+      },
+      "evidence": {
+        "evidence_refs": []
+      },
+      "issued_at": "2026-09-29T16:40:32.138283+00:00",
+      "expires_at": "2026-09-29T16:55:32.138283+00:00",
+      "action_hash": "5b6d6d869f0d8f230913dd0d31a9c7341e86514a66450b46b79ca980160eda2a",
+      "prev_receipt_hash": null,
+      "signature": {
+        "alg": "Ed25519",
+        "key_id": "cyraduct-dev-key-1",
+        "value": "S5wk8wnovOoHDqeOPKJgMY+WIdvv3PTnNOQfyRdvPC4jvj+yyHenmqrRiAb1hpoUcZtoby6TUUhhYGwi7MtJBQ=="
+      },
+      "revoked": false,
+      "consumed_at": null,
+      "authorization_type": "policy",
+      "runtime_decision": null
+    }
+  ],
+  "public_key_b64": "S8YJ3b5nPp9ldc9RIcmqZF/pfiPmcW4+FX4nSVzUQ/c="
+}

@@ -19,7 +19,7 @@ Receipts are additionally chained per-agent (prev_receipt_hash), and that
 chain link is itself covered by the receipt's Ed25519 signature.
 """
 import hashlib
-import json
+import json 
 import os
 import threading
 from datetime import datetime, timezone, timedelta
@@ -27,6 +27,11 @@ from typing import Optional, List
 
 from sqlalchemy import (
     create_engine, MetaData, Table, Column, String, Integer, Text, select,
+ feature/finance-guard
+    insert, update, delete as sa_delete, desc, asc,
+) 
+from sqlalchemy.pool import NullPool
+=======
     insert, update, delete as sa_delete, desc, asc, text,
 )
 from sqlalchemy.pool import NullPool
@@ -34,26 +39,42 @@ from sqlalchemy import (
     create_engine, MetaData, Table, Column, String, Integer, Text, select,
     insert, update, delete as sa_delete, desc, asc, text,
 )
+ main
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
+ feature/finance-guard
+from .models import Receipt, EvidencePackage
+_DATABASE_URL = os.environ.get("CYRADUCT_DATABASE_URL", "sqlite:///./cyraduct.db")
+
+
+from sqlalchemy.pool import NullPool
+
+=======
 from .models import Receipt, EvidencePackage, PartnerSubmission, AnalyticsEvent, new_id
 from .audit_anchor import anchor_latest_hash
 
-_DATABASE_URL = os.environ.get("CYRADUCT_DATABASE_URL", "sqlite:///./cyraduct.db")
-
+_DATABASE_URL = os.environ.get("CYRADUCT_DATABASE_URL", "sqlite:///./cyraduct.db"
+                               
+ main
+                              
 _engine_kwargs = {
     "future": True,
 }
 
 if _DATABASE_URL.startswith("sqlite"):
     _engine_kwargs["connect_args"] = {
+ feature/finance-guard
+        "check_same_thread": False
+    }
+=======
         "check_same_thread": False,
     }
     # Important on Windows test environments:
     # prevents pooled SQLite file handles keeping temp DB files locked.
     from sqlalchemy.pool import NullPool
+      main  
     _engine_kwargs["poolclass"] = NullPool
 
 _engine = create_engine(_DATABASE_URL, **_engine_kwargs)
