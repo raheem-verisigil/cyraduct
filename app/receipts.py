@@ -10,8 +10,6 @@ consequence-class-appropriate expiry.
 A receipt valid until explicitly revoked is treated as a design flaw
 (see positioning language) — every receipt MUST have a bounded expiry.
 """
-import hashlib
-import json
 from datetime import datetime, timedelta, timezone
 
 from .config import CONSEQUENCE_CLASS_EXPIRY_SECONDS, DEFAULT_EXPIRY_SECONDS
@@ -21,11 +19,11 @@ from .models import (
 )
 from .runtime import RuntimeActionRequest, RuntimeDecision
 from . import crypto, consequence
+from .canonical import action_hash as canonical_action_hash, parameters_hash
 
 
 def _parameters_hash(payload: dict) -> str:
-    canonical = json.dumps(payload, sort_keys=True)
-    return hashlib.sha256(canonical.encode()).hexdigest()
+    return parameters_hash(payload)
 
 
 def _action_hash(req: ActionRequest, action_id: str) -> str:
@@ -46,27 +44,12 @@ def _action_hash(req: ActionRequest, action_id: str) -> str:
     the signature covers. Fixed by binding the full decision-relevant
     surface, not just the fields that happened to be checked first.
 
-    principal, framework, consumer, and evidence_refs are deliberately
-    NOT included: none of them currently participate in any policy
-    condition (see policy_engine.py's condition matcher), so binding them
-    would be over-binding without a corresponding integrity claim. If a
-    future policy pack gains a condition on any of these, they must be
-    added here in the same change.
+    The canonical envelope binds principal, framework, consumer, and
+    evidence_refs as security context even when a current policy pack does
+    not branch on every one of them. This prevents a receipt from being
+    detached from the caller context presented at evaluation time.
     """
-    canonical = json.dumps(
-        {
-            "action_id": action_id,
-            "agent_id": req.agent_id,
-            "action_type": req.action_type,
-            "consequence_class": req.consequence_class,
-            "purpose": req.purpose,
-            "jurisdiction": req.jurisdiction,
-            "policy_pack": req.policy_pack,
-            "payload": req.payload,
-        },
-        sort_keys=True,
-    )
-    return hashlib.sha256(canonical.encode()).hexdigest()
+    return canonical_action_hash(req, action_id, mode="policy")
 
 
 def expiry_for(consequence_class: str) -> int:
@@ -94,8 +77,7 @@ def _runtime_binding(req: RuntimeActionRequest, action_id: str) -> dict:
 
 
 def _runtime_action_hash(req: RuntimeActionRequest, action_id: str) -> str:
-    canonical = json.dumps(_runtime_binding(req, action_id), sort_keys=True)
-    return hashlib.sha256(canonical.encode()).hexdigest()
+    return canonical_action_hash(req, action_id, mode="runtime")
 
 
 def _signature_message(receipt: Receipt) -> bytes:
@@ -160,6 +142,7 @@ def issue_runtime_receipt(
             reasons=decision.reasons,
         ),
         evidence=EvidenceInfo(evidence_refs=req.evidence_refs),
+        evidence_assurance=req.evidence_assurance,
         issued_at=now.isoformat(),
         expires_at=expires_at.isoformat(),
         action_hash=action_hash,
@@ -248,6 +231,7 @@ def issue_receipt(req: ActionRequest, action_id: str, decision: str,
             reasons=reasons,
         ),
         evidence=EvidenceInfo(evidence_refs=req.evidence_refs),
+        evidence_assurance=req.evidence_assurance,
         issued_at=now.isoformat(),
         expires_at=expires_at.isoformat(),
         action_hash=action_hash,

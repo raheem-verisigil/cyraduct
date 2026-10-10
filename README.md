@@ -1,50 +1,170 @@
 # Cyraduct
 
-![Cyraduct logo](logo.png)
+### The consequence-control layer for AI agents.
 
-An open, vendor-neutral **reliance and consequence-boundary protocol** for AI agent actions.
-Cyraduct converts governance and assurance evidence into machine-enforceable reliance limits,
-with independent Ed25519-signed receipts, revocation, evidence registration, and conformance testing.
+![Cyraduct architecture](docs/cyraduct-architecture.svg)
 
-**Self-host it. Inspect the protocol. Verify receipts independently.** Cyraduct is designed so a
-compliant downstream sink can verify the published Ed25519 signature, action binding, expiry, and
-revocation state instead of trusting a dashboard or a hidden provider decision.
+AI agents are increasingly able to call APIs, modify enterprise data, change
+configurations, and initiate consequential workflows.
 
-This repository is the reference implementation. Its first commercial reference application is **Finance Guard**: a fail-closed boundary for vendor-master changes and AI-assisted payments. It is intentionally an MVP: the protocol
-concepts (tiers, receipts, expiry, conformance fixtures, tamper-evident audit log) are real
-and tested; the storage layer (SQLite) and broker execution (webhook proxy) are placeholders
-meant to be swapped for production-grade infrastructure.
+**Cyraduct creates an enforceable boundary between:**
 
-## Finance Guard: the first buyer-facing wedge
+**AI agent decision → authorization → real-world execution**
 
-Finance Guard protects `update_vendor_bank_details`, `update_vendor_remittance_details`,
-`initiate_ach_payment`, and `initiate_wire_transfer` without moving money or replacing an ERP.
-An adapter collects trusted evidence, Cyraduct evaluates the action, a human or trusted process
-approves it, and the downstream sink verifies a signed, time-limited receipt before acting.
+Cyraduct evaluates proposed agent actions against consequence rules, evidence,
+policy, and authorization requirements before execution.
 
-Read the [Finance Guard integration guide](docs/FINANCE_GUARD.md) and try the payload in
-[`examples/finance_vendor_change.json`](examples/finance_vendor_change.json). The
-`finance_vendor_change_v1` policy pack fails closed when required facts are absent and keeps
-the protocol honest: an email, requester, or LLM cannot assert that a callback or approval happened.
+When an action is permitted, Cyraduct produces a cryptographically signed
+authorization receipt that a downstream system can independently verify.
 
-## The three enforcement tiers
+When required conditions are not satisfied, the action can be rejected or
+prevented from reaching the execution path.
 
-Cyraduct does not claim one enforcement guarantee — it offers three, explicitly:
+**Cyraduct is not an AI model.**
+**Cyraduct is not an ERP.**
+**Cyraduct does not move money.**
 
-| Tier | Where it sits | What it guarantees | What it does NOT guarantee |
-|---|---|---|---|
-| **1. Advisory** | Outside the execution path | A documented decision trail | That a flagged action is actually stopped |
-| **2. Attested** | Outside the path, but sinks must check | No compliant sink acts without a valid, unexpired receipt | Protection if a sink ignores the receipt requirement |
-| **3. Broker-Enforced** | Inside the execution path | No bypass exists for integrated actions holding a valid receipt | Availability/latency now depend on Cyraduct uptime |
+It is infrastructure for controlling what AI agents are actually allowed to
+execute.
+
+## Why Cyraduct exists
+
+AI agents can increasingly propose and execute actions across enterprise systems. The
+authorization question is therefore no longer only:
+
+> “Did the agent decide to do this?”
+
+It is also:
+
+> “What evidence, policy, authorization, and consequence controls must be satisfied
+> before this action is allowed to reach the execution path?”
+
+Cyraduct separates **decision** from **permission to execute**.
+
+The protocol evaluates an action, records the conditions under which it may proceed,
+issues a signed authorization receipt when those conditions are satisfied, and gives a
+downstream enforcement point the ability to independently verify that receipt.
+
+This creates a control boundary between an agent and a consequential system without
+requiring Cyraduct to be the agent, ERP, payment processor, or source of truth for the
+underlying business data.
+
+## 60-second technical path
+
+If you are evaluating Cyraduct as an engineer, start here:
+
+1. **Understand the reference application**
+   Read `docs/FINANCE_GUARD.md` to see how the protocol is applied to consequential
+   finance actions.
+
+2. **Inspect a proposed action**
+   Open `examples/finance_vendor_change.json` to see the action structure used by the
+   reference implementation.
+
+3. **Trace authorization**
+   Follow the `/v1/attested/evaluate` flow to see how policy, evidence, consequence
+   evaluation, and receipt issuance fit together.
+
+4. **Verify independently**
+   Run `verify_receipt.py` to inspect the standalone Ed25519 receipt verification path.
+
+5. **Inspect enforcement**
+   Follow `/v1/broker/execute` to see how a downstream execution path validates the
+   receipt before calling the execution webhook.
+
+6. **Inspect the guarantees**
+   Read the conformance tests in `tests/` and the enforcement-tier documentation before
+   drawing conclusions about what the current MVP does and does not guarantee.
+
+### The core idea
+
+```text
+AI decision
+    ↓
+Proposed action
+    ↓
+Consequence + evidence + policy evaluation
+    ↓
+Signed authorization receipt
+    ↓
+Independent enforcement check
+    ├── valid → execute
+    └── invalid → reject
+```
+
+### What is working today
+
+This repository contains a working technical reference implementation with:
+
+* Ed25519-signed authorization receipts
+* consequence evaluation
+* evidence registration
+* policy evaluation
+* receipt expiry
+* agent-scoped revocation
+* broker-side receipt validation
+* action/agent binding checks
+* tamper-evident audit logging
+* conformance testing with positive and negative cases
+* four enforcement modes: Advisory, Attested, Broker-Enforced, and Runtime
+
+### First enterprise reference application: Finance Guard
+
+Finance Guard demonstrates the protocol against high-consequence financial
+actions, including:
+
+* vendor bank-detail changes
+* vendor remittance-detail changes
+* ACH initiation
+* wire-transfer initiation
+
+Finance Guard does **not** move money or replace an ERP.
+
+Instead, an action is evaluated, required evidence and policy conditions are
+checked, and an authorization receipt can be issued. The downstream execution
+sink can then independently verify the receipt before acting.
+
+### Start here
+
+* **Finance Guard:** `docs/FINANCE_GUARD.md`
+* **Example action:** `examples/finance_vendor_change.json`
+* **Standalone receipt verification:** `verify_receipt.py`
+* **Canonical action envelope:** `docs/CANONICAL_ACTION_ENVELOPE.md`
+* **API specification:** `openapi.json`
+* **Conformance tests:** `tests/`
+
+### Current status
+
+Cyraduct is an **MVP/reference implementation**, not a claim of production
+readiness for real financial or other high-consequence workloads.
+
+The repository deliberately documents what is implemented and what remains
+roadmap work. See **Known limitations** below before deploying it.
+
+## The four enforcement modes
+
+Cyraduct does not claim one enforcement guarantee — it offers four, explicitly:
+
+| Tier                   | Where it sits                          | What it guarantees                                              | What it does NOT guarantee                           |
+| ---------------------- | -------------------------------------- | --------------------------------------------------------------- | ---------------------------------------------------- |
+| **1. Advisory**        | Outside the execution path             | A documented decision trail                                     | That a flagged action is actually stopped            |
+| **2. Attested**        | Outside the path, but sinks must check | No compliant sink acts without a valid, unexpired receipt       | Protection if a sink ignores the receipt requirement |
+| **3. Broker-Enforced** | Inside the execution path             | No bypass exists for integrated actions holding a valid receipt | Availability/latency now depend on Cyraduct uptime   |
+| **4. Runtime**         | State-aware authorization boundary    | Runtime state, authority, expiry, and idempotency are checked before a signed runtime receipt is enforced | It still depends on the integrated sink enforcing the receipt |
 
 **Broker mode is a two-step flow, not one call.** The broker does not mint its own
 authorization — it validates a receipt you already hold (from a prior `/v1/attested/evaluate`
 call) before executing:
-POST /v1/attested/evaluate → issues a signed receipt (if allowed)
+
+```text
+POST /v1/attested/evaluate
+→ issues a signed receipt (if allowed)
+
 POST /v1/broker/execute?receipt_id=<id>&execution_webhook=<url>
 → checks: exists → not revoked → signature valid → not expired
 → action/agent binding matches the presented request
 → only then calls the execution webhook
+```
 
 That last check — action/agent binding — exists specifically to stop a receipt issued
 for one action from being replayed against a different action with the same ID.
@@ -55,53 +175,56 @@ A receipt valid until explicitly revoked is treated as a design flaw, not a feat
 ## What's real vs. roadmap
 
 Built and tested in this repo:
-- **Ed25519-signed receipts**, independently verifiable with no server trust required (`verify_receipt.py` — runs standalone, air-gapped)
-- **Receipt chaining** per agent (`prev_receipt_hash`, covered by the signature)
-- **Rule-based consequence scoring** — transparent heuristic, not a black-box model (`app/consequence.py`)
-- **Evidence registration** — hash-referenced assurance packages a receipt can cite (`/v1/evidence`)
-- **Agent-scoped revocation** — kill every active receipt an agent holds in one call (`/v1/attested/revoke-agent/{agent_id}`)
-- **Queryable receipts** by agent and time range (`/v1/receipts`)
-- **Broker-side receipt validation** — full check sequence (existence, revocation, signature, expiry, action/agent binding) before any execution webhook is called
-- Three tiers, policy packs, tamper-evident hash-chained audit log, kill switch, conformance suite — 22 automated tests, including 6 broker-specific negative cases
+
+* **Ed25519-signed receipts**, independently verifiable with no server trust required (`verify_receipt.py` — runs standalone, air-gapped)
+* **Receipt chaining** per agent (`prev_receipt_hash`, covered by the signature)
+* **Rule-based consequence scoring** — transparent heuristic, not a black-box model (`app/consequence.py`)
+* **Evidence registration** — hash-referenced assurance packages a receipt can cite (`/v1/evidence`)
+* **Agent-scoped revocation** — kill every active receipt an agent holds in one call (`/v1/attested/revoke-agent/{agent_id}`)
+* **Queryable receipts** by agent and time range (`/v1/receipts`)
+* **Broker-side receipt validation** — full check sequence (existence, revocation, signature, expiry, action/agent binding) before any execution webhook is called
+* Four modes, policy packs, canonical action-envelope hashing, tamper-evident hash-chained audit log, kill switch, conformance suite — 104 automated tests
 
 Explicitly **not** built here yet — real Phase 2/3 items, not implied by anything on the site:
-- Framework SDKs (LangChain, Semantic Kernel, Bedrock Agents, etc.)
-- A policy language / visual policy studio (policy packs are hand-written JSON)
-- OpenTelemetry / SIEM export
-- Federated multi-org broker mode
-- Evidence-to-limit automatic binding (evidence can be *referenced* on a receipt; it does not yet *change* what a policy allows)
-- A certification/marketplace program
+
+* Framework SDKs (LangChain, Semantic Kernel, Bedrock Agents, etc.)
+* A policy language / visual policy studio (policy packs are hand-written JSON)
+* OpenTelemetry / SIEM export
+* Federated multi-org broker mode
+* Evidence-to-limit automatic binding (evidence can be *referenced* on a receipt; it does not yet *change* what a policy allows)
+* A certification/marketplace program
 
 ## Project structure
 
+```text
 cyraduct/
 ├── main.py # FastAPI app entrypoint, public-key endpoint
 ├── generate_key.py # One-time signing keypair generator for deployment
 ├── verify_receipt.py # Standalone receipt verifier (no server trust required)
 ├── app/
-│ ├── config.py # Expiry policy, admin key
-│ ├── crypto.py # Ed25519 signing/verification
-│ ├── consequence.py # Transparent consequence scoring heuristic
-│ ├── models.py # Pydantic models: ActionRequest, Receipt, etc.
-│ ├── policy_engine.py # Loads + evaluates policy packs
-│ ├── receipts.py # Issues, hashes, chains, expires receipts
-│ ├── storage.py # SQLite: receipts, revocations, audit log, evidence, kill switch
-│ └── routers/
-│ ├── advisory.py # Tier 1
-│ ├── attested.py # Tier 2 (evaluate / verify / revoke / revoke-agent)
-│ ├── broker.py # Tier 3 (validates a receipt, then executes via webhook)
-│ ├── conformance.py # Published test-vector runner
-│ ├── evidence.py # Evidence package registration
-│ ├── receipts.py # Receipt querying by agent/time range
-│ └── admin.py # Kill switch + audit log
+│   ├── config.py # Expiry policy, admin key
+│   ├── crypto.py # Ed25519 signing/verification
+│   ├── consequence.py # Transparent consequence scoring heuristic
+│   ├── models.py # Pydantic models: ActionRequest, Receipt, etc.
+│   ├── policy_engine.py # Loads + evaluates policy packs
+│   ├── receipts.py # Issues, hashes, chains, expires receipts
+│   ├── storage.py # SQLite: receipts, revocations, audit log, evidence, kill switch
+│   └── routers/
+│       ├── advisory.py # Tier 1
+│       ├── attested.py # Tier 2 (evaluate / verify / revoke / revoke-agent)
+│       ├── broker.py # Tier 3 (validates a receipt, then executes via webhook)
+│       ├── conformance.py # Published test-vector runner
+│       ├── evidence.py # Evidence package registration
+│       ├── receipts.py # Receipt querying by agent/time range
+│       └── admin.py # Kill switch + audit log
 ├── policy_packs/
-│ ├── generic.json
-│ ├── banking.json
-│ ├── healthcare.json
-│ ├── finance_vendor_change_v1.json # Finance Guard vendor/payment policy
-│ ├── fixtures.json # Positive AND negative conformance cases
+│   ├── generic.json
+│   ├── banking.json
+│   ├── healthcare.json
+│   ├── finance_vendor_change_v1.json # Finance Guard vendor/payment policy
+│   └── fixtures.json # Positive AND negative conformance cases
 ├── tests/
-│ └── test_conformance.py
+│   └── test_conformance.py
 ├── LICENSE # Apache 2.0
 ├── requirements.txt
 ├── railway.json
@@ -113,13 +236,13 @@ docs/
 
 examples/
 └── finance_vendor_change.json # Example action request
-
+```
 
 ## Run locally
 
 ```bash
 python -m venv venv
-source venv/bin/activate       # Linux/macOS; use venv\\Scripts\\activate on Windows
+source venv/bin/activate       # Linux/macOS; use venv\Scripts\activate on Windows
 pip install -r requirements.txt
 cp .env.example .env   # edit secrets before any real use
 uvicorn main:app --reload
@@ -149,9 +272,12 @@ dev but means the signing identity resets on every redeploy on most PaaS platfor
 
 ```bash
 curl http://localhost:8000/v1/public-key | python -c "import json,sys; print(json.load(sys.stdin)['public_key_b64'])" > public_key.txt
-curl -X POST http://localhost:8000/v1/attested/evaluate -H "Content-Type: application/json" \
+
+curl -X POST http://localhost:8000/v1/attested/evaluate \
+  -H "Content-Type: application/json" \
   -d '{"agent_id":"agent-1","action_type":"read_public_doc","consequence_class":"low_risk","policy_pack":"generic","payload":{}}' \
   > receipt.json
+
 python verify_receipt.py receipt.json public_key.txt
 ```
 
@@ -190,24 +316,25 @@ curl -X POST http://localhost:8000/v1/conformance/run
 2. In Railway: **New Project → Deploy from GitHub repo** → select this repo.
 3. Railway auto-detects `railway.json` / `Procfile` and uses Nixpacks to build.
 4. Set environment variables in the Railway dashboard (Settings → Variables):
-   - `CYRADUCT_PRIVATE_KEY_B64` — from `python generate_key.py`, mark as secret. Keeps the
+
+   * `CYRADUCT_PRIVATE_KEY_B64` — from `python generate_key.py`, mark as secret. Keeps the
      signing identity stable across redeploys — do not skip this.
-   - `CYRADUCT_ADMIN_KEY` — long random string (gates kill switch, revocation, audit log)
-   - (optional) `CYRADUCT_KEY_ID` — a label for your key, e.g. `cyraduct-prod-1`
+   * `CYRADUCT_ADMIN_KEY` — long random string (gates kill switch, revocation, audit log)
+   * (optional) `CYRADUCT_KEY_ID` — a label for your key, e.g. `cyraduct-prod-1`
 5. Deploy. Railway assigns a public URL; `/docs` will be live there.
 
 ## Known limitations (MVP, by design)
 
-- **Storage is SQLite on local disk.** Fine for a pilot; on Railway this resets on
-  redeploy unless you attach a persistent volume or migrate to Postgres. Do not use
-  this as-is for anything carrying real financial or health-record consequences.
-- **Broker execution is a generic webhook proxy**, not a real MCP/A2A/protocol
+* **Storage is SQLite locally and should be Postgres in production.** Configure
+  `CYRADUCT_DATABASE_URL` to a managed Postgres instance before carrying real
+  financial or health-record consequences.
+* **Broker execution is a generic webhook proxy**, not a real MCP/A2A/protocol
   terminator. Treat `/v1/broker/execute` as a proof of the *pattern* (in-path
   enforcement with receipt validation), not a production broker.
-- **Policy packs are unsigned placeholders.** The `signed_by` field names where a
+* **Policy packs are unsigned placeholders.** The `signed_by` field names where a
   real domain-authority signature would go. Cryptographic pack signing is not yet
   implemented — see `app/policy_engine.py` for where to add it.
-- **No multi-tenant auth model yet.** One shared admin key. Fine for a single pilot
+* **No multi-tenant auth model yet.** One shared admin key. Fine for a single pilot
   deployment; not fine for multiple customers on one instance.
 
 These are the honest next steps, not hidden gaps — consistent with the project's

@@ -18,6 +18,7 @@ hand real API access to an external tester without giving them control
 over the live service real callers depend on.
 """
 from typing import Optional
+import hmac
 from fastapi import HTTPException
 
 from . import config
@@ -38,9 +39,9 @@ def check_admin_or_test_key(provided_key: Optional[str]) -> AuthResult:
     raise — callers decide what each tier is allowed to do."""
     if not provided_key:
         return AuthResult(False, False)
-    if provided_key == config.ADMIN_API_KEY:
+    if config.ADMIN_API_KEY and hmac.compare_digest(provided_key, config.ADMIN_API_KEY):
         return AuthResult(True, False)
-    if config.TEST_ADMIN_KEY and provided_key == config.TEST_ADMIN_KEY:
+    if config.TEST_ADMIN_KEY and hmac.compare_digest(provided_key, config.TEST_ADMIN_KEY):
         return AuthResult(False, True)
     return AuthResult(False, False)
 

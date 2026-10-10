@@ -1,0 +1,44 @@
+{
+  "name": "finance_vendor_change_indepora_v1",
+  "version": "0.1.0",
+  "signed_by": "cyraduct-reference (experimental adapter pack)",
+  "description": "Experimental policy requiring a current, signed INDEPORA Continuity Record before a vendor bank-detail change can be authorized.",
+  "rules": [
+    {
+      "id": "indepora.deny.missing_record",
+      "when": { "action_type": "update_vendor_bank_details", "indepora_standing_missing": true },
+      "effect": "deny",
+      "reason": "Signed INDEPORA Continuity Record was not supplied"
+    },
+    {
+      "id": "indepora.deny.insufficient_standing",
+      "when": { "action_type": "update_vendor_bank_details", "indepora_standing": "insufficient" },
+      "effect": "deny",
+      "reason": "INDEPORA found insufficient independent evidence for this action"
+    },
+    {
+      "id": "indepora.deny.unknown_standing",
+      "when": { "action_type": "update_vendor_bank_details", "indepora_standing": "unknown" },
+      "effect": "deny",
+      "reason": "INDEPORA standing is unknown"
+    },
+    {
+      "id": "indepora.deny.conflicted_standing",
+      "when": { "action_type": "update_vendor_bank_details", "indepora_standing": "conflicted" },
+      "effect": "deny",
+      "reason": "INDEPORA identified conflicting evidence lineage"
+    },
+    {
+      "id": "indepora.deny.unknown_lineage",
+      "when": { "action_type": "update_vendor_bank_details", "indepora_unknown_relationship_count_gt": 0 },
+      "effect": "deny",
+      "reason": "Unknown evidence lineage prevents autonomous vendor change"
+    },
+    {
+      "id": "indepora.deny.too_few_origins",
+      "when": { "action_type": "update_vendor_bank_details", "indepora_candidate_origin_count_lt": 3 },
+      "effect": "deny",
+      "reason": "Fewer than three candidate origins support this vendor change"
+    }
+  ]
+}

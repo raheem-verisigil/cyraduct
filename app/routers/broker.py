@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from ..runtime import RuntimeActionRequest
 from .. import receipts, storage, url_safety
+from ..indepora import IndeporaVerificationError, verify_and_bind
 from ..rate_limit import limiter
 
 router = APIRouter(prefix="/v1/broker", tags=["broker"])
@@ -59,6 +60,17 @@ async def execute(
         )
         return {"executed": False, "reason": "receipt_expired", "receipt": receipt.model_dump()}
 
+    # Re-derive the assurance binding at execution time. A receipt that was
+    # issued from a verified INDEPORA record must not be reusable with a
+    # caller-supplied or altered assurance object.
+    if receipt.evidence_assurance is not None:
+        if req.indepora_record is None:
+            return {"executed": False, "reason": "indepora_record_required", "receipt": receipt.model_dump()}
+        try:
+            req.evidence_assurance = verify_and_bind(req.indepora_record)
+        except IndeporaVerificationError as exc:
+            return {"executed": False, "reason": str(exc), "receipt": receipt.model_dump()}
+
     if receipt.authorization_type == "runtime":
         if receipt.runtime_decision != "allow":
             storage.append_audit(
@@ -89,6 +101,17 @@ async def execute(
         return {
             "executed": False,
             "reason": binding_reason,
+            "receipt": receipt.model_dump(),
+        }
+
+    if receipt.decision == "conditional":
+        storage.append_audit(
+            "broker_blocked_conditional_requires_human",
+            {"agent_id": req.agent_id, "receipt_id": receipt_id},
+        )
+        return {
+            "executed": False,
+            "reason": "conditional_receipt_requires_human_approval",
             "receipt": receipt.model_dump(),
         }
 

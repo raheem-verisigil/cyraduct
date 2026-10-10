@@ -22,32 +22,59 @@ import hashlib
 import json 
 import os
 import threading
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 
 from sqlalchemy import (
     create_engine, MetaData, Table, Column, String, Integer, Text, select,
+ feature/finance-guard
     insert, update, delete as sa_delete, desc, asc,
 ) 
 from sqlalchemy.pool import NullPool
+=======
+    insert, update, delete as sa_delete, desc, asc, text,
+)
+from sqlalchemy.pool import NullPool
+from sqlalchemy import (
+    create_engine, MetaData, Table, Column, String, Integer, Text, select,
+    insert, update, delete as sa_delete, desc, asc, text,
+)
+ main
 
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
+ feature/finance-guard
 from .models import Receipt, EvidencePackage
 _DATABASE_URL = os.environ.get("CYRADUCT_DATABASE_URL", "sqlite:///./cyraduct.db")
 
 
 from sqlalchemy.pool import NullPool
 
+=======
+from .models import Receipt, EvidencePackage, PartnerSubmission, AnalyticsEvent, new_id
+from .audit_anchor import anchor_latest_hash
+
+_DATABASE_URL = os.environ.get("CYRADUCT_DATABASE_URL", "sqlite:///./cyraduct.db"
+                               
+ main
+                              
 _engine_kwargs = {
     "future": True,
 }
 
 if _DATABASE_URL.startswith("sqlite"):
     _engine_kwargs["connect_args"] = {
+ feature/finance-guard
         "check_same_thread": False
     }
+=======
+        "check_same_thread": False,
+    }
+    # Important on Windows test environments:
+    # prevents pooled SQLite file handles keeping temp DB files locked.
+    from sqlalchemy.pool import NullPool
+      main  
     _engine_kwargs["poolclass"] = NullPool
 
 _engine = create_engine(_DATABASE_URL, **_engine_kwargs)
@@ -92,6 +119,35 @@ evidence_table = Table(
     Column("data", Text, nullable=False),
 )
 
+partners_table = Table(
+    "partners", metadata,
+    Column("id", String, primary_key=True),
+    Column("name", String, nullable=False),
+    Column("company", String, nullable=False),
+    Column("email", String, nullable=False, index=True),
+    Column("role", String, nullable=True),
+    Column("partner_type", String, nullable=False),
+    Column("message", Text, nullable=False),
+    Column("created_at", String, nullable=False, index=True),
+    Column("status", String, nullable=False, default="new"),
+    Column("utm_source", String, nullable=True),
+    Column("utm_medium", String, nullable=True),
+    Column("utm_campaign", String, nullable=True),
+    Column("utm_content", String, nullable=True),
+    Column("landing_path", String, nullable=True),
+    Column("notification_status", String, nullable=False, default="pending"),
+    Column("notified_at", String, nullable=True),
+    Column("notification_error", Text, nullable=True),
+)
+
+analytics_events_table = Table(
+    "analytics_events", metadata,
+    Column("id", String, primary_key=True),
+    Column("event", String, nullable=False, index=True),
+    Column("properties", Text, nullable=False),
+    Column("created_at", String, nullable=False, index=True),
+)
+
 agent_chain_table = Table(
     "agent_chain", metadata,
     Column("agent_id", String, primary_key=True),
@@ -102,12 +158,79 @@ agent_chain_table = Table(
 def init_db():
     metadata.create_all(_engine)
     _migrate_add_consumed_at_column()
+    _migrate_partner_attribution_columns()
     with _engine.begin() as conn:
         exists = conn.execute(
             select(kill_switch_table.c.id).where(kill_switch_table.c.id == 1)
         ).fetchone()
         if not exists:
             conn.execute(insert(kill_switch_table).values(id=1, active=0, reason=None))
+
+
+def save_partner_submission(submission: PartnerSubmission) -> dict:
+    """Persist a partner request and return the notification-ready record."""
+    partner_id = new_id("partner")
+    created_at = datetime.now(timezone.utc).isoformat()
+    record = {
+        "id": partner_id,
+        "name": submission.name,
+        "company": submission.company,
+        "email": submission.email,
+        "role": submission.role,
+        "partner_type": submission.partner_type,
+        "message": submission.message,
+        "created_at": created_at,
+        "status": "new",
+        "utm_source": submission.utm_source,
+        "utm_medium": submission.utm_medium,
+        "utm_campaign": submission.utm_campaign,
+        "utm_content": submission.utm_content,
+        "landing_path": submission.landing_path,
+        "notification_status": "pending",
+        "notified_at": None,
+        "notification_error": None,
+    }
+    with _lock, _engine.begin() as conn:
+        conn.execute(insert(partners_table).values(**record))
+    return record
+
+
+def update_partner_notification(partner_id: str, status: str, error: Optional[str] = None) -> None:
+    with _lock, _engine.begin() as conn:
+        conn.execute(
+            update(partners_table).where(partners_table.c.id == partner_id).values(
+                notification_status=status,
+                notified_at=datetime.now(timezone.utc).isoformat() if status == "sent" else None,
+                notification_error=error[:1000] if error else None,
+            )
+        )
+
+
+def list_partner_submissions(limit: int = 100) -> list[dict]:
+    with _lock, _engine.begin() as conn:
+        rows = conn.execute(
+            select(partners_table).order_by(desc(partners_table.c.created_at)).limit(max(1, min(limit, 500)))
+        ).mappings().all()
+    return [dict(row) for row in rows]
+
+
+def purge_expired_partner_data(retention_days: int) -> dict[str, int]:
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=retention_days)).isoformat()
+    with _lock, _engine.begin() as conn:
+        partner_result = conn.execute(sa_delete(partners_table).where(partners_table.c.created_at < cutoff))
+        event_result = conn.execute(sa_delete(analytics_events_table).where(analytics_events_table.c.created_at < cutoff))
+    return {"partners_deleted": partner_result.rowcount or 0, "analytics_events_deleted": event_result.rowcount or 0}
+
+
+def save_analytics_event(event: AnalyticsEvent) -> None:
+    record = {
+        "id": new_id("event"),
+        "event": event.event,
+        "properties": json.dumps(event.properties, separators=(",", ":"), sort_keys=True),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    with _lock, _engine.begin() as conn:
+        conn.execute(insert(analytics_events_table).values(**record))
 
 
 def _migrate_add_consumed_at_column():
@@ -126,6 +249,23 @@ def _migrate_add_consumed_at_column():
     try:
         with _engine.begin() as conn:
             conn.exec_driver_sql("ALTER TABLE receipts ADD COLUMN consumed_at VARCHAR")
+    except Exception:
+        pass
+
+
+def _migrate_partner_attribution_columns():
+    """Add nullable attribution fields to pre-existing partner tables."""
+    for column in ("utm_source", "utm_medium", "utm_campaign", "utm_content", "landing_path", "notification_status", "notified_at", "notification_error"):
+        try:
+            with _engine.begin() as conn:
+                conn.exec_driver_sql(f"ALTER TABLE partners ADD COLUMN {column} VARCHAR")
+        except Exception:
+            pass
+    try:
+        with _engine.begin() as conn:
+            conn.execute(
+                text("UPDATE partners SET notification_status = 'pending' WHERE notification_status IS NULL")
+            )
     except Exception:
         pass
 
@@ -263,10 +403,12 @@ def append_audit(event_type: str, detail: dict):
         timestamp = datetime.now(timezone.utc).isoformat()
         payload = json.dumps({"timestamp": timestamp, "event_type": event_type, "detail": detail}, sort_keys=True)
         entry_hash = hashlib.sha256((prev_hash + payload).encode()).hexdigest()
-        conn.execute(insert(audit_log_table).values(
+        result = conn.execute(insert(audit_log_table).values(
             timestamp=timestamp, event_type=event_type, detail=json.dumps(detail),
             prev_hash=prev_hash, entry_hash=entry_hash,
         ))
+        sequence = result.inserted_primary_key[0] if result.inserted_primary_key else None
+    anchor_latest_hash(entry_hash, sequence)
 
 
 def get_audit_log(limit: int = 200) -> list:

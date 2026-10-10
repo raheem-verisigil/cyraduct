@@ -2,8 +2,8 @@
 """
 Cyraduct database backup.
 
-Dumps every table (receipts, audit_log, kill_switch, evidence,
-agent_chain) to a single JSON document, encrypts it (Fernet, symmetric),
+Dumps every application table (receipts, audit_log, kill_switch, evidence,
+agent_chain, partners, analytics_events) to a single JSON document, encrypts it (Fernet, symmetric),
 and pushes it to a SEPARATE PRIVATE repository via the GitHub contents
 API — deliberately never the main `cyraduct` repo, which is public.
 
@@ -44,7 +44,7 @@ from sqlalchemy import select
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from app.storage import (
     _engine, receipts_table, audit_log_table, kill_switch_table,
-    evidence_table, agent_chain_table,
+    evidence_table, agent_chain_table, partners_table, analytics_events_table,
 )
 
 TABLES = {
@@ -53,6 +53,8 @@ TABLES = {
     "kill_switch": kill_switch_table,
     "evidence": evidence_table,
     "agent_chain": agent_chain_table,
+    "partners": partners_table,
+    "analytics_events": analytics_events_table,
 }
 
 

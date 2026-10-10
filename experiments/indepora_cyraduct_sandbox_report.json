@@ -1,0 +1,943 @@
+{
+  "cases": [
+    {
+      "adapter_facts": {
+        "charter_version": "synthetic-charter-v0",
+        "indepora_result_hash": "fd856f71b42fd0c40d4b20d3d88c49a4a3263be010e9e9a22010de9477865001",
+        "indepora_result_ref": "stemma-result-001",
+        "lineage_summary": {
+          "candidate_origin_count": 2,
+          "conflict_count": 0,
+          "evidence_assurance_status": "insufficient_for_independence_claim",
+          "execution_mode": "sandbox_only",
+          "inferred_relationship_count": 1,
+          "sandbox_only": true,
+          "unknown_relationship_count": 1,
+          "verified_relationship_count": 6
+        }
+      },
+      "evaluate_response": {
+        "action_id": "act_5dbd8039a8cc410380a4",
+        "decision": {
+          "decision": "allow",
+          "matched_rules": [
+            "indepora.sandbox.allow.boundary_test"
+          ],
+          "policy_pack": "indepora_sandbox_v1",
+          "policy_pack_version": "0.1.0",
+          "reasons": [
+            "Synthetic evidence-assurance result is authorized for sandbox boundary testing"
+          ]
+        },
+        "receipt": {
+          "action": {
+            "consequence_class": "generic_tool_call",
+            "consequence_score": 0.15,
+            "parameters_hash": "ca37bcd4572b7acc7bd823fb69b326e81399d6a31133e9fa3c59d183774b72d0",
+            "score_factors": [
+              "base_class:generic_tool_call=0.15"
+            ],
+            "type": "publish_sandbox_decision"
+          },
+          "action_hash": "b032f405a66ab9f0d70324483b4b78cfea289bc0bc9d931c6ba61c7500b02640",
+          "action_id": "act_5dbd8039a8cc410380a4",
+          "agent": {
+            "agent_id": "test-indepora-agent",
+            "framework": "indepora-sandbox",
+            "principal": "org:synthetic:research"
+          },
+          "authorization_type": "policy",
+          "consumed_at": null,
+          "decision": "allow",
+          "evidence": {
+            "evidence_refs": [
+              "ev-001",
+              "ev-002",
+              "ev-003",
+              "ev-004",
+              "ev-005",
+              "ev-006",
+              "ev-007",
+              "ev-008"
+            ]
+          },
+          "expires_at": "2026-10-07T07:33:04.474800+00:00",
+          "issued_at": "2026-10-07T07:03:04.474800+00:00",
+          "policy": {
+            "matched_rules": [
+              "indepora.sandbox.allow.boundary_test"
+            ],
+            "policy_pack": "indepora_sandbox_v1",
+            "policy_pack_version": "0.1.0",
+            "reasons": [
+              "Synthetic evidence-assurance result is authorized for sandbox boundary testing"
+            ]
+          },
+          "prev_receipt_hash": null,
+          "receipt_id": "rcpt_b6adc98141d644c99fe4",
+          "revoked": false,
+          "runtime_decision": null,
+          "signature": {
+            "alg": "Ed25519",
+            "key_id": "cyraduct-dev-key-1",
+            "value": "fBNkSytUl/8y3OXuvfo88D7XmF6xaUCSOIYj2vgRETXumZwR+AUl5XdYvj1AKIn9Q3MZkPM6ltx9ysQqlMYYBQ=="
+          }
+        }
+      },
+      "execution_response": {
+        "action_id": "act_5dbd8039a8cc410380a4",
+        "decision": {
+          "decision": "allow",
+          "matched_rules": [
+            "indepora.sandbox.allow.boundary_test"
+          ],
+          "policy_pack": "indepora_sandbox_v1",
+          "policy_pack_version": "0.1.0",
+          "reasons": [
+            "Synthetic evidence-assurance result is authorized for sandbox boundary testing"
+          ]
+        },
+        "executed": true,
+        "execution_result": {
+          "body": "{\"accepted\":true,\"sink_call_number\":1}",
+          "status_code": 200
+        },
+        "receipt": {
+          "action": {
+            "consequence_class": "generic_tool_call",
+            "consequence_score": 0.15,
+            "parameters_hash": "ca37bcd4572b7acc7bd823fb69b326e81399d6a31133e9fa3c59d183774b72d0",
+            "score_factors": [
+              "base_class:generic_tool_call=0.15"
+            ],
+            "type": "publish_sandbox_decision"
+          },
+          "action_hash": "b032f405a66ab9f0d70324483b4b78cfea289bc0bc9d931c6ba61c7500b02640",
+          "action_id": "act_5dbd8039a8cc410380a4",
+          "agent": {
+            "agent_id": "test-indepora-agent",
+            "framework": "indepora-sandbox",
+            "principal": "org:synthetic:research"
+          },
+          "authorization_type": "policy",
+          "consumed_at": "2026-10-07T07:03:04.490760+00:00",
+          "decision": "allow",
+          "evidence": {
+            "evidence_refs": [
+              "ev-001",
+              "ev-002",
+              "ev-003",
+              "ev-004",
+              "ev-005",
+              "ev-006",
+              "ev-007",
+              "ev-008"
+            ]
+          },
+          "expires_at": "2026-10-07T07:33:04.474800+00:00",
+          "issued_at": "2026-10-07T07:03:04.474800+00:00",
+          "policy": {
+            "matched_rules": [
+              "indepora.sandbox.allow.boundary_test"
+            ],
+            "policy_pack": "indepora_sandbox_v1",
+            "policy_pack_version": "0.1.0",
+            "reasons": [
+              "Synthetic evidence-assurance result is authorized for sandbox boundary testing"
+            ]
+          },
+          "prev_receipt_hash": null,
+          "receipt_id": "rcpt_b6adc98141d644c99fe4",
+          "revoked": false,
+          "runtime_decision": null,
+          "signature": {
+            "alg": "Ed25519",
+            "key_id": "cyraduct-dev-key-1",
+            "value": "fBNkSytUl/8y3OXuvfo88D7XmF6xaUCSOIYj2vgRETXumZwR+AUl5XdYvj1AKIn9Q3MZkPM6ltx9ysQqlMYYBQ=="
+          }
+        }
+      },
+      "expected": "authorized and executed once in local sink",
+      "name": "baseline",
+      "request": {
+        "action_type": "publish_sandbox_decision",
+        "agent_id": "test-indepora-agent",
+        "consequence_class": "generic_tool_call",
+        "consumer": "sandbox:decision-sink",
+        "evidence_refs": [
+          "ev-001",
+          "ev-002",
+          "ev-003",
+          "ev-004",
+          "ev-005",
+          "ev-006",
+          "ev-007",
+          "ev-008"
+        ],
+        "framework": "indepora-sandbox",
+        "jurisdiction": "TEST",
+        "payload": {
+          "charter_version": "synthetic-charter-v0",
+          "decision_id": "decision-001",
+          "decision_parameters": {
+            "amount": 1,
+            "publication_label": "synthetic-boundary-result"
+          },
+          "execution_mode": "sandbox_only",
+          "experiment_id": "exp-boundary-001",
+          "indepora_result_hash": "fd856f71b42fd0c40d4b20d3d88c49a4a3263be010e9e9a22010de9477865001",
+          "indepora_result_ref": "stemma-result-001",
+          "lineage_summary": {
+            "candidate_origin_count": 2,
+            "conflict_count": 0,
+            "evidence_assurance_status": "insufficient_for_independence_claim",
+            "execution_mode": "sandbox_only",
+            "inferred_relationship_count": 1,
+            "sandbox_only": true,
+            "unknown_relationship_count": 1,
+            "verified_relationship_count": 6
+          },
+          "sandbox_only": true
+        },
+        "policy_pack": "indepora_sandbox_v1",
+        "principal": "org:synthetic:research",
+        "protocol_version": "1.0",
+        "purpose": "synthetic evidence-lineage boundary experiment",
+        "request_id": "req-indepora-cyraduct-001"
+      },
+      "stemma": {
+        "charter": {
+          "conclusion": "These 8 apparent pieces of evidence do not represent 8 independent origins.",
+          "standing": "insufficient_for_independence_claim",
+          "version": "synthetic-charter-v0"
+        },
+        "evidence": [
+          {
+            "id": "ev-001",
+            "origin": "origin-A",
+            "relationship": "source"
+          },
+          {
+            "id": "ev-002",
+            "origin": "origin-A",
+            "relationship": "derived"
+          },
+          {
+            "id": "ev-003",
+            "origin": "origin-A",
+            "relationship": "derived"
+          },
+          {
+            "id": "ev-004",
+            "origin": "origin-A",
+            "relationship": "derived"
+          },
+          {
+            "id": "ev-005",
+            "origin": "origin-B",
+            "relationship": "source"
+          },
+          {
+            "id": "ev-006",
+            "origin": "origin-B",
+            "relationship": "derived"
+          },
+          {
+            "id": "ev-007",
+            "origin": "origin-A",
+            "relationship": "republication"
+          },
+          {
+            "id": "ev-008",
+            "origin": null,
+            "relationship": "unknown"
+          }
+        ],
+        "experiment_id": "exp-boundary-001",
+        "issued_at": "2026-10-07T08:00:00Z",
+        "lineage": {
+          "apparent_evidence_count": 8,
+          "candidate_origin_count": 2,
+          "conflict_count": 0,
+          "inferred_relationship_count": 1,
+          "unknown_relationship_count": 1,
+          "verified_relationship_count": 6
+        },
+        "result_hash": "fd856f71b42fd0c40d4b20d3d88c49a4a3263be010e9e9a22010de9477865001",
+        "result_id": "stemma-result-001",
+        "schema": "indepora.stemma.v0.synthetic",
+        "signature": "ce7f36079cd76781d4de61cfeb866850cfdb10d36c2c15cfbe473e75b65e59c0",
+        "unknowns": [
+          "ev-008 lineage is unknown; it is not treated as independent"
+        ]
+      }
+    },
+    {
+      "expected": "action_binding_mismatch",
+      "name": "changed_result_hash",
+      "request": {
+        "action_type": "publish_sandbox_decision",
+        "agent_id": "test-indepora-agent",
+        "consequence_class": "generic_tool_call",
+        "consumer": "sandbox:decision-sink",
+        "evidence_refs": [
+          "ev-001",
+          "ev-002",
+          "ev-003",
+          "ev-004",
+          "ev-005",
+          "ev-006",
+          "ev-007",
+          "ev-008"
+        ],
+        "framework": "indepora-sandbox",
+        "jurisdiction": "TEST",
+        "payload": {
+          "charter_version": "synthetic-charter-v0",
+          "decision_id": "decision-001",
+          "decision_parameters": {
+            "amount": 1,
+            "publication_label": "synthetic-boundary-result"
+          },
+          "execution_mode": "sandbox_only",
+          "experiment_id": "exp-boundary-001",
+          "indepora_result_hash": "fabricated-result-hash",
+          "indepora_result_ref": "stemma-result-001",
+          "lineage_summary": {
+            "candidate_origin_count": 2,
+            "conflict_count": 0,
+            "evidence_assurance_status": "insufficient_for_independence_claim",
+            "execution_mode": "sandbox_only",
+            "inferred_relationship_count": 1,
+            "sandbox_only": true,
+            "unknown_relationship_count": 1,
+            "verified_relationship_count": 6
+          },
+          "sandbox_only": true
+        },
+        "policy_pack": "indepora_sandbox_v1",
+        "principal": "org:synthetic:research",
+        "protocol_version": "1.0",
+        "purpose": "synthetic evidence-lineage boundary experiment",
+        "request_id": "req-indepora-cyraduct-001"
+      },
+      "response": {
+        "executed": false,
+        "reason": "action_binding_mismatch",
+        "receipt": {
+          "action": {
+            "consequence_class": "generic_tool_call",
+            "consequence_score": 0.15,
+            "parameters_hash": "ca37bcd4572b7acc7bd823fb69b326e81399d6a31133e9fa3c59d183774b72d0",
+            "score_factors": [
+              "base_class:generic_tool_call=0.15"
+            ],
+            "type": "publish_sandbox_decision"
+          },
+          "action_hash": "8fe5b5879903cfb2742c06f88f8505c6818730a10d9ec8d9f2c209c61027d6f8",
+          "action_id": "act_17d70c2a461447f8b9ea",
+          "agent": {
+            "agent_id": "test-indepora-agent",
+            "framework": "indepora-sandbox",
+            "principal": "org:synthetic:research"
+          },
+          "authorization_type": "policy",
+          "consumed_at": null,
+          "decision": "allow",
+          "evidence": {
+            "evidence_refs": [
+              "ev-001",
+              "ev-002",
+              "ev-003",
+              "ev-004",
+              "ev-005",
+              "ev-006",
+              "ev-007",
+              "ev-008"
+            ]
+          },
+          "expires_at": "2026-10-07T07:33:04.524133+00:00",
+          "issued_at": "2026-10-07T07:03:04.524133+00:00",
+          "policy": {
+            "matched_rules": [
+              "indepora.sandbox.allow.boundary_test"
+            ],
+            "policy_pack": "indepora_sandbox_v1",
+            "policy_pack_version": "0.1.0",
+            "reasons": [
+              "Synthetic evidence-assurance result is authorized for sandbox boundary testing"
+            ]
+          },
+          "prev_receipt_hash": "b032f405a66ab9f0d70324483b4b78cfea289bc0bc9d931c6ba61c7500b02640",
+          "receipt_id": "rcpt_97a671a601744b21afe3",
+          "revoked": false,
+          "runtime_decision": null,
+          "signature": {
+            "alg": "Ed25519",
+            "key_id": "cyraduct-dev-key-1",
+            "value": "iPsVWSBPnle4t+KeS4oMbwQgnvRbGdLbaWXT7QI5phBBIlz+xtaOZ0KZRA6Tp79AhOZA6DcuExQp07er+kpVDQ=="
+          }
+        }
+      }
+    },
+    {
+      "expected": "action_binding_mismatch",
+      "name": "changed_evidence_refs",
+      "request": {
+        "action_type": "publish_sandbox_decision",
+        "agent_id": "test-indepora-agent",
+        "consequence_class": "generic_tool_call",
+        "consumer": "sandbox:decision-sink",
+        "evidence_refs": [
+          "ev-001",
+          "ev-002",
+          "ev-999"
+        ],
+        "framework": "indepora-sandbox",
+        "jurisdiction": "TEST",
+        "payload": {
+          "charter_version": "synthetic-charter-v0",
+          "decision_id": "decision-001",
+          "decision_parameters": {
+            "amount": 1,
+            "publication_label": "synthetic-boundary-result"
+          },
+          "execution_mode": "sandbox_only",
+          "experiment_id": "exp-boundary-001",
+          "indepora_result_hash": "fd856f71b42fd0c40d4b20d3d88c49a4a3263be010e9e9a22010de9477865001",
+          "indepora_result_ref": "stemma-result-001",
+          "lineage_summary": {
+            "candidate_origin_count": 2,
+            "conflict_count": 0,
+            "evidence_assurance_status": "insufficient_for_independence_claim",
+            "execution_mode": "sandbox_only",
+            "inferred_relationship_count": 1,
+            "sandbox_only": true,
+            "unknown_relationship_count": 1,
+            "verified_relationship_count": 6
+          },
+          "sandbox_only": true
+        },
+        "policy_pack": "indepora_sandbox_v1",
+        "principal": "org:synthetic:research",
+        "protocol_version": "1.0",
+        "purpose": "synthetic evidence-lineage boundary experiment",
+        "request_id": "req-indepora-cyraduct-001"
+      },
+      "response": {
+        "executed": false,
+        "reason": "action_binding_mismatch",
+        "receipt": {
+          "action": {
+            "consequence_class": "generic_tool_call",
+            "consequence_score": 0.15,
+            "parameters_hash": "ca37bcd4572b7acc7bd823fb69b326e81399d6a31133e9fa3c59d183774b72d0",
+            "score_factors": [
+              "base_class:generic_tool_call=0.15"
+            ],
+            "type": "publish_sandbox_decision"
+          },
+          "action_hash": "8c2bc15d348db265b6b64fb3924915b3609d9d5d55d63213b3cfcd3655e1388b",
+          "action_id": "act_55a8cbb49b264f6cad82",
+          "agent": {
+            "agent_id": "test-indepora-agent",
+            "framework": "indepora-sandbox",
+            "principal": "org:synthetic:research"
+          },
+          "authorization_type": "policy",
+          "consumed_at": null,
+          "decision": "allow",
+          "evidence": {
+            "evidence_refs": [
+              "ev-001",
+              "ev-002",
+              "ev-003",
+              "ev-004",
+              "ev-005",
+              "ev-006",
+              "ev-007",
+              "ev-008"
+            ]
+          },
+          "expires_at": "2026-10-07T07:33:04.539800+00:00",
+          "issued_at": "2026-10-07T07:03:04.539800+00:00",
+          "policy": {
+            "matched_rules": [
+              "indepora.sandbox.allow.boundary_test"
+            ],
+            "policy_pack": "indepora_sandbox_v1",
+            "policy_pack_version": "0.1.0",
+            "reasons": [
+              "Synthetic evidence-assurance result is authorized for sandbox boundary testing"
+            ]
+          },
+          "prev_receipt_hash": "8fe5b5879903cfb2742c06f88f8505c6818730a10d9ec8d9f2c209c61027d6f8",
+          "receipt_id": "rcpt_1c2f44d5545945238050",
+          "revoked": false,
+          "runtime_decision": null,
+          "signature": {
+            "alg": "Ed25519",
+            "key_id": "cyraduct-dev-key-1",
+            "value": "YTyHeG3Vs3z/FJaigSw20Zlb6AvWuEaRmAu51bOCXXrR69CqZlUCAEFwGItqnDr+afUWFNoNg7Olby8PTeqfAQ=="
+          }
+        }
+      }
+    },
+    {
+      "expected": "action_binding_mismatch",
+      "name": "changed_action_parameters",
+      "request": {
+        "action_type": "publish_sandbox_decision",
+        "agent_id": "test-indepora-agent",
+        "consequence_class": "generic_tool_call",
+        "consumer": "sandbox:decision-sink",
+        "evidence_refs": [
+          "ev-001",
+          "ev-002",
+          "ev-003",
+          "ev-004",
+          "ev-005",
+          "ev-006",
+          "ev-007",
+          "ev-008"
+        ],
+        "framework": "indepora-sandbox",
+        "jurisdiction": "TEST",
+        "payload": {
+          "charter_version": "synthetic-charter-v0",
+          "decision_id": "decision-001",
+          "decision_parameters": {
+            "amount": 999,
+            "publication_label": "changed"
+          },
+          "execution_mode": "sandbox_only",
+          "experiment_id": "exp-boundary-001",
+          "indepora_result_hash": "fd856f71b42fd0c40d4b20d3d88c49a4a3263be010e9e9a22010de9477865001",
+          "indepora_result_ref": "stemma-result-001",
+          "lineage_summary": {
+            "candidate_origin_count": 2,
+            "conflict_count": 0,
+            "evidence_assurance_status": "insufficient_for_independence_claim",
+            "execution_mode": "sandbox_only",
+            "inferred_relationship_count": 1,
+            "sandbox_only": true,
+            "unknown_relationship_count": 1,
+            "verified_relationship_count": 6
+          },
+          "sandbox_only": true
+        },
+        "policy_pack": "indepora_sandbox_v1",
+        "principal": "org:synthetic:research",
+        "protocol_version": "1.0",
+        "purpose": "synthetic evidence-lineage boundary experiment",
+        "request_id": "req-indepora-cyraduct-001"
+      },
+      "response": {
+        "executed": false,
+        "reason": "action_binding_mismatch",
+        "receipt": {
+          "action": {
+            "consequence_class": "generic_tool_call",
+            "consequence_score": 0.15,
+            "parameters_hash": "ca37bcd4572b7acc7bd823fb69b326e81399d6a31133e9fa3c59d183774b72d0",
+            "score_factors": [
+              "base_class:generic_tool_call=0.15"
+            ],
+            "type": "publish_sandbox_decision"
+          },
+          "action_hash": "910b6305560ea5faf802cc0714418efd603acf3db89cf4f193ca1c3ec165a10c",
+          "action_id": "act_762c1554f29641b6bfa4",
+          "agent": {
+            "agent_id": "test-indepora-agent",
+            "framework": "indepora-sandbox",
+            "principal": "org:synthetic:research"
+          },
+          "authorization_type": "policy",
+          "consumed_at": null,
+          "decision": "allow",
+          "evidence": {
+            "evidence_refs": [
+              "ev-001",
+              "ev-002",
+              "ev-003",
+              "ev-004",
+              "ev-005",
+              "ev-006",
+              "ev-007",
+              "ev-008"
+            ]
+          },
+          "expires_at": "2026-10-07T07:33:04.555231+00:00",
+          "issued_at": "2026-10-07T07:03:04.555231+00:00",
+          "policy": {
+            "matched_rules": [
+              "indepora.sandbox.allow.boundary_test"
+            ],
+            "policy_pack": "indepora_sandbox_v1",
+            "policy_pack_version": "0.1.0",
+            "reasons": [
+              "Synthetic evidence-assurance result is authorized for sandbox boundary testing"
+            ]
+          },
+          "prev_receipt_hash": "8c2bc15d348db265b6b64fb3924915b3609d9d5d55d63213b3cfcd3655e1388b",
+          "receipt_id": "rcpt_3fe5bbd016e24368a5f7",
+          "revoked": false,
+          "runtime_decision": null,
+          "signature": {
+            "alg": "Ed25519",
+            "key_id": "cyraduct-dev-key-1",
+            "value": "IqMRCu945r9cz4jke5IpQZFX0CcttRtiJ/JPd2NlE3eCYqqop19vcIcaYT1O8zTDh5JudjpGafZcmKlZv/wZCw=="
+          }
+        }
+      }
+    },
+    {
+      "adapter_response": {
+        "accepted": false,
+        "reason": "agent_supplied_assurance_fact_rejected:candidate_origin_count"
+      },
+      "expected": "trusted adapter rejects before Cyraduct",
+      "name": "agent_claims_8_independent"
+    },
+    {
+      "adapter_response": {
+        "accepted": false,
+        "reason": "result_hash_invalid"
+      },
+      "expected": "tampered Stemma rejected by integrity check",
+      "name": "unknown_replaced_with_independent"
+    },
+    {
+      "expected": "receipt_already_consumed",
+      "name": "receipt_replay",
+      "response": {
+        "executed": false,
+        "reason": "receipt_already_consumed",
+        "receipt": {
+          "action": {
+            "consequence_class": "generic_tool_call",
+            "consequence_score": 0.15,
+            "parameters_hash": "ca37bcd4572b7acc7bd823fb69b326e81399d6a31133e9fa3c59d183774b72d0",
+            "score_factors": [
+              "base_class:generic_tool_call=0.15"
+            ],
+            "type": "publish_sandbox_decision"
+          },
+          "action_hash": "b032f405a66ab9f0d70324483b4b78cfea289bc0bc9d931c6ba61c7500b02640",
+          "action_id": "act_5dbd8039a8cc410380a4",
+          "agent": {
+            "agent_id": "test-indepora-agent",
+            "framework": "indepora-sandbox",
+            "principal": "org:synthetic:research"
+          },
+          "authorization_type": "policy",
+          "consumed_at": "2026-10-07T07:03:04.490760+00:00",
+          "decision": "allow",
+          "evidence": {
+            "evidence_refs": [
+              "ev-001",
+              "ev-002",
+              "ev-003",
+              "ev-004",
+              "ev-005",
+              "ev-006",
+              "ev-007",
+              "ev-008"
+            ]
+          },
+          "expires_at": "2026-10-07T07:33:04.474800+00:00",
+          "issued_at": "2026-10-07T07:03:04.474800+00:00",
+          "policy": {
+            "matched_rules": [
+              "indepora.sandbox.allow.boundary_test"
+            ],
+            "policy_pack": "indepora_sandbox_v1",
+            "policy_pack_version": "0.1.0",
+            "reasons": [
+              "Synthetic evidence-assurance result is authorized for sandbox boundary testing"
+            ]
+          },
+          "prev_receipt_hash": null,
+          "receipt_id": "rcpt_b6adc98141d644c99fe4",
+          "revoked": false,
+          "runtime_decision": null,
+          "signature": {
+            "alg": "Ed25519",
+            "key_id": "cyraduct-dev-key-1",
+            "value": "fBNkSytUl/8y3OXuvfo88D7XmF6xaUCSOIYj2vgRETXumZwR+AUl5XdYvj1AKIn9Q3MZkPM6ltx9ysQqlMYYBQ=="
+          }
+        }
+      }
+    },
+    {
+      "evaluate_response": {
+        "action_id": "act_289c6bb5fd614af9aa55",
+        "decision": {
+          "decision": "allow",
+          "matched_rules": [
+            "indepora.sandbox.allow.boundary_test"
+          ],
+          "policy_pack": "indepora_sandbox_v1",
+          "policy_pack_version": "0.1.0",
+          "reasons": [
+            "Synthetic evidence-assurance result is authorized for sandbox boundary testing"
+          ]
+        },
+        "receipt": {
+          "action": {
+            "consequence_class": "generic_tool_call",
+            "consequence_score": 0.15,
+            "parameters_hash": "50159bf7e68f36f74614491f7db9553951bc4c1ff1fb7f75d3543e5ea029020a",
+            "score_factors": [
+              "base_class:generic_tool_call=0.15"
+            ],
+            "type": "publish_sandbox_decision"
+          },
+          "action_hash": "b53dc5de6fbff78402875fdfc1d69ba7d9345326dc79551ad54d5bf9d528ada9",
+          "action_id": "act_289c6bb5fd614af9aa55",
+          "agent": {
+            "agent_id": "test-indepora-agent",
+            "framework": "indepora-sandbox",
+            "principal": "org:synthetic:research"
+          },
+          "authorization_type": "policy",
+          "consumed_at": null,
+          "decision": "allow",
+          "evidence": {
+            "evidence_refs": [
+              "ev-001",
+              "ev-002",
+              "ev-003",
+              "ev-004",
+              "ev-005",
+              "ev-006",
+              "ev-007",
+              "ev-008"
+            ]
+          },
+          "expires_at": "2026-10-07T07:33:04.577928+00:00",
+          "issued_at": "2026-10-07T07:03:04.577928+00:00",
+          "policy": {
+            "matched_rules": [
+              "indepora.sandbox.allow.boundary_test"
+            ],
+            "policy_pack": "indepora_sandbox_v1",
+            "policy_pack_version": "0.1.0",
+            "reasons": [
+              "Synthetic evidence-assurance result is authorized for sandbox boundary testing"
+            ]
+          },
+          "prev_receipt_hash": "910b6305560ea5faf802cc0714418efd603acf3db89cf4f193ca1c3ec165a10c",
+          "receipt_id": "rcpt_88fa996a5c3044e0b866",
+          "revoked": false,
+          "runtime_decision": null,
+          "signature": {
+            "alg": "Ed25519",
+            "key_id": "cyraduct-dev-key-1",
+            "value": "Ybnh3kRQ8xqbIlj2oyYY/aZzziydfQm75YTH9HYU5Cc+k6rBKq9CjzEMJzSOFjvUoiki6G3Vww27ru905Iu+BQ=="
+          }
+        }
+      },
+      "execution_response": {
+        "action_id": "act_289c6bb5fd614af9aa55",
+        "decision": {
+          "decision": "allow",
+          "matched_rules": [
+            "indepora.sandbox.allow.boundary_test"
+          ],
+          "policy_pack": "indepora_sandbox_v1",
+          "policy_pack_version": "0.1.0",
+          "reasons": [
+            "Synthetic evidence-assurance result is authorized for sandbox boundary testing"
+          ]
+        },
+        "executed": true,
+        "execution_result": {
+          "body": "{\"accepted\":true,\"sink_call_number\":2}",
+          "status_code": 200
+        },
+        "receipt": {
+          "action": {
+            "consequence_class": "generic_tool_call",
+            "consequence_score": 0.15,
+            "parameters_hash": "50159bf7e68f36f74614491f7db9553951bc4c1ff1fb7f75d3543e5ea029020a",
+            "score_factors": [
+              "base_class:generic_tool_call=0.15"
+            ],
+            "type": "publish_sandbox_decision"
+          },
+          "action_hash": "b53dc5de6fbff78402875fdfc1d69ba7d9345326dc79551ad54d5bf9d528ada9",
+          "action_id": "act_289c6bb5fd614af9aa55",
+          "agent": {
+            "agent_id": "test-indepora-agent",
+            "framework": "indepora-sandbox",
+            "principal": "org:synthetic:research"
+          },
+          "authorization_type": "policy",
+          "consumed_at": "2026-10-07T07:03:04.586764+00:00",
+          "decision": "allow",
+          "evidence": {
+            "evidence_refs": [
+              "ev-001",
+              "ev-002",
+              "ev-003",
+              "ev-004",
+              "ev-005",
+              "ev-006",
+              "ev-007",
+              "ev-008"
+            ]
+          },
+          "expires_at": "2026-10-07T07:33:04.577928+00:00",
+          "issued_at": "2026-10-07T07:03:04.577928+00:00",
+          "policy": {
+            "matched_rules": [
+              "indepora.sandbox.allow.boundary_test"
+            ],
+            "policy_pack": "indepora_sandbox_v1",
+            "policy_pack_version": "0.1.0",
+            "reasons": [
+              "Synthetic evidence-assurance result is authorized for sandbox boundary testing"
+            ]
+          },
+          "prev_receipt_hash": "910b6305560ea5faf802cc0714418efd603acf3db89cf4f193ca1c3ec165a10c",
+          "receipt_id": "rcpt_88fa996a5c3044e0b866",
+          "revoked": false,
+          "runtime_decision": null,
+          "signature": {
+            "alg": "Ed25519",
+            "key_id": "cyraduct-dev-key-1",
+            "value": "Ybnh3kRQ8xqbIlj2oyYY/aZzziydfQm75YTH9HYU5Cc+k6rBKq9CjzEMJzSOFjvUoiki6G3Vww27ru905Iu+BQ=="
+          }
+        }
+      },
+      "expected": "new action has a different action hash and can be authorized independently",
+      "name": "same_evidence_different_parameters",
+      "request": {
+        "action_type": "publish_sandbox_decision",
+        "agent_id": "test-indepora-agent",
+        "consequence_class": "generic_tool_call",
+        "consumer": "sandbox:decision-sink",
+        "evidence_refs": [
+          "ev-001",
+          "ev-002",
+          "ev-003",
+          "ev-004",
+          "ev-005",
+          "ev-006",
+          "ev-007",
+          "ev-008"
+        ],
+        "framework": "indepora-sandbox",
+        "jurisdiction": "TEST",
+        "payload": {
+          "charter_version": "synthetic-charter-v0",
+          "decision_id": "decision-001",
+          "decision_parameters": {
+            "amount": 2,
+            "publication_label": "second-action"
+          },
+          "execution_mode": "sandbox_only",
+          "experiment_id": "exp-boundary-001",
+          "indepora_result_hash": "fd856f71b42fd0c40d4b20d3d88c49a4a3263be010e9e9a22010de9477865001",
+          "indepora_result_ref": "stemma-result-001",
+          "lineage_summary": {
+            "candidate_origin_count": 2,
+            "conflict_count": 0,
+            "evidence_assurance_status": "insufficient_for_independence_claim",
+            "execution_mode": "sandbox_only",
+            "inferred_relationship_count": 1,
+            "sandbox_only": true,
+            "unknown_relationship_count": 1,
+            "verified_relationship_count": 6
+          },
+          "sandbox_only": true
+        },
+        "policy_pack": "indepora_sandbox_v1",
+        "principal": "org:synthetic:research",
+        "protocol_version": "1.0",
+        "purpose": "synthetic evidence-lineage boundary experiment",
+        "request_id": "req-indepora-cyraduct-001"
+      }
+    }
+  ],
+  "experiment": "indepora-cyraduct-boundary-sandbox-v1",
+  "scope": "synthetic local-only; no production data or external sink",
+  "sink_calls": [
+    {
+      "action_id": "act_5dbd8039a8cc410380a4",
+      "action_type": "publish_sandbox_decision",
+      "agent_id": "test-indepora-agent",
+      "authority": "present",
+      "payload": {
+        "charter_version": "synthetic-charter-v0",
+        "decision_id": "decision-001",
+        "decision_parameters": {
+          "amount": 1,
+          "publication_label": "synthetic-boundary-result"
+        },
+        "execution_mode": "sandbox_only",
+        "experiment_id": "exp-boundary-001",
+        "indepora_result_hash": "fd856f71b42fd0c40d4b20d3d88c49a4a3263be010e9e9a22010de9477865001",
+        "indepora_result_ref": "stemma-result-001",
+        "lineage_summary": {
+          "candidate_origin_count": 2,
+          "conflict_count": 0,
+          "evidence_assurance_status": "insufficient_for_independence_claim",
+          "execution_mode": "sandbox_only",
+          "inferred_relationship_count": 1,
+          "sandbox_only": true,
+          "unknown_relationship_count": 1,
+          "verified_relationship_count": 6
+        },
+        "sandbox_only": true
+      },
+      "receipt_id": "rcpt_b6adc98141d644c99fe4",
+      "resource": null,
+      "reversibility": "reversible",
+      "target": null
+    },
+    {
+      "action_id": "act_289c6bb5fd614af9aa55",
+      "action_type": "publish_sandbox_decision",
+      "agent_id": "test-indepora-agent",
+      "authority": "present",
+      "payload": {
+        "charter_version": "synthetic-charter-v0",
+        "decision_id": "decision-001",
+        "decision_parameters": {
+          "amount": 2,
+          "publication_label": "second-action"
+        },
+        "execution_mode": "sandbox_only",
+        "experiment_id": "exp-boundary-001",
+        "indepora_result_hash": "fd856f71b42fd0c40d4b20d3d88c49a4a3263be010e9e9a22010de9477865001",
+        "indepora_result_ref": "stemma-result-001",
+        "lineage_summary": {
+          "candidate_origin_count": 2,
+          "conflict_count": 0,
+          "evidence_assurance_status": "insufficient_for_independence_claim",
+          "execution_mode": "sandbox_only",
+          "inferred_relationship_count": 1,
+          "sandbox_only": true,
+          "unknown_relationship_count": 1,
+          "verified_relationship_count": 6
+        },
+        "sandbox_only": true
+      },
+      "receipt_id": "rcpt_88fa996a5c3044e0b866",
+      "resource": null,
+      "reversibility": "reversible",
+      "target": null
+    }
+  ],
+  "stemma_conclusion": "These 8 apparent pieces of evidence do not represent 8 independent origins.",
+  "stemma_lineage": {
+    "apparent_evidence_count": 8,
+    "candidate_origin_count": 2,
+    "conflict_count": 0,
+    "inferred_relationship_count": 1,
+    "unknown_relationship_count": 1,
+    "verified_relationship_count": 6
+  }
+}

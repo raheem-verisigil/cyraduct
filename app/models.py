@@ -2,6 +2,8 @@ from typing import Optional, Literal, Dict, Any, List
 from pydantic import BaseModel, Field, model_validator
 import uuid
 
+from .indepora import EvidenceAssuranceBinding
+
 
 def new_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex[:20]}"
@@ -26,6 +28,18 @@ def _contains_nul(value: Any) -> bool:
 
 class ActionRequest(BaseModel):
     """A proposed agent action submitted for evaluation."""
+
+    protocol_version: str = Field(
+        "1.0",
+        max_length=16,
+        description="Canonical Cyraduct action-envelope version",
+    )
+
+    request_id: Optional[str] = Field(
+        None,
+        max_length=128,
+        description="Caller-supplied idempotency/correlation identifier",
+    )
 
     agent_id: str = Field(
         ...,
@@ -94,10 +108,25 @@ class ActionRequest(BaseModel):
         description="IDs of registered evidence packages this action relies on",
     )
 
+    indepora_record: Optional[Dict[str, Any]] = Field(
+        None,
+        description=(
+            "Signed INDEPORA Continuity Record. Cyraduct verifies it and derives "
+            "evidence_assurance; callers must not supply assurance facts directly."
+        ),
+    )
+
+    evidence_assurance: Optional[EvidenceAssuranceBinding] = Field(
+        None,
+        description="Trusted facts derived from a verified INDEPORA Continuity Record",
+    )
+
     @model_validator(mode="after")
     def reject_unsafe_strings(self):
         """Reject NUL bytes anywhere in request-controlled data."""
         values_to_check = (
+            self.protocol_version,
+            self.request_id,
             self.agent_id,
             self.principal,
             self.framework,
@@ -109,6 +138,8 @@ class ActionRequest(BaseModel):
             self.payload,
             self.policy_pack,
             self.evidence_refs,
+            self.indepora_record,
+            self.evidence_assurance.model_dump() if self.evidence_assurance else None,
         )
 
         if any(_contains_nul(value) for value in values_to_check):
@@ -174,6 +205,7 @@ class Receipt(BaseModel):
     action: ActionInfo
     policy: PolicyInfo
     evidence: EvidenceInfo
+    evidence_assurance: Optional[EvidenceAssuranceBinding] = None
     issued_at: str
     expires_at: str
     action_hash: str
@@ -209,3 +241,59 @@ class EvidenceRegisterRequest(BaseModel):
     label: str
     content_hash: str
     registered_by: Optional[str] = None
+
+
+class PartnerSubmission(BaseModel):
+    name: str = Field(..., min_length=1, max_length=160)
+    company: str = Field(..., min_length=1, max_length=200)
+    email: str = Field(..., min_length=3, max_length=320)
+    role: Optional[str] = Field(None, max_length=160)
+    partner_type: str = Field(..., min_length=1, max_length=80)
+    message: str = Field(..., min_length=20, max_length=5000)
+    utm_source: Optional[str] = Field(None, max_length=80)
+    utm_medium: Optional[str] = Field(None, max_length=80)
+    utm_campaign: Optional[str] = Field(None, max_length=120)
+    utm_content: Optional[str] = Field(None, max_length=120)
+    landing_path: Optional[str] = Field(None, max_length=200)
+
+    @model_validator(mode="after")
+    def validate_contact_fields(self):
+        import re
+
+        if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", self.email):
+            raise ValueError("A valid work email is required")
+        if _contains_nul(self.model_dump()):
+            raise ValueError("NUL byte is not permitted")
+        return self
+
+
+AnalyticsEventName = Literal[
+    "audience_route_click",
+    "finance_cta_click",
+    "technical_asset_click",
+    "verification_lab_start",
+    "partner_form_start",
+    "partner_form_submit",
+    "partner_form_error",
+    "outbound_click",
+]
+
+
+class AnalyticsEvent(BaseModel):
+    event: AnalyticsEventName
+    properties: Dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_event_properties(self):
+        allowed_keys = {
+            "audience", "destination", "cta", "asset", "action", "partner_type",
+            "form_version", "utm_source", "utm_medium", "utm_campaign", "utm_content",
+            "landing_path", "error_category", "source_section",
+        }
+        if len(self.properties) > 12 or any(key not in allowed_keys for key in self.properties):
+            raise ValueError("Unsupported analytics property")
+        if any(len(key) > 40 or len(value) > 160 for key, value in self.properties.items()):
+            raise ValueError("Analytics property is too long")
+        if _contains_nul(self.properties):
+            raise ValueError("NUL byte is not permitted")
+        return self

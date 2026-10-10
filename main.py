@@ -11,15 +11,16 @@ Run locally:
 
 Deploy: see README.md for Railway instructions.
 """
+import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from app.routers import advisory, attested, broker, conformance, admin, evidence, receipts as receipts_router, runtime
+from app.routers import advisory, attested, broker, conformance, admin, evidence, indepora, receipts as receipts_router, runtime, partners, analytics
 from app.storage import init_db
-from app import crypto
+from app import crypto, config
 from app.rate_limit import limiter
 
 app = FastAPI(
@@ -40,7 +41,7 @@ app.add_middleware(SlowAPIMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten before production
+    allow_origins=[origin.strip() for origin in os.getenv("CYRADUCT_ALLOWED_ORIGINS", "https://cyraduct.com").split(",") if origin.strip()],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -51,12 +52,16 @@ app.include_router(broker.router)
 app.include_router(conformance.router)
 app.include_router(admin.router)
 app.include_router(evidence.router)
+app.include_router(indepora.router)
 app.include_router(receipts_router.router)
 app.include_router(runtime.router)
+app.include_router(partners.router)
+app.include_router(analytics.router)
 
 # Initialize storage at import time so it's ready even under test clients
 # that don't trigger startup events (and again on startup for safety).
 init_db()
+config.validate_startup()
 
 
 @app.on_event("startup")
@@ -81,6 +86,11 @@ def healthz():
     return {"status": "ok"}
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "cyraduct", "environment": config.ENVIRONMENT}
+
+
 @app.get("/v1/public-key")
 def public_key():
     """The Ed25519 public key used to sign all receipts. Fetch this once
@@ -91,4 +101,7 @@ def public_key():
         "key_id": crypto.key_id(),
         "alg": "Ed25519",
         "public_key_b64": crypto.public_key_b64(),
+        "algorithm": "Ed25519",
+        "public_key": crypto.public_key_b64(),
+        "status": "active",
     }
