@@ -39,9 +39,18 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
+# Browser origins allowed to call this API. The marketing site is served on both the apex and
+# www hosts; a missing origin shows up as a page that loads but whose API-backed parts fail.
+# Add preview/staging origins with CYRADUCT_ALLOWED_ORIGINS (comma-separated) or, for many
+# generated hostnames, CYRADUCT_ALLOWED_ORIGIN_REGEX (a full-match regex; keep it narrow).
+DEFAULT_ALLOWED_ORIGINS = "https://cyraduct.com,https://www.cyraduct.com"
+ALLOWED_ORIGINS = [o.strip() for o in os.getenv("CYRADUCT_ALLOWED_ORIGINS", DEFAULT_ALLOWED_ORIGINS).split(",") if o.strip()]
+ALLOWED_ORIGIN_REGEX = os.getenv("CYRADUCT_ALLOWED_ORIGIN_REGEX", "").strip() or None
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in os.getenv("CYRADUCT_ALLOWED_ORIGINS", "https://cyraduct.com").split(",") if origin.strip()],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=ALLOWED_ORIGIN_REGEX,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -67,6 +76,10 @@ config.validate_startup()
 @app.on_event("startup")
 def on_startup():
     init_db()
+    import logging
+    logging.getLogger("cyraduct").info(
+        "CORS allowed origins: %s%s", ALLOWED_ORIGINS,
+        f" + regex {ALLOWED_ORIGIN_REGEX}" if ALLOWED_ORIGIN_REGEX else "")
 
 
 @app.get("/")

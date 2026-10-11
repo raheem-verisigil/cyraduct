@@ -238,6 +238,33 @@ examples/
 └── finance_vendor_change.json # Example action request
 ```
 
+## Operations: email, admin safety, audit integrity
+
+* **Partner requests are emailed** to `PARTNER_NOTIFICATION_TO` (default `hello@cyraduct.com`) as well as stored. Delivery runs in the
+  background and each lead records `notification_status`: `sent`, `pending` (provider not configured) or `failed`. The visitor's address is
+  set as Reply-To. Admin routes (full admin key): `GET /api/partners`, `GET /api/partners/notifications`,
+  `POST /api/partners/notifications/test`, `POST /api/partners/retry-notifications`. Kill-switch changes also send an alert email.
+* **Production safeguards:** a Railway deployment is treated as production even if `CYRADUCT_ENV` is unset. Production refuses to boot without a
+  non-default `CYRADUCT_ADMIN_KEY` and `CYRADUCT_PRIVATE_KEY_B64`. `CYRADUCT_SIGNING_SECRET` is no longer used or required.
+  Run `python scripts/check_production_env.py` (e.g. `railway run python scripts/check_production_env.py`) before deploying.
+* **Conditional receipts never auto-execute.** The broker returns `conditional_receipt_requires_human_approval` without consuming the receipt, and
+  `examples/sink_guard.py` rejects them unless `allow_conditional=True` is passed after a human approves.
+* **Audit log:** an `audit_head` record, updated atomically with each append, makes deleting the newest entries detectable by
+  `verify_audit_chain()`. It lives in the same database, so for a full tamper-evidence guarantee also set `CYRADUCT_AUDIT_ANCHOR_URL`.
+* Backups include partner leads, analytics events and `audit_head`.
+
+* **Receipt signature v2.** New receipts also carry `signature_v2`, which authenticates `decision` and the agent/action/policy
+  metadata that the original signature does not. Verifiers that rely on those fields must require it
+  (`python verify_receipt.py receipt.json public_key.txt --require-v2`; `examples/sink_guard.py` requires it by default).
+  See `docs/RECEIPT_SIGNATURE_V2.md`.
+* **Edge configuration.** `railway.json` and `Procfile` use one start command with proxy headers enabled, and Railway gates deploys on
+  `/healthz` so a failed boot keeps the previous version serving. On Railway the rate limiter keys on `X-Real-IP` (the real client);
+  elsewhere that header is ignored unless `CYRADUCT_CLIENT_IP_HEADER` names one your own proxy sets (e.g. `cf-connecting-ip`).
+  CORS allows `https://cyraduct.com` and `https://www.cyraduct.com` by default; add others with `CYRADUCT_ALLOWED_ORIGINS`
+  or `CYRADUCT_ALLOWED_ORIGIN_REGEX`.
+
+See `docs/PRODUCTION_CHECKLIST.md`.
+
 ## Run locally
 
 ```bash

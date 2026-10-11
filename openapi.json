@@ -684,7 +684,7 @@
         "type": "object"
       },
       "Receipt": {
-        "description": "Independently verifiable action receipt.\n\nVerification does not require trusting Cyraduct's server: fetch the\npublic key from /v1/public-key and verify `signature.value` against\nthe canonical hash of {receipt_id, action_hash, expires_at,\nprev_receipt_hash} (pipe-joined, empty string if prev_receipt_hash is\nNone \u2014 see app/receipts.py:issue_receipt and verify_receipt.py, which\nis the authoritative reference for the exact message format) yourself.",
+        "description": "Independently verifiable action receipt.\n\nVerification does not require trusting Cyraduct's server: fetch the\npublic key from /v1/public-key and verify `signature.value` against\nthe canonical hash of {receipt_id, action_hash, expires_at,\nprev_receipt_hash} (pipe-joined, empty string if prev_receipt_hash is\nNone \u2014 see app/receipts.py:issue_receipt and verify_receipt.py, which\nis the authoritative reference for the exact message format) yourself.\n\nThat original signature does NOT cover `decision` or the agent/action/policy\nmetadata. Receipts issued by current versions also carry `signature_v2`, which\ndoes (see docs/RECEIPT_SIGNATURE_V2.md). Verifiers that rely on `decision` or on\nthose fields must require and check `signature_v2`.",
         "properties": {
           "action": {
             "$ref": "#/components/schemas/ActionInfo"
@@ -789,6 +789,16 @@
           },
           "signature": {
             "$ref": "#/components/schemas/SignatureInfo"
+          },
+          "signature_v2": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SignatureInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -1390,6 +1400,149 @@
           }
         },
         "summary": "Create Partner Submission",
+        "tags": [
+          "partners"
+        ]
+      }
+    },
+    "/api/partners/notifications": {
+      "get": {
+        "operationId": "notification_health_api_partners_notifications_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-cyraduct-admin-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Cyraduct-Admin-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Notification Health",
+        "tags": [
+          "partners"
+        ]
+      }
+    },
+    "/api/partners/notifications/test": {
+      "post": {
+        "description": "Send one real email to the notification inbox so delivery can be confirmed\nend to end (API key, verified sending domain, mailbox).",
+        "operationId": "send_test_notification_api_partners_notifications_test_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-cyraduct-admin-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Cyraduct-Admin-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send Test Notification",
+        "tags": [
+          "partners"
+        ]
+      }
+    },
+    "/api/partners/retry-notifications": {
+      "post": {
+        "description": "Re-send notifications for leads that were never delivered (pending or\nfailed). Oldest first, at most 10 per call.",
+        "operationId": "retry_partner_notifications_api_partners_retry_notifications_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-cyraduct-admin-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Cyraduct-Admin-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Retry Partner Notifications",
         "tags": [
           "partners"
         ]

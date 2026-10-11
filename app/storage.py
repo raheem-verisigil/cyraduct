@@ -85,6 +85,18 @@ audit_log_table = Table(
     Column("entry_hash", String, nullable=False),
 )
 
+# Latest audit entry (sequence + hash), updated in the SAME transaction as every
+# append. verify_audit_chain() compares it with the last row, so deleting the
+# newest entries (which the hash chain alone cannot detect) is caught. It lives
+# in the same database, so it raises the bar but is not a substitute for the
+# external anchor (CYRADUCT_AUDIT_ANCHOR_URL) against an attacker with full DB write.
+audit_head_table = Table(
+    "audit_head", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("seq", Integer, nullable=False),
+    Column("entry_hash", String, nullable=False),
+)
+
 kill_switch_table = Table(
     "kill_switch", metadata,
     Column("id", Integer, primary_key=True),
@@ -134,10 +146,25 @@ agent_chain_table = Table(
 )
 
 
+def _init_audit_head():
+    """Existing databases have audit rows but no head yet: adopt the current last row
+    (trust on first run). Protection against later truncation starts from here."""
+    with _engine.begin() as conn:
+        if conn.execute(select(audit_head_table.c.id).where(audit_head_table.c.id == 1)).fetchone():
+            return
+        last = conn.execute(
+            select(audit_log_table.c.seq, audit_log_table.c.entry_hash)
+            .order_by(desc(audit_log_table.c.seq)).limit(1)
+        ).fetchone()
+        if last:
+            conn.execute(insert(audit_head_table).values(id=1, seq=last[0], entry_hash=last[1]))
+
+
 def init_db():
     metadata.create_all(_engine)
     _migrate_add_consumed_at_column()
     _migrate_partner_attribution_columns()
+    _init_audit_head()
     with _engine.begin() as conn:
         exists = conn.execute(
             select(kill_switch_table.c.id).where(kill_switch_table.c.id == 1)
@@ -183,6 +210,14 @@ def update_partner_notification(partner_id: str, status: str, error: Optional[st
                 notification_error=error[:1000] if error else None,
             )
         )
+
+
+def get_partner_submission(partner_id: str) -> Optional[dict]:
+    with _lock, _engine.begin() as conn:
+        row = conn.execute(
+            select(partners_table).where(partners_table.c.id == partner_id)
+        ).mappings().first()
+    return dict(row) if row else None
 
 
 def list_partner_submissions(limit: int = 100) -> list[dict]:
@@ -387,6 +422,13 @@ def append_audit(event_type: str, detail: dict):
             prev_hash=prev_hash, entry_hash=entry_hash,
         ))
         sequence = result.inserted_primary_key[0] if result.inserted_primary_key else None
+        if sequence is not None:
+            updated = conn.execute(
+                update(audit_head_table).where(audit_head_table.c.id == 1)
+                .values(seq=sequence, entry_hash=entry_hash)
+            )
+            if not updated.rowcount:
+                conn.execute(insert(audit_head_table).values(id=1, seq=sequence, entry_hash=entry_hash))
     anchor_latest_hash(entry_hash, sequence)
 
 
@@ -422,7 +464,18 @@ def verify_audit_chain() -> bool:
         if expected != row[4] or row[3] != prev_hash:
             return False
         prev_hash = row[4]
-    return True
+    with _lock, _engine.begin() as conn:
+        head = conn.execute(
+            select(audit_head_table.c.seq, audit_head_table.c.entry_hash).where(audit_head_table.c.id == 1)
+        ).fetchone()
+        if head is None:
+            return True  # head not initialised yet (fresh or pre-upgrade database)
+        last = conn.execute(
+            select(audit_log_table.c.seq, audit_log_table.c.entry_hash)
+            .order_by(desc(audit_log_table.c.seq)).limit(1)
+        ).fetchone()
+    # Rows deleted from the end (or everything wiped) no longer match the head.
+    return last is not None and (last[0], last[1]) == (head[0], head[1])
 
 
 def get_kill_switch() -> dict:

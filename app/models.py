@@ -197,6 +197,11 @@ class Receipt(BaseModel):
     prev_receipt_hash} (pipe-joined, empty string if prev_receipt_hash is
     None — see app/receipts.py:issue_receipt and verify_receipt.py, which
     is the authoritative reference for the exact message format) yourself.
+
+    That original signature does NOT cover `decision` or the agent/action/policy
+    metadata. Receipts issued by current versions also carry `signature_v2`, which
+    does (see docs/RECEIPT_SIGNATURE_V2.md). Verifiers that rely on `decision` or on
+    those fields must require and check `signature_v2`.
     """
     receipt_id: str
     action_id: str
@@ -211,6 +216,10 @@ class Receipt(BaseModel):
     action_hash: str
     prev_receipt_hash: Optional[str] = None
     signature: SignatureInfo
+    # Second, stronger signature (scheme v2, see docs/RECEIPT_SIGNATURE_V2.md). It covers
+    # `decision`, agent/action/policy metadata and evidence assurance, which the original
+    # `signature` does not. Absent on receipts issued before v2 shipped.
+    signature_v2: Optional[SignatureInfo] = None
     revoked: bool = False
     consumed_at: Optional[str] = None  # set on first successful broker execution; see app/routers/broker.py
     authorization_type: Literal["policy", "runtime"] = "policy"

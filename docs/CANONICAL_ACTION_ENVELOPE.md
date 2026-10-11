@@ -70,7 +70,7 @@ The implementation in `app/canonical.py` is the single source of truth:
 - non-finite numbers are rejected;
 - values are hashed as structured JSON, not string concatenation;
 - SHA-256 returns the lowercase hexadecimal digest;
-- Ed25519 signs the receipt message containing the receipt ID, action hash, expiry and previous receipt hash.
+- Ed25519 signs the receipt: `signature` (legacy) covers the receipt ID, action hash, expiry and previous receipt hash; `signature_v2` additionally covers the decision, agent, action type and consequence class, policy pack and version, evidence assurance and issue time. See `docs/RECEIPT_SIGNATURE_V2.md`.
 
 ## Verification invariant
 

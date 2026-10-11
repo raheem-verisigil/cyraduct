@@ -10,6 +10,7 @@ consequence-class-appropriate expiry.
 A receipt valid until explicitly revoked is treated as a design flaw
 (see positioning language) — every receipt MUST have a bounded expiry.
 """
+import json
 from datetime import datetime, timedelta, timezone
 
 from .config import CONSEQUENCE_CLASS_EXPIRY_SECONDS, DEFAULT_EXPIRY_SECONDS
@@ -19,7 +20,7 @@ from .models import (
 )
 from .runtime import RuntimeActionRequest, RuntimeDecision
 from . import crypto, consequence
-from .canonical import action_hash as canonical_action_hash, parameters_hash
+from .canonical import action_hash as canonical_action_hash, canonical_json_bytes, parameters_hash
 
 
 def _parameters_hash(payload: dict) -> str:
@@ -90,6 +91,57 @@ def _signature_message(receipt: Receipt) -> bytes:
     return message.encode()
 
 
+RECEIPT_V2_DOMAIN = b"cyraduct.receipt.v2\n"
+
+
+def receipt_core_v2(r: dict) -> dict:
+    """The exact set of receipt fields the v2 signature covers, taken from the receipt's
+    JSON form (what every client sees). External verifiers must build this identically.
+
+    Signed: identity, decision, authorization type, agent, action type and consequence
+    class, policy pack and version, evidence assurance, action hash (which itself binds the
+    full request), issue and expiry time, chain link, and the signing key id.
+    Not signed (explanatory or mutable): matched_rules, reasons, consequence_score,
+    score_factors, parameters_hash, evidence_refs (bound through action_hash),
+    revoked, consumed_at. Revocation is only knowable from the issuer."""
+    agent, action, policy = r.get("agent") or {}, r.get("action") or {}, r.get("policy") or {}
+    return {
+        "v": 2,
+        "receipt_id": r["receipt_id"],
+        "action_id": r["action_id"],
+        "decision": r["decision"],
+        "authorization_type": r.get("authorization_type", "policy"),
+        "runtime_decision": r.get("runtime_decision"),
+        "agent": {k: agent.get(k) for k in ("agent_id", "principal", "framework")},
+        "action": {k: action.get(k) for k in ("type", "consequence_class")},
+        "policy": {k: policy.get(k) for k in ("policy_pack", "policy_pack_version")},
+        "evidence_assurance": r.get("evidence_assurance"),
+        "action_hash": r["action_hash"],
+        "issued_at": r["issued_at"],
+        "expires_at": r["expires_at"],
+        "prev_receipt_hash": r.get("prev_receipt_hash"),
+        "key_id": (r.get("signature_v2") or {}).get("key_id"),
+    }
+
+
+def signature_message_v2(receipt_json: dict) -> bytes:
+    return RECEIPT_V2_DOMAIN + canonical_json_bytes(receipt_core_v2(receipt_json))
+
+
+def _signature_message_v2(receipt: Receipt) -> bytes:
+    return signature_message_v2(json.loads(receipt.model_dump_json()))
+
+
+def _attach_v2_signature(receipt: Receipt) -> Receipt:
+    receipt.signature_v2 = SignatureInfo(key_id=crypto.key_id(), value="")
+    receipt.signature_v2.value = crypto.sign(_signature_message_v2(receipt))
+    return receipt
+
+
+def has_v2_signature(receipt: Receipt) -> bool:
+    return receipt.signature_v2 is not None
+
+
 def issue_runtime_receipt(
     req: RuntimeActionRequest,
     decision: RuntimeDecision,
@@ -152,7 +204,7 @@ def issue_runtime_receipt(
         runtime_decision="allow",
     )
     receipt.signature.value = crypto.sign(_signature_message(receipt))
-    return receipt
+    return _attach_v2_signature(receipt)
 
 
 def verify_runtime_binding(
@@ -212,7 +264,7 @@ def issue_receipt(req: ActionRequest, action_id: str, decision: str,
     msg = f"{receipt_id}|{action_hash}|{expires_at.isoformat()}|{prev_receipt_hash or ''}".encode()
     signature_value = crypto.sign(msg)
 
-    return Receipt(
+    receipt = Receipt(
         receipt_id=receipt_id,
         action_id=action_id,
         decision=decision,
@@ -239,14 +291,17 @@ def issue_receipt(req: ActionRequest, action_id: str, decision: str,
         signature=SignatureInfo(key_id=crypto.key_id(), value=signature_value),
         revoked=False,
     )
+    return _attach_v2_signature(receipt)
 
 
 def verify_signature(receipt: Receipt, public_key_b64: str = None) -> bool:
-    return crypto.verify(
-        _signature_message(receipt),
-        receipt.signature.value,
-        public_key_b64,
-    )
+    """Both signatures must verify when both are present. The legacy signature is kept so
+    existing verifiers keep working; the v2 signature is what protects decision/metadata."""
+    if not crypto.verify(_signature_message(receipt), receipt.signature.value, public_key_b64):
+        return False
+    if receipt.signature_v2 is not None:
+        return crypto.verify(_signature_message_v2(receipt), receipt.signature_v2.value, public_key_b64)
+    return True
 
 
 def is_expired(receipt: Receipt) -> bool:

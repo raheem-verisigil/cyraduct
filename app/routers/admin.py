@@ -13,10 +13,10 @@ caller; that capability is deliberately kept out of reach of any
 external/automated test harness, however well-intentioned.
 """
 import json
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Header
 from pydantic import BaseModel
 from typing import Optional
-from .. import storage, auth, config
+from .. import storage, auth, config, partner_notification
 
 router = APIRouter(prefix="/v1/admin", tags=["admin"])
 
@@ -27,10 +27,16 @@ class KillSwitchRequest(BaseModel):
 
 
 @router.post("/kill-switch")
-def set_kill_switch(body: KillSwitchRequest, x_cyraduct_admin_key: Optional[str] = Header(None)):
+def set_kill_switch(body: KillSwitchRequest, background_tasks: BackgroundTasks,
+                    x_cyraduct_admin_key: Optional[str] = Header(None)):
     auth.require_full_admin(x_cyraduct_admin_key)  # full admin only — never the test key
     storage.set_kill_switch(body.active, body.reason)
     storage.append_audit("kill_switch_changed", {"active": body.active, "reason": body.reason})
+    state = "ACTIVATED" if body.active else "DEACTIVATED"
+    background_tasks.add_task(
+        partner_notification.notify_admin_event, f"Kill switch {state}",
+        f"The Cyraduct kill switch was {state}.\nReason: {body.reason or '-'}\n"
+        "If this was not you, rotate CYRADUCT_ADMIN_KEY immediately.")
     return {"active": body.active, "reason": body.reason}
 
 

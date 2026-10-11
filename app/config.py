@@ -7,7 +7,19 @@ gap"). Do not let receipts default to indefinite validity.
 """
 import os
 
-ENVIRONMENT = os.environ.get("CYRADUCT_ENV", "development").lower()
+def _detect_environment() -> str:
+    """An explicit CYRADUCT_ENV always wins. Otherwise a Railway deployment is
+    treated as production, so the production safeguards cannot be bypassed
+    simply by forgetting to set CYRADUCT_ENV."""
+    explicit = os.environ.get("CYRADUCT_ENV", "").strip().lower()
+    if explicit:
+        return explicit
+    if any(os.environ.get(k) for k in ("RAILWAY_ENVIRONMENT", "RAILWAY_ENVIRONMENT_NAME", "RAILWAY_PROJECT_ID")):
+        return "production"
+    return "development"
+
+
+ENVIRONMENT = _detect_environment()
 
 # Signing secret for receipts. In production this MUST come from a secrets
 # manager / environment variable, never committed to source.
@@ -57,7 +69,8 @@ def validate_startup() -> None:
         return
     if ADMIN_API_KEY in {"", "dev-insecure-admin-key"}:
         raise RuntimeError("CYRADUCT_ADMIN_KEY must be set to a non-default value in production")
-    if SIGNING_SECRET in {"", "dev-insecure-secret-change-me"}:
-        raise RuntimeError("CYRADUCT_SIGNING_SECRET must be set to a non-default value in production")
+    # CYRADUCT_SIGNING_SECRET is intentionally NOT required: receipts are signed with the
+    # Ed25519 key (CYRADUCT_PRIVATE_KEY_B64), and nothing reads SIGNING_SECRET. Requiring an
+    # unused secret could only cause a boot failure (outage) with no security benefit.
     if not os.environ.get("CYRADUCT_PRIVATE_KEY_B64"):
         raise RuntimeError("CYRADUCT_PRIVATE_KEY_B64 must be set in production")

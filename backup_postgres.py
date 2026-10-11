@@ -44,7 +44,7 @@ from sqlalchemy import select
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 from app.storage import (
     _engine, receipts_table, audit_log_table, kill_switch_table,
-    evidence_table, agent_chain_table, partners_table, analytics_events_table,
+    evidence_table, agent_chain_table, partners_table, analytics_events_table, audit_head_table,
 )
 
 TABLES = {
@@ -55,6 +55,8 @@ TABLES = {
     "agent_chain": agent_chain_table,
     "partners": partners_table,
     "analytics_events": analytics_events_table,
+    # Must be restored together with audit_log or the chain check would flag the restore.
+    "audit_head": audit_head_table,
 }
 
 
