@@ -10,6 +10,7 @@ def _valid_production_config(monkeypatch):
     monkeypatch.setattr(config, "ENVIRONMENT", "production")
     monkeypatch.setattr(config, "ADMIN_API_KEY", "a" * 40)
     monkeypatch.setattr(config, "BROKER_API_KEY", "b" * 40)
+    monkeypatch.setattr(config, "BROKER_ALLOWED_HOSTS", {"sink.example.com"})
     monkeypatch.setattr(config, "SIGNING_SECRET", "s" * 40)
     monkeypatch.setattr(config, "DATABASE_URL", "postgresql://user:password@db.example:5432/cyraduct")
     monkeypatch.setattr(config, "TEST_ADMIN_KEY", "")
@@ -64,6 +65,13 @@ def test_production_test_key_must_be_long_and_distinct(monkeypatch):
 
     monkeypatch.setattr(config, "TEST_ADMIN_KEY", "short")
     with pytest.raises(RuntimeError, match="at least 32"):
+        config.validate_startup()
+
+
+def test_production_requires_sink_allowlist(monkeypatch):
+    _valid_production_config(monkeypatch)
+    monkeypatch.setattr(config, "BROKER_ALLOWED_HOSTS", set())
+    with pytest.raises(RuntimeError, match="CYRADUCT_BROKER_ALLOWED_HOSTS"):
         config.validate_startup()
 
 
