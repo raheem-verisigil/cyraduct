@@ -29,7 +29,7 @@ Generate independent random values for the admin, broker, and signing secrets us
 
 ## Broker integration requirements
 
-The broker execution endpoint requires `X-Cyraduct-Broker-Key` and, in production, only calls exact hostnames listed in `CYRADUCT_BROKER_ALLOWED_HOSTS`. DNS results are still checked for private/reserved addresses. This is a coarse single-integration credential, **not** multi-tenant authentication. Do not give it to unrelated customers or an untrusted external tester. A real multi-customer deployment needs per-tenant/per-integration credentials, revocation, scoped sink allowlists, and auditable ownership.
+The broker execution endpoint requires `X-Cyraduct-Broker-Key` and, in production, only calls exact hostnames listed in `CYRADUCT_BROKER_ALLOWED_HOSTS`. Webhook URLs must use HTTPS on port 443, contain no URL username/password, and resolve only to public addresses. This is a coarse single-integration credential, **not** multi-tenant authentication. Do not give it to unrelated customers or an untrusted external tester. A real multi-customer deployment needs per-tenant/per-integration credentials, revocation, scoped sink allowlists, and auditable ownership.
 
 The sink must independently verify the signed receipt and enforce the authorized action immediately before the side effect. The API's broker key is not a substitute for receipt verification, action binding, or sink-side authorization.
 
