@@ -77,3 +77,10 @@ def require_admin_or_scoped_test(provided_key: Optional[str], target_agent_id: s
             detail=f"Test key may only act on agents prefixed '{config.TEST_AGENT_PREFIX}' — "
                    f"'{target_agent_id}' is outside the test namespace",
         )
+
+
+def require_broker_key(provided_key: Optional[str]) -> None:
+    """Authenticate access to the execution broker using its dedicated key."""
+    expected = config.BROKER_API_KEY
+    if not expected or not provided_key or not hmac.compare_digest(provided_key, expected):
+        raise HTTPException(status_code=401, detail="Invalid or missing broker key")

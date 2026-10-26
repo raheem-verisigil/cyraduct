@@ -10,8 +10,11 @@ from app.indepora import verify_and_bind
 from app.models import ActionRequest
 from app import policy_engine
 from main import app
+from app import config
 
 client = TestClient(app)
+BROKER_KEY = "broker-key-for-pytest-only-0123456789"
+config.BROKER_API_KEY = BROKER_KEY
 
 
 def key_material():
@@ -140,6 +143,7 @@ def test_broker_rechecks_record_before_execution(monkeypatch):
     response = client.post(
         "/v1/broker/execute",
         params={"receipt_id": evaluated["receipt"]["receipt_id"], "execution_webhook": "https://example.invalid/sink"},
+        headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
         json=altered.model_dump(),
     )
     assert response.json()["executed"] is False

@@ -2,10 +2,11 @@
 # Runtime authorizations reuse the existing signed Receipt.
 import httpx
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, Request
+from typing import Optional
+from fastapi import APIRouter, HTTPException, Request, Header
 
 from ..runtime import RuntimeActionRequest
-from .. import receipts, storage, url_safety
+from .. import receipts, storage, url_safety, auth, config
 from ..indepora import IndeporaVerificationError, verify_and_bind
 from ..rate_limit import limiter
 
@@ -19,7 +20,9 @@ async def execute(
     req: RuntimeActionRequest,
     receipt_id: str,
     execution_webhook: str,
+    x_cyraduct_broker_key: Optional[str] = Header(None),
 ):
+    auth.require_broker_key(x_cyraduct_broker_key)
     kill = storage.get_kill_switch()
     if kill["active"]:
         storage.append_audit(
@@ -115,7 +118,8 @@ async def execute(
             "receipt": receipt.model_dump(),
         }
 
-    is_safe, webhook_reason = url_safety.validate_webhook_url(execution_webhook)
+    allowed_hosts = config.BROKER_ALLOWED_HOSTS if config.ENVIRONMENT == "production" else None
+    is_safe, webhook_reason = url_safety.validate_webhook_url(execution_webhook, allowed_hosts=allowed_hosts)
     if not is_safe:
         storage.append_audit(
             "broker_blocked_unsafe_webhook",
