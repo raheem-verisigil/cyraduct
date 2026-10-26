@@ -72,12 +72,10 @@ def test_broker_rejects_missing_or_invalid_broker_key():
     auth = _allow()
     params = {"receipt_id": auth["receipt_id"], "execution_webhook": "https://example.com/cyraduct-test"}
     payload = _broker_payload(auth)
-    missing = headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
-json=payload)
+    missing = client.post("/v1/broker/execute", params=params, json=payload)
     assert missing.status_code == 401
     invalid = client.post(
-        headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
-        json=payload,
+        "/v1/broker/execute", params=params, json=payload,
         headers={"X-Cyraduct-Broker-Key": "not-the-broker-key"},
     )
     assert invalid.status_code == 401
@@ -186,10 +184,14 @@ def test_runtime_authorization_replay_is_blocked(monkeypatch):
     auth = _allow()
     monkeypatch.setattr(broker.httpx, "AsyncClient", FakeAsyncClient)
     params = {"receipt_id": auth["receipt_id"], "execution_webhook": "https://example.com/cyraduct-test"}
-    first = headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
-json=_broker_payload(auth))
-    second = headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
-json=_broker_payload(auth))
+    first = client.post(
+        "/v1/broker/execute", params=params, json=_broker_payload(auth),
+        headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
+    )
+    second = client.post(
+        "/v1/broker/execute", params=params, json=_broker_payload(auth),
+        headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
+    )
     assert first.status_code == 200
     assert first.json()["executed"] is True
     assert second.status_code == 200
