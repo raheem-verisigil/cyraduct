@@ -7,11 +7,14 @@ from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 from sqlalchemy import delete
 from main import app
+from app import config
 from app import crypto, storage, policy_engine, config
 from app.models import ActionRequest
 from verify_receipt import verify as standalone_verify
 
 client = TestClient(app)
+BROKER_KEY = "broker-key-for-pytest-only-0123456789"
+config.BROKER_API_KEY = BROKER_KEY
 
 
 def test_health():
@@ -279,6 +282,7 @@ def test_broker_valid_receipt_allows_execution():
                 "receipt_id": receipt_id,
                 "execution_webhook": "https://example.com/sink",
             },
+            headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
             json=req,
         )
 
@@ -314,6 +318,7 @@ def test_broker_revoked_receipt_blocks_execution():
                 "receipt_id": receipt_id,
                 "execution_webhook": "http://fake-sink/sink",
             },
+            headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
             json=req,
         )
 
@@ -347,6 +352,7 @@ def test_broker_missing_receipt_blocks_execution():
                 "receipt_id": "rcpt_does_not_exist",
                 "execution_webhook": "http://fake-sink/sink",
             },
+            headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
             json=req,
         )
 
@@ -381,6 +387,7 @@ def test_broker_invalid_signature_blocks_execution():
                     "receipt_id": receipt_id,
                     "execution_webhook": "http://fake-sink/sink",
                 },
+                headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
                 json=req,
             )
 
@@ -415,6 +422,7 @@ def test_broker_expired_receipt_blocks_execution():
                     "receipt_id": receipt_id,
                     "execution_webhook": "http://fake-sink/sink",
                 },
+                headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
                 json=req,
             )
 
@@ -451,6 +459,7 @@ def test_broker_action_mismatch_blocks_execution():
                 "receipt_id": receipt_id,
                 "execution_webhook": "http://fake-sink/sink",
             },
+            headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
             json=mismatched_req,
         )
 
@@ -485,6 +494,7 @@ def test_broker_rejects_private_ip_webhook():
                 "receipt_id": receipt_id,
                 "execution_webhook": "https://169.254.169.254/latest/meta-data/",
             },
+            headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
             json=req,
         )
 
@@ -519,6 +529,7 @@ def test_broker_rejects_internal_railway_hostname():
                 "receipt_id": receipt_id,
                 "execution_webhook": "https://postgres.railway.internal/hook",
             },
+            headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
             json=req,
         )
 
@@ -601,11 +612,13 @@ def test_broker_replay_of_the_same_receipt_is_refused():
         first = client.post(
             "/v1/broker/execute",
             params={"receipt_id": receipt_id, "execution_webhook": "https://example.com/sink"},
+            headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
             json=req,
         )
         second = client.post(
             "/v1/broker/execute",
             params={"receipt_id": receipt_id, "execution_webhook": "https://example.com/sink"},
+            headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
             json=req,
         )
 
