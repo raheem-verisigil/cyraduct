@@ -28,4 +28,5 @@ jobs:
       - name: Run test suite
         env:
           CYRADUCT_ENV: test
+          PYTHONPATH: .
         run: pytest -q
