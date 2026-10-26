@@ -46,3 +46,23 @@ def test_rejects_unresolvable_hostname():
 def test_accepts_public_https_url():
     ok, reason = url_safety.validate_webhook_url("https://example.com/hook")
     assert ok, reason
+
+
+def test_rejects_hostname_not_in_production_allowlist(monkeypatch):
+    ok, reason = url_safety.validate_webhook_url(
+        "https://example.com/hook", allowed_hosts={"approved-sink.example"}
+    )
+    assert not ok
+    assert reason == "hostname_not_in_allowlist"
+
+
+def test_allowlisted_hostname_still_requires_public_dns(monkeypatch):
+    monkeypatch.setattr(
+        url_safety.socket, "getaddrinfo",
+        lambda hostname, port: [(None, None, None, None, ("127.0.0.1", 0))],
+    )
+    ok, reason = url_safety.validate_webhook_url(
+        "https://sink.example.com/hook", allowed_hosts={"sink.example.com"}
+    )
+    assert not ok
+    assert reason.startswith("resolved_to_private_or_reserved_address")
