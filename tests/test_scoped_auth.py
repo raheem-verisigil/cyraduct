@@ -68,7 +68,9 @@ def test_test_key_can_never_reach_kill_switch():
     assert r.status_code == 403
 
     # Confirm it genuinely didn't toggle
-    status = client.get("/v1/admin/kill-switch").json()
+    unauth_status = client.get("/v1/admin/kill-switch")
+    assert unauth_status.status_code == 401
+    status = client.get("/v1/admin/kill-switch", headers={"X-Cyraduct-Admin-Key": FULL_ADMIN_KEY}).json()
     assert status["active"] is False
 
 
