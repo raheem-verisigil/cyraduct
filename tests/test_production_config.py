@@ -9,6 +9,7 @@ from app import config
 def _valid_production_config(monkeypatch):
     monkeypatch.setattr(config, "ENVIRONMENT", "production")
     monkeypatch.setattr(config, "ADMIN_API_KEY", "a" * 40)
+    monkeypatch.setattr(config, "BROKER_API_KEY", "b" * 40)
     monkeypatch.setattr(config, "SIGNING_SECRET", "s" * 40)
     monkeypatch.setattr(config, "DATABASE_URL", "postgresql://user:password@db.example:5432/cyraduct")
     monkeypatch.setattr(config, "TEST_ADMIN_KEY", "")
@@ -28,6 +29,8 @@ def test_production_configuration_accepts_valid_values(monkeypatch):
         ("ADMIN_API_KEY", "short", "CYRADUCT_ADMIN_KEY"),
         ("SIGNING_SECRET", "dev-insecure-secret-change-me", "CYRADUCT_SIGNING_SECRET"),
         ("SIGNING_SECRET", "short", "CYRADUCT_SIGNING_SECRET"),
+        ("BROKER_API_KEY", "", "CYRADUCT_BROKER_API_KEY"),
+        ("BROKER_API_KEY", "short", "CYRADUCT_BROKER_API_KEY"),
         ("DATABASE_URL", "sqlite:///./cyraduct.db", "CYRADUCT_DATABASE_URL"),
     ],
 )
@@ -61,6 +64,13 @@ def test_production_test_key_must_be_long_and_distinct(monkeypatch):
 
     monkeypatch.setattr(config, "TEST_ADMIN_KEY", "short")
     with pytest.raises(RuntimeError, match="at least 32"):
+        config.validate_startup()
+
+
+def test_production_broker_key_must_be_distinct(monkeypatch):
+    _valid_production_config(monkeypatch)
+    monkeypatch.setattr(config, "BROKER_API_KEY", config.ADMIN_API_KEY)
+    with pytest.raises(RuntimeError, match="must differ"):
         config.validate_startup()
 
 
