@@ -53,7 +53,7 @@ def _is_private_or_reserved(ip_str: str) -> bool:
     )
 
 
-def validate_webhook_url(url: str) -> tuple[bool, str]:
+def validate_webhook_url(url: str, allowed_hosts: set[str] | None = None) -> tuple[bool, str]:
     """Returns (is_safe, reason). Call this before making any outbound
     request to a caller-supplied URL."""
     try:
@@ -67,6 +67,9 @@ def validate_webhook_url(url: str) -> tuple[bool, str]:
     hostname = parsed.hostname
     if not hostname:
         return False, "no_hostname_in_url"
+
+    if allowed_hosts is not None and hostname.lower() not in {host.lower() for host in allowed_hosts}:
+        return False, "hostname_not_in_allowlist"
 
     if hostname.lower() in _BLOCKED_HOSTNAMES:
         return False, "hostname_explicitly_blocked"
