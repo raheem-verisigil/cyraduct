@@ -64,6 +64,16 @@ def validate_webhook_url(url: str, allowed_hosts: set[str] | None = None) -> tup
     if parsed.scheme != "https":
         return False, "scheme_must_be_https"
 
+    if parsed.username is not None or parsed.password is not None:
+        return False, "userinfo_not_allowed"
+
+    try:
+        port = parsed.port
+    except ValueError:
+        return False, "invalid_port"
+    if port not in (None, 443):
+        return False, "port_must_be_443"
+
     hostname = parsed.hostname
     if not hostname:
         return False, "no_hostname_in_url"
