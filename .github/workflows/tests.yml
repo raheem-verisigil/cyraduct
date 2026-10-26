@@ -2,9 +2,10 @@ name: Cyraduct tests
 
 on:
   push:
-    branches: [main, "hardening/**"]
+    branches: [main, "hardening/**", "security/**"]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
