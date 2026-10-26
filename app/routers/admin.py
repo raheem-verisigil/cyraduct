@@ -35,7 +35,8 @@ def set_kill_switch(body: KillSwitchRequest, x_cyraduct_admin_key: Optional[str]
 
 
 @router.get("/kill-switch")
-def get_kill_switch():
+def get_kill_switch(x_cyraduct_admin_key: Optional[str] = Header(None)):
+    auth.require_full_admin(x_cyraduct_admin_key)
     return storage.get_kill_switch()
 
 

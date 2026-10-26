@@ -181,11 +181,12 @@ def test_tampered_receipt_fails_standalone_verification():
 
 
 def test_evidence_registration_and_reference():
-    reg = client.post("/v1/evidence", json={"label": "soc2_type2", "content_hash": "a" * 64})
+    admin = {"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"}
+    reg = client.post("/v1/evidence", json={"label": "soc2_type2", "content_hash": "a" * 64}, headers=admin)
     assert reg.status_code == 200
     evidence_id = reg.json()["evidence_id"]
 
-    fetched = client.get(f"/v1/evidence/{evidence_id}")
+    fetched = client.get(f"/v1/evidence/{evidence_id}", headers=admin)
     assert fetched.status_code == 200
     assert fetched.json()["label"] == "soc2_type2"
 
@@ -203,7 +204,7 @@ def test_receipts_query_by_agent():
         "agent_id": agent_id, "action_type": "read_public_doc",
         "consequence_class": "low_risk", "policy_pack": "generic", "payload": {}
     })
-    r = client.get("/v1/receipts", params={"agent_id": agent_id})
+    r = client.get("/v1/receipts", params={"agent_id": agent_id}, headers={"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"})
     body = r.json()
     assert body["count"] >= 1
     assert all(rc["agent"]["agent_id"] == agent_id for rc in body["receipts"])
