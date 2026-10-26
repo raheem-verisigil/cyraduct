@@ -1,13 +1,15 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from app import receipts, storage
+from app.rate_limit import limiter
 from app.runtime import RuntimeActionRequest, RuntimeDecision, evaluate
 
 router = APIRouter(prefix="/v1/runtime", tags=["runtime"])
 
 
 @router.post("/evaluate", response_model=RuntimeDecision)
-def evaluate_runtime(req: RuntimeActionRequest):
+@limiter.limit("60/minute")
+def evaluate_runtime(request: Request, req: RuntimeActionRequest):
     if storage.get_kill_switch()["active"]:
         storage.append_audit(
             "runtime_evaluate_blocked",
