@@ -14,17 +14,20 @@ not built here — registering evidence today lets a receipt reference it;
 it does not yet automatically change what a policy pack allows.
 """
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Header
+from typing import Optional
 from ..models import EvidenceRegisterRequest, EvidencePackage, new_id
 from .. import storage
 from ..rate_limit import limiter
+from .. import auth
 
 router = APIRouter(prefix="/v1/evidence", tags=["evidence"])
 
 
 @router.post("", response_model=EvidencePackage)
 @limiter.limit("30/minute")
-def register_evidence(request: Request, req: EvidenceRegisterRequest):
+def register_evidence(request: Request, req: EvidenceRegisterRequest, x_cyraduct_admin_key: Optional[str] = Header(None)):
+    auth.require_full_admin(x_cyraduct_admin_key)
     pkg = EvidencePackage(
         evidence_id=new_id("ev"),
         label=req.label,
@@ -38,7 +41,8 @@ def register_evidence(request: Request, req: EvidenceRegisterRequest):
 
 
 @router.get("/{evidence_id}", response_model=EvidencePackage)
-def get_evidence(evidence_id: str):
+def get_evidence(evidence_id: str, x_cyraduct_admin_key: Optional[str] = Header(None)):
+    auth.require_full_admin(x_cyraduct_admin_key)
     pkg = storage.get_evidence(evidence_id)
     if not pkg:
         raise HTTPException(status_code=404, detail="Evidence package not found")
