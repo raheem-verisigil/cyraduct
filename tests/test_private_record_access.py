@@ -10,7 +10,7 @@ from app import config, storage
 
 client = TestClient(app)
 ADMIN = {"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"}
-TEST_KEY = "test-key-private-record-tests"
+TEST_KEY = "test-key-for-pytest-only"
 config.TEST_ADMIN_KEY = TEST_KEY
 TEST = {"X-Cyraduct-Admin-Key": TEST_KEY}
 
