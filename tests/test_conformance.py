@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 from sqlalchemy import delete
 from main import app
-from app import crypto, storage, policy_engine
+from app import crypto, storage, policy_engine, config
 from app.models import ActionRequest
 from verify_receipt import verify as standalone_verify
 
@@ -21,7 +21,7 @@ def test_health():
 
     draft_compatible = client.get("/health")
     assert draft_compatible.status_code == 200
-    assert draft_compatible.json() == {"status": "ok", "service": "cyraduct", "environment": "development"}
+    assert draft_compatible.json() == {"status": "ok", "service": "cyraduct", "environment": config.ENVIRONMENT}
 
 
 def test_conformance_fixtures_all_pass():
