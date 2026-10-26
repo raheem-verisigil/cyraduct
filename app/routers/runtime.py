@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException, Request
+from typing import Optional
 
-from app import receipts, storage
+from fastapi import APIRouter, Header, HTTPException, Request
+
+from app import auth, config, receipts, storage
 from app.rate_limit import limiter
 from app.runtime import RuntimeActionRequest, RuntimeDecision, evaluate
 
@@ -9,7 +11,17 @@ router = APIRouter(prefix="/v1/runtime", tags=["runtime"])
 
 @router.post("/evaluate", response_model=RuntimeDecision)
 @limiter.limit("60/minute")
-def evaluate_runtime(request: Request, req: RuntimeActionRequest):
+def evaluate_runtime(
+    request: Request,
+    req: RuntimeActionRequest,
+    x_cyraduct_runtime_key: Optional[str] = Header(None),
+):
+    auth.require_service_key(
+        x_cyraduct_runtime_key,
+        config.RUNTIME_API_KEY,
+        "CYRADUCT_RUNTIME_API_KEY",
+    )
+
     if storage.get_kill_switch()["active"]:
         storage.append_audit(
             "runtime_evaluate_blocked",
