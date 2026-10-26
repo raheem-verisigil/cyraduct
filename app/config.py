@@ -26,6 +26,7 @@ DEFAULT_EXPIRY_SECONDS = 600
 DATABASE_URL = os.environ.get("CYRADUCT_DATABASE_URL", "sqlite:///./cyraduct.db")
 ADMIN_API_KEY = os.environ.get("CYRADUCT_ADMIN_KEY", "dev-insecure-admin-key")
 BROKER_API_KEY = os.environ.get("CYRADUCT_BROKER_API_KEY", "")
+BROKER_ALLOWED_HOSTS = {host.strip().lower() for host in os.environ.get("CYRADUCT_BROKER_ALLOWED_HOSTS", "").split(",") if host.strip()}
 TEST_ADMIN_KEY = os.environ.get("CYRADUCT_TEST_ADMIN_KEY", "")
 TEST_AGENT_PREFIX = os.environ.get("CYRADUCT_TEST_AGENT_PREFIX", "test-")
 POLICY_PACK_DIR = os.environ.get("CYRADUCT_POLICY_DIR", "policy_packs")
@@ -51,6 +52,8 @@ def validate_startup() -> None:
         raise RuntimeError("CYRADUCT_BROKER_API_KEY must be a unique secret of at least 32 characters in production")
     if BROKER_API_KEY in {ADMIN_API_KEY, SIGNING_SECRET}:
         raise RuntimeError("CYRADUCT_BROKER_API_KEY must differ from admin and signing secrets")
+    if not BROKER_ALLOWED_HOSTS:
+        raise RuntimeError("CYRADUCT_BROKER_ALLOWED_HOSTS must list exact approved sink hostnames in production")
 
     if TEST_ADMIN_KEY:
         if len(TEST_ADMIN_KEY) < 32:
