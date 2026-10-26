@@ -22,6 +22,7 @@ from app.routers import advisory, attested, broker, conformance, admin, evidence
 from app.storage import init_db
 from app import crypto, config
 from app.rate_limit import limiter
+from app.request_limits import RequestSizeLimitMiddleware
 
 app = FastAPI(
     title="Cyraduct",
@@ -38,6 +39,7 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(RequestSizeLimitMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
