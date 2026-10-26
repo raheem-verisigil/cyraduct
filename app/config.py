@@ -48,6 +48,20 @@ TEST_ADMIN_KEY = os.environ.get("CYRADUCT_TEST_ADMIN_KEY", "")
 # A test key may only act on receipts/agents within this namespace.
 TEST_AGENT_PREFIX = os.environ.get("CYRADUCT_TEST_AGENT_PREFIX", "test-")
 
+# Tenant isolation. When true, every evaluate/broker call must present a
+# valid tenant API key (X-Cyraduct-Api-Key). Default false so existing
+# unauthenticated callers keep working until tenants are provisioned; flip to
+# true once partners have keys. Receipts issued to a tenant are only visible
+# to, executable by, and revocable by that tenant (or a full admin).
+REQUIRE_TENANT_AUTH = os.environ.get("CYRADUCT_REQUIRE_TENANT_AUTH", "false").lower() in ("1", "true", "yes")
+
+# Header carrying the real client IP, used ONLY as the rate-limit key. Empty
+# (default) means "use the socket peer address", which is correct locally but,
+# behind a reverse proxy such as Railway's edge, may be the proxy for every
+# caller. Set this to a header your edge OVERWRITES on every request (verify
+# with GET /v1/admin/posture); never set it to a header clients can forge.
+CLIENT_IP_HEADER = os.environ.get("CYRADUCT_CLIENT_IP_HEADER", "").strip().lower()
+
 POLICY_PACK_DIR = os.environ.get("CYRADUCT_POLICY_DIR", "policy_packs")
 
 

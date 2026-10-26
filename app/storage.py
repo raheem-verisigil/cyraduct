@@ -19,6 +19,7 @@ Receipts are additionally chained per-agent (prev_receipt_hash), and that
 chain link is itself covered by the receipt's Ed25519 signature.
 """
 import hashlib
+import secrets
 import json
 import os
 import threading
@@ -73,6 +74,7 @@ receipts_table = Table(
     Column("data", Text, nullable=False),
     Column("revoked", Integer, nullable=False, default=0),
     Column("consumed_at", String, nullable=True),
+    Column("tenant_id", String, nullable=True, index=True),
 )
 
 audit_log_table = Table(
@@ -134,9 +136,20 @@ agent_chain_table = Table(
 )
 
 
+tenants_table = Table(
+    "tenants", metadata,
+    Column("tenant_id", String, primary_key=True),
+    Column("name", String, nullable=False),
+    Column("key_hash", String, nullable=False, unique=True, index=True),
+    Column("created_at", String, nullable=False),
+    Column("revoked", Integer, nullable=False, default=0),
+)
+
+
 def init_db():
     metadata.create_all(_engine)
     _migrate_add_consumed_at_column()
+    _migrate_add_receipt_tenant_column()
     _migrate_partner_attribution_columns()
     with _engine.begin() as conn:
         exists = conn.execute(
@@ -232,6 +245,17 @@ def _migrate_add_consumed_at_column():
         pass
 
 
+def _migrate_add_receipt_tenant_column():
+    """Add the nullable tenant_id column to a pre-existing receipts table.
+    Same idempotent pattern as consumed_at: the ALTER fails harmlessly when
+    the column already exists."""
+    try:
+        with _engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE receipts ADD COLUMN tenant_id VARCHAR")
+    except Exception:
+        pass
+
+
 def _migrate_partner_attribution_columns():
     """Add nullable attribution fields to pre-existing partner tables."""
     for column in ("utm_source", "utm_medium", "utm_campaign", "utm_content", "landing_path", "notification_status", "notified_at", "notification_error"):
@@ -263,7 +287,14 @@ def _upsert_agent_chain(conn, agent_id: str, last_hash: str):
     conn.execute(stmt)
 
 
-def save_receipt(receipt: Receipt):
+def _chain_key(agent_id: str, tenant_id: Optional[str]) -> str:
+    """Per-agent hash chains are namespaced by tenant so two tenants that
+    happen to use the same agent_id cannot interleave or read each other's
+    chain state. Legacy (no tenant) keeps the bare agent_id."""
+    return agent_id if not tenant_id else f"{tenant_id}::{agent_id}"
+
+
+def save_receipt(receipt: Receipt, tenant_id: Optional[str] = None):
     with _lock, _engine.begin() as conn:
         conn.execute(sa_delete(receipts_table).where(receipts_table.c.receipt_id == receipt.receipt_id))
         conn.execute(insert(receipts_table).values(
@@ -273,14 +304,17 @@ def save_receipt(receipt: Receipt):
             consequence_class=receipt.action.consequence_class,
             data=receipt.model_dump_json(),
             revoked=int(receipt.revoked),
+            tenant_id=tenant_id,
         ))
-        _upsert_agent_chain(conn, receipt.agent.agent_id, receipt.action_hash)
+        _upsert_agent_chain(conn, _chain_key(receipt.agent.agent_id, tenant_id), receipt.action_hash)
 
 
-def get_last_receipt_hash(agent_id: str) -> Optional[str]:
+def get_last_receipt_hash(agent_id: str, tenant_id: Optional[str] = None) -> Optional[str]:
     with _lock, _engine.begin() as conn:
         row = conn.execute(
-            select(agent_chain_table.c.last_receipt_hash).where(agent_chain_table.c.agent_id == agent_id)
+            select(agent_chain_table.c.last_receipt_hash).where(
+                agent_chain_table.c.agent_id == _chain_key(agent_id, tenant_id)
+            )
         ).fetchone()
         return row[0] if row else None
 
@@ -317,10 +351,13 @@ def mark_receipt_consumed(receipt_id: str, consumed_at: str) -> bool:
 
 
 def query_receipts(agent_id: Optional[str] = None, since: Optional[str] = None,
-                    until: Optional[str] = None, limit: int = 100) -> List[Receipt]:
+                    until: Optional[str] = None, limit: int = 100,
+                    tenant_id: Optional[str] = None) -> List[Receipt]:
     stmt = select(receipts_table.c.data, receipts_table.c.revoked)
     if agent_id:
         stmt = stmt.where(receipts_table.c.agent_id == agent_id)
+    if tenant_id:
+        stmt = stmt.where(receipts_table.c.tenant_id == tenant_id)
     if since:
         stmt = stmt.where(receipts_table.c.issued_at >= since)
     if until:
@@ -345,14 +382,71 @@ def revoke_receipt(receipt_id: str) -> bool:
         return result.rowcount > 0
 
 
-def revoke_by_agent(agent_id: str) -> int:
+def revoke_by_agent(agent_id: str, tenant_id: Optional[str] = None) -> int:
+    """tenant_id=None revokes across all tenants (full-admin/test paths);
+    a tenant id restricts revocation to that tenant's receipts."""
+    clauses = [receipts_table.c.agent_id == agent_id, receipts_table.c.revoked == 0]
+    if tenant_id:
+        clauses.append(receipts_table.c.tenant_id == tenant_id)
     with _lock, _engine.begin() as conn:
-        result = conn.execute(
-            update(receipts_table)
-            .where(receipts_table.c.agent_id == agent_id, receipts_table.c.revoked == 0)
-            .values(revoked=1)
-        )
+        result = conn.execute(update(receipts_table).where(*clauses).values(revoked=1))
         return result.rowcount
+
+
+def get_receipt_tenant(receipt_id: str) -> Optional[str]:
+    with _lock, _engine.begin() as conn:
+        row = conn.execute(
+            select(receipts_table.c.tenant_id).where(receipts_table.c.receipt_id == receipt_id)
+        ).fetchone()
+        return row[0] if row else None
+
+
+def _hash_api_key(api_key: str) -> str:
+    return hashlib.sha256(api_key.encode()).hexdigest()
+
+
+def create_tenant(name: str) -> dict:
+    """Creates a tenant and returns its API key ONCE. Only a SHA-256 hash of
+    the key is stored; a lost key cannot be recovered, only replaced."""
+    tenant_id = new_id("tnt")
+    api_key = "cyr_" + secrets.token_urlsafe(32)
+    with _lock, _engine.begin() as conn:
+        conn.execute(insert(tenants_table).values(
+            tenant_id=tenant_id, name=name, key_hash=_hash_api_key(api_key),
+            created_at=datetime.now(timezone.utc).isoformat(), revoked=0,
+        ))
+    return {"tenant_id": tenant_id, "name": name, "api_key": api_key}
+
+
+def get_tenant_id_by_key(api_key: str) -> Optional[str]:
+    with _lock, _engine.begin() as conn:
+        row = conn.execute(
+            select(tenants_table.c.tenant_id, tenants_table.c.revoked)
+            .where(tenants_table.c.key_hash == _hash_api_key(api_key))
+        ).fetchone()
+    if not row or row[1]:
+        return None
+    return row[0]
+
+
+def list_tenants() -> list:
+    with _lock, _engine.begin() as conn:
+        rows = conn.execute(
+            select(tenants_table.c.tenant_id, tenants_table.c.name,
+                   tenants_table.c.created_at, tenants_table.c.revoked)
+            .order_by(asc(tenants_table.c.created_at))
+        ).fetchall()
+    return [{"tenant_id": r[0], "name": r[1], "created_at": r[2], "revoked": bool(r[3])} for r in rows]
+
+
+def revoke_tenant(tenant_id: str) -> bool:
+    """Disables the tenant's API key and revokes every receipt it holds."""
+    with _lock, _engine.begin() as conn:
+        res = conn.execute(update(tenants_table).where(tenants_table.c.tenant_id == tenant_id).values(revoked=1))
+        if res.rowcount == 0:
+            return False
+        conn.execute(update(receipts_table).where(receipts_table.c.tenant_id == tenant_id).values(revoked=1))
+    return True
 
 
 def save_evidence(pkg: EvidencePackage):

@@ -2,12 +2,14 @@
 # Runtime authorizations reuse the existing signed Receipt.
 import httpx
 from datetime import datetime, timezone
-from fastapi import APIRouter, HTTPException, Request
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from ..runtime import RuntimeActionRequest
 from .. import receipts, storage, url_safety
 from ..indepora import IndeporaVerificationError, verify_and_bind
 from ..rate_limit import limiter
+from ..tenancy import required_tenant
 
 router = APIRouter(prefix="/v1/broker", tags=["broker"])
 
@@ -19,6 +21,7 @@ async def execute(
     req: RuntimeActionRequest,
     receipt_id: str,
     execution_webhook: str,
+    tenant: Optional[str] = Depends(required_tenant),
 ):
     kill = storage.get_kill_switch()
     if kill["active"]:
@@ -32,6 +35,11 @@ async def execute(
         )
 
     receipt = storage.get_receipt(receipt_id)
+    # A receipt can only be executed by the tenant it was issued to; any
+    # mismatch is reported exactly like a missing receipt so ids are not
+    # an existence oracle across tenants.
+    if receipt is not None and storage.get_receipt_tenant(receipt_id) != tenant:
+        receipt = None
     if not receipt:
         storage.append_audit(
             "broker_blocked_receipt_not_found",

@@ -80,3 +80,24 @@
 - **Production ready:** All applicable gates are evidenced, independent review is complete, and operational ownership is established.
 
 A passing CI run alone never advances Cyraduct to production-ready status.
+
+
+## Progress notes (not approvals)
+
+These record what changed and what evidence exists. No gate above is ticked
+until its evidence is linked.
+
+- **Gate 1:** CI (`.github/workflows/tests.yml`) runs compile + full suite on
+  every PR; PRs #13 and #14 were green. A gate-level tick still needs the CI run
+  URL for the exact commit proposed for release.
+- **Gate 2:** Per-tenant API keys, tenant-scoped receipts, chains, verification,
+  execution and revocation are implemented and tested (`docs/TENANT_ISOLATION.md`),
+  off by default. Still open: audit-log and evidence tenant scoping,
+  per-tenant rate limits, key rotation, secret-management process, and
+  switching `CYRADUCT_REQUIRE_TENANT_AUTH` on in production.
+- **Gate 3:** Single-use consumption is an atomic conditional update; concurrent
+  replay behavior has not been load-tested. Sink-bypass paths and
+  Cyraduct-outage behavior are untested.
+- **Gate 4:** `GET /v1/admin/posture` gives a one-call configuration check.
+  Backup/restore drill, alerts, retention and incident procedures are open.
+- **Gate 5:** No independent reviewer has completed the adversarial plan.

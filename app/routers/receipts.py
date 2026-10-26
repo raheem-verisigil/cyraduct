@@ -1,7 +1,8 @@
 """Receipt querying with full-admin and test-namespace access controls."""
 from typing import Optional
-from fastapi import APIRouter, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from .. import storage, auth
+from ..tenancy import optional_tenant
 
 router = APIRouter(prefix="/v1/receipts", tags=["receipts"])
 
@@ -20,7 +21,11 @@ def query_receipts(
     until: Optional[str] = None,
     limit: int = Query(100, ge=1, le=1000),
     x_cyraduct_admin_key: Optional[str] = Header(None),
+    tenant: Optional[str] = Depends(optional_tenant),
 ):
+    if tenant and not x_cyraduct_admin_key:
+        results = storage.query_receipts(agent_id=agent_id, since=since, until=until, limit=limit, tenant_id=tenant)
+        return {"count": len(results), "receipts": [r.model_dump() for r in results]}
     scope = _authenticated_scope(x_cyraduct_admin_key)
 
     if scope.is_test_key:
@@ -36,7 +41,13 @@ def query_receipts(
 
 
 @router.get("/{receipt_id}")
-def get_receipt(receipt_id: str, x_cyraduct_admin_key: Optional[str] = Header(None)):
+def get_receipt(receipt_id: str, x_cyraduct_admin_key: Optional[str] = Header(None),
+                tenant: Optional[str] = Depends(optional_tenant)):
+    if tenant and not x_cyraduct_admin_key:
+        r = storage.get_receipt(receipt_id)
+        if not r or storage.get_receipt_tenant(receipt_id) != tenant:
+            raise HTTPException(status_code=404, detail="Receipt not found")
+        return r.model_dump()
     scope = _authenticated_scope(x_cyraduct_admin_key)
     r = storage.get_receipt(receipt_id)
     if not r:

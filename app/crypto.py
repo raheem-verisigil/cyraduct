@@ -56,6 +56,15 @@ def _load_or_generate_key() -> Ed25519PrivateKey:
     return _private_key
 
 
+def key_source() -> str:
+    """Where the signing key comes from, for the security posture report:
+    'env' (deployed, survives redeploys), 'file' or 'generated' (local dev;
+    on most PaaS a file key is lost on redeploy, silently rotating identity)."""
+    if _PRIVATE_KEY_B64:
+        return "env"
+    return "file" if os.path.exists(_PRIVATE_KEY_PATH) else "generated"
+
+
 def key_id() -> str:
     return _KEY_ID
 

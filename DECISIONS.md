@@ -36,3 +36,13 @@ This is about sequencing, not merit.
   issuer, never a rewrite of it.
 - Isolated — deletable without breaking the three-tier system underneath.
 - Reviewed line-by-line before deployment, same discipline as the SSRF fix.
+
+## Scope additions since 2026-09-08 (recorded 2026-10-26, awaiting owner confirmation)
+
+The repository now also contains: a Runtime tier (`/v1/runtime`), INDEPORA
+integration, a canonical action envelope, partner intake and privacy-safe
+analytics endpoints, tenant isolation (`/v1/admin/tenants`), a security posture
+report, and request-size / rate-limit hardening. Most were added after the scope
+lock above without an entry here. This section records that they exist; it does
+not approve them. The owner should confirm or remove each, per the "How new work
+should land" rules (small, additive, isolated, reviewed line by line).

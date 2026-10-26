@@ -6,18 +6,19 @@ Cyraduct is not in the execution path, but a compliant sink MUST call
 This is the recommended default tier for most consequential-action
 deployments (see positioning language).
 """
-from fastapi import APIRouter, HTTPException, Header, Request
+from fastapi import APIRouter, Depends, HTTPException, Header, Request
 from typing import Optional
 from ..models import ActionRequest, VerifyResult, new_id
 from .. import policy_engine, receipts, storage, auth
 from ..rate_limit import limiter
+from ..tenancy import optional_tenant, required_tenant
 
 router = APIRouter(prefix="/v1/attested", tags=["attested"])
 
 
 @router.post("/evaluate")
 @limiter.limit("60/minute")
-def evaluate(request: Request, req: ActionRequest):
+def evaluate(request: Request, req: ActionRequest, tenant: Optional[str] = Depends(required_tenant)):
     kill = storage.get_kill_switch()
     if kill["active"]:
         storage.append_audit("attested_blocked_kill_switch", {"agent_id": req.agent_id, "reason": kill["reason"]})
@@ -29,12 +30,12 @@ def evaluate(request: Request, req: ActionRequest):
     result = {"action_id": action_id, "decision": decision.model_dump(), "receipt": None}
 
     if decision.decision in ("allow", "conditional"):
-        prev_hash = storage.get_last_receipt_hash(req.agent_id)
+        prev_hash = storage.get_last_receipt_hash(req.agent_id, tenant_id=tenant)
         receipt = receipts.issue_receipt(
             req, action_id, decision.decision, decision.policy_pack, decision.policy_pack_version,
             decision.matched_rules, decision.reasons, prev_receipt_hash=prev_hash,
         )
-        storage.save_receipt(receipt)
+        storage.save_receipt(receipt, tenant_id=tenant)
         result["receipt"] = receipt.model_dump()
 
     storage.append_audit("attested_evaluate", {
@@ -43,13 +44,14 @@ def evaluate(request: Request, req: ActionRequest):
         "action_type": req.action_type,
         "decision": decision.decision,
         "receipt_id": result["receipt"]["receipt_id"] if result["receipt"] else None,
+        **({"tenant_id": tenant} if tenant else {}),
     })
     return result
 
 
 @router.get("/verify/{receipt_id}", response_model=VerifyResult)
 @limiter.limit("300/minute")
-def verify(request: Request, receipt_id: str):
+def verify(request: Request, receipt_id: str, tenant: Optional[str] = Depends(optional_tenant)):
     """Called by the sink (bank API, infra control plane, EHR, etc.) before
     it executes the action. This is the actual enforcement point in Tier 2.
     Higher limit than /evaluate since a real sink may call this on every
@@ -58,7 +60,8 @@ def verify(request: Request, receipt_id: str):
     independent verifier should instead fetch /v1/public-key and check the
     signature itself (see verify_receipt.py)."""
     receipt = storage.get_receipt(receipt_id)
-    if not receipt:
+    # A receipt issued to a tenant is invisible to every other caller.
+    if not receipt or storage.get_receipt_tenant(receipt_id) != tenant:
         return VerifyResult(valid=False, reason="receipt_not_found")
     if receipt.revoked:
         return VerifyResult(valid=False, reason="receipt_revoked", receipt=receipt)
@@ -73,10 +76,16 @@ def verify(request: Request, receipt_id: str):
 
 @router.post("/revoke/{receipt_id}")
 @limiter.limit("30/minute")
-def revoke(request: Request, receipt_id: str, x_cyraduct_admin_key: Optional[str] = Header(None)):
+def revoke(request: Request, receipt_id: str, x_cyraduct_admin_key: Optional[str] = Header(None),
+           tenant: Optional[str] = Depends(optional_tenant)):
     """Full admin key: may revoke any receipt. Test key: may only revoke
     a receipt whose agent_id is in the test namespace (see app/auth.py)."""
     existing = storage.get_receipt(receipt_id)
+    if existing and tenant and storage.get_receipt_tenant(receipt_id) == tenant:
+        # A tenant may revoke its own receipts without any admin key.
+        storage.revoke_receipt(receipt_id)
+        storage.append_audit("receipt_revoked", {"receipt_id": receipt_id, "scope": "single", "tenant_id": tenant})
+        return {"receipt_id": receipt_id, "revoked": True}
     if not existing:
         # Still enforce auth before revealing not-found, to avoid using this
         # endpoint as an unauthenticated receipt-existence oracle.
@@ -94,10 +103,16 @@ def revoke(request: Request, receipt_id: str, x_cyraduct_admin_key: Optional[str
 
 @router.post("/revoke-agent/{agent_id}")
 @limiter.limit("30/minute")
-def revoke_agent(request: Request, agent_id: str, reason: Optional[str] = None, x_cyraduct_admin_key: Optional[str] = Header(None)):
+def revoke_agent(request: Request, agent_id: str, reason: Optional[str] = None, x_cyraduct_admin_key: Optional[str] = Header(None),
+                 tenant: Optional[str] = Depends(optional_tenant)):
     """Fleet/agent-scoped revocation: invalidate every currently-active
     receipt this agent holds. Full admin key: any agent. Test key: only
     agents in the test namespace."""
+    if tenant and not x_cyraduct_admin_key:
+        # Tenant callers can only ever revoke their own receipts.
+        count = storage.revoke_by_agent(agent_id, tenant_id=tenant)
+        storage.append_audit("receipt_revoked", {"agent_id": agent_id, "scope": "agent", "count": count, "reason": reason, "tenant_id": tenant})
+        return {"agent_id": agent_id, "revoked_count": count, "reason": reason}
     auth.require_admin_or_scoped_test(x_cyraduct_admin_key, target_agent_id=agent_id)
     count = storage.revoke_by_agent(agent_id)
     storage.append_audit("receipt_revoked", {"agent_id": agent_id, "scope": "agent", "count": count, "reason": reason})

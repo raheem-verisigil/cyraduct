@@ -13,10 +13,10 @@ caller; that capability is deliberately kept out of reach of any
 external/automated test harness, however well-intentioned.
 """
 import json
-from fastapi import APIRouter, HTTPException, Header
+from fastapi import APIRouter, HTTPException, Header, Request
 from pydantic import BaseModel
 from typing import Optional
-from .. import storage, auth, config
+from .. import storage, auth, config, crypto
 
 router = APIRouter(prefix="/v1/admin", tags=["admin"])
 
@@ -64,3 +64,80 @@ def audit_log(limit: int = 200, x_cyraduct_admin_key: Optional[str] = Header(Non
     # the entries returned are filtered.
     filtered = [e for e in entries if (aid := _entry_agent_id(e)) and auth.is_test_namespace(aid)]
     return {"chain_valid": storage.verify_audit_chain(), "entries": filtered, "note": "filtered to test namespace (scoped test key)"}
+
+
+class TenantCreateRequest(BaseModel):
+    name: str
+
+
+@router.post("/tenants")
+def create_tenant(body: TenantCreateRequest, x_cyraduct_admin_key: Optional[str] = Header(None)):
+    """Provision a tenant. The API key is returned exactly once; only its
+    hash is stored. Full admin only."""
+    auth.require_full_admin(x_cyraduct_admin_key)
+    tenant = storage.create_tenant(body.name.strip()[:120] or "unnamed")
+    storage.append_audit("tenant_created", {"tenant_id": tenant["tenant_id"], "name": tenant["name"]})
+    return tenant
+
+
+@router.get("/tenants")
+def list_tenants(x_cyraduct_admin_key: Optional[str] = Header(None)):
+    auth.require_full_admin(x_cyraduct_admin_key)
+    return {"tenants": storage.list_tenants()}
+
+
+@router.post("/tenants/{tenant_id}/revoke")
+def revoke_tenant(tenant_id: str, x_cyraduct_admin_key: Optional[str] = Header(None)):
+    """Disable a tenant's key and revoke every receipt it holds."""
+    auth.require_full_admin(x_cyraduct_admin_key)
+    if not storage.revoke_tenant(tenant_id):
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    storage.append_audit("tenant_revoked", {"tenant_id": tenant_id})
+    return {"tenant_id": tenant_id, "revoked": True}
+
+
+@router.get("/posture")
+def security_posture(request: Request, x_cyraduct_admin_key: Optional[str] = Header(None)):
+    """Read-only deployment self-check for operators. Reports booleans and
+    names only -- never a secret value -- so it is safe to paste into a
+    ticket. Lets you confirm production configuration with one request and
+    without any startup-crash risk."""
+    auth.require_full_admin(x_cyraduct_admin_key)
+    findings = []
+    if config.ENVIRONMENT != "production":
+        findings.append("CYRADUCT_ENV is not 'production'")
+    if config.ADMIN_API_KEY in {"", "dev-insecure-admin-key"}:
+        findings.append("admin key is the insecure default")
+    if config.SIGNING_SECRET in {"", "dev-insecure-secret-change-me"}:
+        findings.append("signing secret is the insecure default")
+    if crypto.key_source() != "env":
+        findings.append("signing key is not supplied via CYRADUCT_PRIVATE_KEY_B64 (may rotate on redeploy)")
+    if not config.REQUIRE_TENANT_AUTH:
+        findings.append("tenant authentication is not required (CYRADUCT_REQUIRE_TENANT_AUTH=false)")
+    if not config.CLIENT_IP_HEADER:
+        findings.append("rate limits key on the socket address; behind a proxy this may be shared by all callers")
+    if not config.TEST_ADMIN_KEY:
+        pass  # unset is the safe state
+    return {
+        "environment": config.ENVIRONMENT,
+        "admin_key_is_default": config.ADMIN_API_KEY in {"", "dev-insecure-admin-key"},
+        "signing_secret_is_default": config.SIGNING_SECRET in {"", "dev-insecure-secret-change-me"},
+        "signing_key_source": crypto.key_source(),
+        "require_tenant_auth": config.REQUIRE_TENANT_AUTH,
+        "test_key_configured": bool(config.TEST_ADMIN_KEY),
+        "client_ip_header": config.CLIENT_IP_HEADER or None,
+        "client_ip_seen_by_rate_limiter": limiter_key(request),
+        "socket_peer": request.client.host if request.client else None,
+        "forwarded_headers_present": {
+            h: bool(request.headers.get(h))
+            for h in ("x-forwarded-for", "x-real-ip", "x-forwarded-proto", "forwarded")
+        },
+        "tenants": len(storage.list_tenants()),
+        "findings": findings,
+        "ready_for_production": not findings,
+    }
+
+
+def limiter_key(request: Request) -> str:
+    from ..rate_limit import client_key
+    return client_key(request)

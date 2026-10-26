@@ -39,7 +39,7 @@ from app.storage import (
     evidence_table,
     agent_chain_table,
     partners_table,
-    analytics_events_table,
+    analytics_events_table, tenants_table, init_db,
 )
 
 TABLES = {
@@ -50,11 +50,13 @@ TABLES = {
     "agent_chain": agent_chain_table,
     "partners": partners_table,
     "analytics_events": analytics_events_table,
+    "tenants": tenants_table,
 }
 
 
 def reflect_live_tables():
     """Discover actual columns in the selected live database tables."""
+    init_db()  # idempotent: guarantees newly added tables exist before reflection
     metadata = MetaData()
     metadata.reflect(bind=_engine, only=list(TABLES.keys()))
 
