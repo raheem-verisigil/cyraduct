@@ -97,3 +97,55 @@ def test_broker_requires_its_own_key_before_processing(monkeypatch):
         },
     )
     assert response.status_code == 401
+
+
+
+def test_broker_rejects_wrong_key_before_receipt_lookup(monkeypatch):
+    from app import storage
+
+    monkeypatch.setattr(config, "BROKER_API_KEY", "test-broker-secret")
+
+    def forbidden_lookup(_receipt_id):
+        raise AssertionError("receipt lookup must not run before broker authentication")
+
+    monkeypatch.setattr(storage, "get_receipt", forbidden_lookup)
+    response = client.post(
+        "/v1/broker/execute?receipt_id=not-a-real-receipt&execution_webhook=https%3A%2F%2Fexample.com%2Fhook",
+        headers={"X-Cyraduct-Broker-Key": "wrong-key"},
+        json={
+            "agent_id": "service-auth-test",
+            "action_type": "read_public_doc",
+            "consequence_class": "low_risk",
+            "target": "docs",
+            "resource": "public",
+            "reversibility": "reversible",
+            "authority": "present",
+            "policy_pack": "generic",
+            "payload": {},
+            "runtime_state": {},
+        },
+    )
+    assert response.status_code == 401
+
+
+def test_broker_accepts_matching_key_then_checks_receipt(monkeypatch):
+    monkeypatch.setattr(config, "BROKER_API_KEY", "test-broker-secret")
+    response = client.post(
+        "/v1/broker/execute?receipt_id=not-a-real-receipt&execution_webhook=https%3A%2F%2Fexample.com%2Fhook",
+        headers={"X-Cyraduct-Broker-Key": "test-broker-secret"},
+        json={
+            "agent_id": "service-auth-test",
+            "action_type": "read_public_doc",
+            "consequence_class": "low_risk",
+            "target": "docs",
+            "resource": "public",
+            "reversibility": "reversible",
+            "authority": "present",
+            "policy_pack": "generic",
+            "payload": {},
+            "runtime_state": {},
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["executed"] is False
+    assert response.json()["reason"] == "receipt_not_found"
