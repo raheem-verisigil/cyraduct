@@ -19,7 +19,7 @@ from .models import (
 )
 from .runtime import RuntimeActionRequest, RuntimeDecision
 from . import crypto, consequence
-from .canonical import action_hash as canonical_action_hash, parameters_hash
+from .canonical import action_hash as canonical_action_hash, canonical_json_bytes, parameters_hash
 
 
 def _parameters_hash(payload: dict) -> str:
@@ -81,13 +81,22 @@ def _runtime_action_hash(req: RuntimeActionRequest, action_id: str) -> str:
 
 
 def _signature_message(receipt: Receipt) -> bytes:
-    message = (
-        f"{receipt.receipt_id}|{receipt.action_hash}|"
-        f"{receipt.expires_at}|{receipt.prev_receipt_hash or ''}"
+    """Canonical signature over every immutable authorization claim.
+
+    Mutable lifecycle fields (revoked and consumed_at) are excluded and are
+    checked separately by the enforcement service. Decision, agent, action,
+    policy metadata, evidence references, timestamps, chain link, authorization
+    type, runtime decision, and signing-key metadata are all covered.
+    """
+    payload = receipt.model_dump(
+        mode="json",
+        exclude={"signature", "revoked", "consumed_at"},
     )
-    if receipt.authorization_type == "runtime":
-        message += f"|runtime|{receipt.runtime_decision or ''}"
-    return message.encode()
+    payload["signature_header"] = {
+        "alg": receipt.signature.alg,
+        "key_id": receipt.signature.key_id,
+    }
+    return canonical_json_bytes(payload)
 
 
 def issue_runtime_receipt(
@@ -206,13 +215,7 @@ def issue_receipt(req: ActionRequest, action_id: str, decision: str,
     action_hash = _action_hash(req, action_id)
     score_result = consequence.score(req.consequence_class, req.action_type, req.payload)
 
-    # Sign over the fields that matter for integrity: receipt id, action
-    # hash, expiry, and the previous receipt's hash (so the chain itself
-    # is covered by the signature, not just individually-checkable links).
-    msg = f"{receipt_id}|{action_hash}|{expires_at.isoformat()}|{prev_receipt_hash or ''}".encode()
-    signature_value = crypto.sign(msg)
-
-    return Receipt(
+    receipt = Receipt(
         receipt_id=receipt_id,
         action_id=action_id,
         decision=decision,
@@ -236,9 +239,11 @@ def issue_receipt(req: ActionRequest, action_id: str, decision: str,
         expires_at=expires_at.isoformat(),
         action_hash=action_hash,
         prev_receipt_hash=prev_receipt_hash,
-        signature=SignatureInfo(key_id=crypto.key_id(), value=signature_value),
+        signature=SignatureInfo(key_id=crypto.key_id(), value=""),
         revoked=False,
     )
+    receipt.signature.value = crypto.sign(_signature_message(receipt))
+    return receipt
 
 
 def verify_signature(receipt: Receipt, public_key_b64: str = None) -> bool:
