@@ -66,3 +66,15 @@ def test_allowlisted_hostname_still_requires_public_dns(monkeypatch):
     )
     assert not ok
     assert reason.startswith("resolved_to_private_or_reserved_address")
+
+
+def test_rejects_url_userinfo():
+    ok, reason = url_safety.validate_webhook_url("https://user:pass@example.com/hook")
+    assert not ok
+    assert reason == "userinfo_not_allowed"
+
+
+def test_rejects_nonstandard_https_port():
+    ok, reason = url_safety.validate_webhook_url("https://example.com:8443/hook")
+    assert not ok
+    assert reason == "port_must_be_443"
