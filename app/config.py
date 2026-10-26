@@ -25,6 +25,7 @@ DEFAULT_EXPIRY_SECONDS = 600
 
 DATABASE_URL = os.environ.get("CYRADUCT_DATABASE_URL", "sqlite:///./cyraduct.db")
 ADMIN_API_KEY = os.environ.get("CYRADUCT_ADMIN_KEY", "dev-insecure-admin-key")
+BROKER_API_KEY = os.environ.get("CYRADUCT_BROKER_API_KEY", "")
 TEST_ADMIN_KEY = os.environ.get("CYRADUCT_TEST_ADMIN_KEY", "")
 TEST_AGENT_PREFIX = os.environ.get("CYRADUCT_TEST_AGENT_PREFIX", "test-")
 POLICY_PACK_DIR = os.environ.get("CYRADUCT_POLICY_DIR", "policy_packs")
@@ -45,6 +46,11 @@ def validate_startup() -> None:
 
     if SIGNING_SECRET in {"", "dev-insecure-secret-change-me"} or len(SIGNING_SECRET) < 32:
         raise RuntimeError("CYRADUCT_SIGNING_SECRET must be a unique secret of at least 32 characters in production")
+
+    if BROKER_API_KEY in {"", "dev-insecure-broker-key"} or len(BROKER_API_KEY) < 32:
+        raise RuntimeError("CYRADUCT_BROKER_API_KEY must be a unique secret of at least 32 characters in production")
+    if BROKER_API_KEY in {ADMIN_API_KEY, SIGNING_SECRET}:
+        raise RuntimeError("CYRADUCT_BROKER_API_KEY must differ from admin and signing secrets")
 
     if TEST_ADMIN_KEY:
         if len(TEST_ADMIN_KEY) < 32:
