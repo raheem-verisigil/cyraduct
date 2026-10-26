@@ -12,13 +12,14 @@ Set these as deployment secrets/environment variables. Do not commit real values
 | `CYRADUCT_DATABASE_URL` | PostgreSQL URL; local SQLite is rejected in production |
 | `CYRADUCT_ADMIN_KEY` | Unique random secret, at least 32 characters |
 | `CYRADUCT_BROKER_API_KEY` | Separate unique random secret, at least 32 characters; required on every broker execution request |
+| `CYRADUCT_BROKER_ALLOWED_HOSTS` | Comma-separated exact sink hostnames approved for broker callbacks; required in production |
 | `CYRADUCT_SIGNING_SECRET` | Unique random secret, at least 32 characters (legacy compatibility setting; do not reuse another key) |
 | `CYRADUCT_PRIVATE_KEY_B64` | Base64 encoding of a 32-byte raw Ed25519 private key |
 | `CYRADUCT_KEY_ID` | Explicit non-development key identifier, for example `cyraduct-prod-2026-01` |
 | `CYRADUCT_ALLOWED_ORIGINS` | Exact trusted browser origins; avoid wildcards |
 | `CYRADUCT_TEST_ADMIN_KEY` | Optional; only if a separate test capability is required, at least 32 characters and distinct from the admin key |
 
-The application fails at startup when production settings contain default credentials, an invalid signing key, a development key ID, or a non-PostgreSQL database URL.
+The application fails at startup when production settings contain default credentials, an invalid signing key, a development key ID, a non-PostgreSQL database URL, or no broker sink allowlist.
 
 ## Generate the signing key
 
@@ -28,7 +29,7 @@ Generate independent random values for the admin, broker, and signing secrets us
 
 ## Broker integration requirements
 
-The broker execution endpoint requires `X-Cyraduct-Broker-Key`. This is a coarse single-integration credential, **not** multi-tenant authentication. Do not give it to unrelated customers or an untrusted external tester. A real multi-customer deployment needs per-tenant/per-integration credentials, revocation, scoped sink allowlists, and auditable ownership.
+The broker execution endpoint requires `X-Cyraduct-Broker-Key` and, in production, only calls exact hostnames listed in `CYRADUCT_BROKER_ALLOWED_HOSTS`. DNS results are still checked for private/reserved addresses. This is a coarse single-integration credential, **not** multi-tenant authentication. Do not give it to unrelated customers or an untrusted external tester. A real multi-customer deployment needs per-tenant/per-integration credentials, revocation, scoped sink allowlists, and auditable ownership.
 
 The sink must independently verify the signed receipt and enforce the authorized action immediately before the side effect. The API's broker key is not a substitute for receipt verification, action binding, or sink-side authorization.
 
