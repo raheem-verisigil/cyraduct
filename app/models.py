@@ -192,11 +192,10 @@ class Receipt(BaseModel):
     Independently verifiable action receipt.
 
     Verification does not require trusting Cyraduct's server: fetch the
-    public key from /v1/public-key and verify `signature.value` against
-    the canonical hash of {receipt_id, action_hash, expires_at,
-    prev_receipt_hash} (pipe-joined, empty string if prev_receipt_hash is
-    None — see app/receipts.py:issue_receipt and verify_receipt.py, which
-    is the authoritative reference for the exact message format) yourself.
+    public key from /v1/public-key and verify `signature.value` over the
+    canonical JSON representation of all immutable receipt claims, including
+    the decision and policy metadata. Mutable lifecycle fields (`revoked`,
+    `consumed_at`) are checked separately by the enforcement service.
     """
     receipt_id: str
     action_id: str

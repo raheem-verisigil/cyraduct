@@ -131,3 +131,61 @@ def test_verify_action_binding_rejects_policy_pack_swap_post_issuance():  # SB-0
 
     swapped_req = _base_request(policy_pack="banking")
     assert verify_action_binding(receipt, swapped_req) is False
+
+
+def test_policy_receipt_signature_covers_decision_and_policy_metadata():
+    """A stored receipt cannot be changed from conditional to allow or have
+    its policy context rewritten while retaining a valid signature."""
+    req = _base_request()
+    receipt = issue_receipt(
+        req, action_id="act_signed_claims", decision="conditional",
+        policy_pack="generic", policy_pack_version="0.1.0",
+        matched_rules=["generic.conditional.financial_transfer.review_band"],
+        reasons=["human review required"],
+    )
+    from app.receipts import verify_signature
+    assert verify_signature(receipt)
+
+    receipt.decision = "allow"
+    assert not verify_signature(receipt), "decision mutation must invalidate signature"
+
+
+def test_policy_receipt_signature_covers_policy_version_and_evidence():
+    req = _base_request()
+    receipt = issue_receipt(
+        req, action_id="act_signed_policy", decision="allow",
+        policy_pack="generic", policy_pack_version="0.1.0",
+        matched_rules=["rule-1"], reasons=["approved"],
+    )
+    from app.receipts import verify_signature
+    assert verify_signature(receipt)
+    receipt.policy.policy_pack_version = "9.9.9"
+    assert not verify_signature(receipt), "policy version mutation must invalidate signature"
+
+
+def test_policy_receipt_signature_covers_decision_and_policy_metadata():
+    """Changing conditional to allow must invalidate the signed receipt."""
+    from app.receipts import verify_signature
+    req = _base_request()
+    receipt = issue_receipt(
+        req, action_id="act_signed_claims", decision="conditional",
+        policy_pack="generic", policy_pack_version="0.1.0",
+        matched_rules=["generic.conditional.financial_transfer.review_band"],
+        reasons=["human review required"],
+    )
+    assert verify_signature(receipt)
+    receipt.decision = "allow"
+    assert not verify_signature(receipt), "decision mutation must invalidate signature"
+
+
+def test_policy_receipt_signature_covers_policy_version():
+    from app.receipts import verify_signature
+    req = _base_request()
+    receipt = issue_receipt(
+        req, action_id="act_signed_policy", decision="allow",
+        policy_pack="generic", policy_pack_version="0.1.0",
+        matched_rules=["rule-1"], reasons=["approved"],
+    )
+    assert verify_signature(receipt)
+    receipt.policy.policy_pack_version = "9.9.9"
+    assert not verify_signature(receipt), "policy version mutation must invalidate signature"

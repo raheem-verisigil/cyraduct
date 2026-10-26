@@ -21,13 +21,24 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 
 def verify(receipt: dict, public_key_b64: str) -> tuple[bool, str]:
-    receipt_id = receipt["receipt_id"]
-    action_hash = receipt["action_hash"]
-    expires_at = receipt["expires_at"]
-    prev_hash = receipt.get("prev_receipt_hash") or ""
-    signature_b64 = receipt["signature"]["value"]
+    signature = receipt["signature"]
+    signature_b64 = signature["value"]
 
-    msg = f"{receipt_id}|{action_hash}|{expires_at}|{prev_hash}".encode()
+    # Keep this canonicalization in sync with app.receipts._signature_message.
+    # Lifecycle fields are mutable operational state; immutable authorization
+    # claims, including decision and policy metadata, are signed.
+    payload = {
+        key: value for key, value in receipt.items()
+        if key not in {"signature", "revoked", "consumed_at"}
+    }
+    payload["signature_header"] = {
+        "alg": signature["alg"],
+        "key_id": signature["key_id"],
+    }
+    msg = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"),
+        ensure_ascii=False, allow_nan=False,
+    ).encode("utf-8")
 
     pub_bytes = base64.b64decode(public_key_b64)
     pub_key = Ed25519PublicKey.from_public_bytes(pub_bytes)
