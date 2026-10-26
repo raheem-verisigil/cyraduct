@@ -39,12 +39,47 @@ def test_normal_body_is_still_accepted():
     assert r.status_code == 200
 
 
-def test_chunked_body_without_length_is_rejected_with_411():
+def test_small_chunked_body_is_accepted():
+    """Chunked uploads (no Content-Length) within the cap must still work."""
+    import json
+    payload = json.dumps({
+        "agent_id": "test-chunked-ok", "action_type": "read_public_doc",
+        "consequence_class": "low_risk", "policy_pack": "generic", "payload": {},
+    }).encode()
+
     def gen():
-        yield b'{"agent_id":"test-chunked"}'
+        yield payload[:20]
+        yield payload[20:]
     r = client.post("/v1/advisory/evaluate", content=gen(),
                     headers={"content-type": "application/json"})
-    assert r.status_code == 411
+    assert r.status_code == 200
+
+
+def test_oversized_chunked_body_is_cut_off_with_413():
+    """No Content-Length to inspect: the cap must still fire on bytes received."""
+    chunk = b"x" * 65536
+
+    def gen():
+        for _ in range((MAX_REQUEST_BYTES // len(chunk)) + 3):
+            yield chunk
+    r = client.post("/v1/advisory/evaluate", content=gen(),
+                    headers={"content-type": "application/json"})
+    assert r.status_code == 413
+
+
+def test_understated_content_length_cannot_bypass_cap():
+    """Header says small, body is large: must not be accepted."""
+    import httpx  # noqa: F401
+    big = b'{"agent_id":"test-lie","payload":{"b":"' + b"x" * (MAX_REQUEST_BYTES + 5000) + b'"}}'
+    r = client.post("/v1/advisory/evaluate", content=big,
+                    headers={"content-type": "application/json", "content-length": "50"})
+    assert r.status_code in (400, 413)
+
+
+def test_invalid_content_length_is_400():
+    r = client.post("/v1/advisory/evaluate", content=b"{}",
+                    headers={"content-type": "application/json", "content-length": "abc"})
+    assert r.status_code in (400, 422)
 
 
 def test_runtime_evaluate_rate_limit_fires():
