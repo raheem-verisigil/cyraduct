@@ -72,10 +72,12 @@ def test_broker_rejects_missing_or_invalid_broker_key():
     auth = _allow()
     params = {"receipt_id": auth["receipt_id"], "execution_webhook": "https://example.com/cyraduct-test"}
     payload = _broker_payload(auth)
-    missing = client.post("/v1/broker/execute", params=params, json=payload)
+    missing = headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
+json=payload)
     assert missing.status_code == 401
     invalid = client.post(
-        "/v1/broker/execute", params=params, json=payload,
+        headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
+        json=payload,
         headers={"X-Cyraduct-Broker-Key": "not-the-broker-key"},
     )
     assert invalid.status_code == 401
@@ -118,6 +120,7 @@ def test_changed_state_is_blocked():
     r = client.post(
         "/v1/broker/execute",
         params={"receipt_id": auth["receipt_id"], "execution_webhook": "https://example.com/cyraduct-test"},
+        headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
         json=_broker_payload(auth, current_state_version="state-2"),
     )
     assert r.status_code == 200
@@ -128,6 +131,7 @@ def test_changed_target_is_blocked():
     r = client.post(
         "/v1/broker/execute",
         params={"receipt_id": auth["receipt_id"], "execution_webhook": "https://example.com/cyraduct-test"},
+        headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
         json=_broker_payload(auth, target="payments"),
     )
     assert r.status_code == 200
@@ -138,6 +142,7 @@ def test_changed_authority_or_reversibility_is_blocked():
     r = client.post(
         "/v1/broker/execute",
         params={"receipt_id": auth["receipt_id"], "execution_webhook": "https://example.com/cyraduct-test"},
+        headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
         json=_broker_payload(auth, authority="delegated"),
     )
     assert r.status_code == 200
@@ -147,6 +152,7 @@ def test_changed_authority_or_reversibility_is_blocked():
     r2 = client.post(
         "/v1/broker/execute",
         params={"receipt_id": auth2["receipt_id"], "execution_webhook": "https://example.com/cyraduct-test"},
+        headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
         json=_broker_payload(auth2, reversibility="irreversible"),
     )
     assert r2.status_code == 200
@@ -158,6 +164,7 @@ def test_expired_runtime_authorization_is_blocked(monkeypatch):
     r = client.post(
         "/v1/broker/execute",
         params={"receipt_id": auth["receipt_id"], "execution_webhook": "https://example.com/cyraduct-test"},
+        headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
         json=_broker_payload(auth),
     )
     assert r.status_code == 200
@@ -169,6 +176,7 @@ def test_revoked_runtime_authorization_is_blocked():
     r = client.post(
         "/v1/broker/execute",
         params={"receipt_id": auth["receipt_id"], "execution_webhook": "https://example.com/cyraduct-test"},
+        headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
         json=_broker_payload(auth),
     )
     assert r.status_code == 200
@@ -178,8 +186,10 @@ def test_runtime_authorization_replay_is_blocked(monkeypatch):
     auth = _allow()
     monkeypatch.setattr(broker.httpx, "AsyncClient", FakeAsyncClient)
     params = {"receipt_id": auth["receipt_id"], "execution_webhook": "https://example.com/cyraduct-test"}
-    first = client.post("/v1/broker/execute", params=params, json=_broker_payload(auth))
-    second = client.post("/v1/broker/execute", params=params, json=_broker_payload(auth))
+    first = headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
+json=_broker_payload(auth))
+    second = headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
+json=_broker_payload(auth))
     assert first.status_code == 200
     assert first.json()["executed"] is True
     assert second.status_code == 200
@@ -195,6 +205,7 @@ def test_invalid_runtime_signature_is_blocked():
         r = client.post(
             "/v1/broker/execute",
             params={"receipt_id": auth["receipt_id"], "execution_webhook": "https://example.com/cyraduct-test"},
+            headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
             json=_broker_payload(auth),
         )
     finally:
@@ -214,6 +225,7 @@ def test_kill_switch_blocks_runtime_broker():
         r = client.post(
             "/v1/broker/execute",
             params={"receipt_id": auth["receipt_id"], "execution_webhook": "https://example.com/cyraduct-test"},
+            headers={"X-Cyraduct-Broker-Key": BROKER_KEY},
             json=_broker_payload(auth),
         )
         assert r.status_code == 503
