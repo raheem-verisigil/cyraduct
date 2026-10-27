@@ -108,7 +108,7 @@ async def test_tampered_receipt_fails_closed_before_executor(app_transport):
     )
     graph = build_demo_graph(guarded)
 
-    with pytest.raises(CyraductError, match="signature verification failed"):
+    with pytest.raises(CyraductError, match="does not bind to the requested action"):
         await graph.ainvoke({"action_text": "Tampered evidence must not execute"})
     assert executed == []
 
@@ -119,3 +119,34 @@ async def test_remote_endpoint_requires_https_and_key():
         CyraductRuntimeClient("http://cyraduct.example.com", "key")
     with pytest.raises(ValueError, match="api_key"):
         CyraductRuntimeClient("https://cyraduct.example.com")
+    with pytest.raises(ValueError, match="trusted_key_id"):
+        CyraductRuntimeClient("https://cyraduct.example.com", "runtime-key")
+
+@pytest.mark.asyncio
+async def test_tampered_signature_fails_closed_before_executor(app_transport):
+    executed = []
+    client = CyraductRuntimeClient(
+        "http://localhost",
+        "langgraph-test-key",
+        transport=app_transport,
+    )
+    original_evaluate = client.evaluate
+
+    async def tampered_evaluate(action):
+        result = await original_evaluate(action)
+        result["authorization"]["signature"]["value"] = "invalid-signature"
+        return result
+
+    client.evaluate = tampered_evaluate
+    guarded = create_cyraduct_guarded_tool(
+        base_url="http://localhost",
+        api_key="langgraph-test-key",
+        agent_id="test-langgraph-signature-tampered",
+        execute_action=lambda payload: executed.append(payload),
+        client=client,
+    )
+    graph = build_demo_graph(guarded)
+
+    with pytest.raises(CyraductError, match="signature verification failed"):
+        await graph.ainvoke({"action_text": "Invalid signature must not execute"})
+    assert executed == []
