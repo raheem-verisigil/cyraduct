@@ -3,6 +3,8 @@ name: Cyraduct production read-only smoke test
 on:
   push:
     branches: ["integration/langgraph-cyraduct-guard"]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
