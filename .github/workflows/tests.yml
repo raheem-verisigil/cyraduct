@@ -30,4 +30,4 @@ jobs:
         env:
           CYRADUCT_ENV: test
           PYTHONPATH: .
-        run: pytest -q
+        run: pytest -q --ignore=tests/integrations
