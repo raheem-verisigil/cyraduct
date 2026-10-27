@@ -1,3 +1,4 @@
+import base64
 import json
 
 import httpx
@@ -134,7 +135,7 @@ async def test_tampered_signature_fails_closed_before_executor(app_transport):
 
     async def tampered_evaluate(action):
         result = await original_evaluate(action)
-        result["authorization"]["signature"]["value"] = "invalid-signature"
+        result["authorization"]["signature"]["value"] = base64.b64encode(b"\\x00" * 64).decode("ascii")
         return result
 
     client.evaluate = tampered_evaluate
