@@ -17,10 +17,11 @@ POST /v1/runtime/evaluate (dedicated runtime API key)
         +-- allow + signed receipt
                     |
                     v
-          fetch /v1/public-key
+          use pinned Ed25519 public key
+          (loopback only: fetch /v1/public-key)
                     |
                     v
-       independently verify Ed25519 signature
+       verify signature + exact action binding
                     |
                     +-- invalid / missing --> fail closed; no executor call
                     |
@@ -65,17 +66,25 @@ guarded_tool = create_cyraduct_guarded_tool(
     api_key="load-from-your-secret-manager",
     agent_id="my-langgraph-agent",
     execute_action=safe_demo_executor,
+    # Pin these from a separately trusted channel; do not fetch-and-trust
+    # the key from the same endpoint that returns the authorization receipt.
+    trusted_key_id="cyraduct-key-id-from-trusted-source",
+    trusted_public_key_b64="base64-ed25519-public-key-from-trusted-source",
 )
 graph = build_demo_graph(guarded_tool)
 result = await graph.ainvoke({"action_text": "Create a test ticket"})
 print(result["tool_result"])
 ```
 
-Never put a live API key in source control or prompt context. Use a scoped
-runtime credential. A runtime ALLOW decision is not enough on its own: this
-adapter requires a receipt, checks the receipt's key identity, verifies the
-Ed25519 signature using the published public key, and only then invokes the
-configured executor.
+Never put a live API key or pinned key material in prompt context. Load them
+from configuration or a secret manager. For remote endpoints, pin both the
+Ed25519 public key and key ID from a separately trusted channel (for example,
+compare a fingerprint communicated out-of-band); trusting a key fetched from
+the same endpoint would not protect against endpoint/key substitution. Loopback
+development tests may fetch the local test key. Before execution, the adapter
+checks the receipt signature, expiry, runtime authorization type, agent and
+action identifiers, consequence class, payload hash, and canonical runtime
+action hash. Any mismatch fails closed.
 
 This is a reference integration, not a security certification. Before using it
 for consequential production actions, add the application's own authorization
