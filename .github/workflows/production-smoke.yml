@@ -1,0 +1,86 @@
+name: Cyraduct production read-only smoke test
+
+on:
+  push:
+    branches: ["integration/langgraph-cyraduct-guard"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check live health, public verification key, and fail-closed runtime auth
+        env:
+          CYRADUCT_BASE_URL: https://api.cyraduct.com
+        run: |
+          python - <<'PY'
+          import base64
+          import hashlib
+          import json
+          import os
+          import urllib.error
+          import urllib.request
+
+          base = os.environ["CYRADUCT_BASE_URL"].rstrip("/")
+
+          def request(path, *, method="GET", payload=None):
+              data = None if payload is None else json.dumps(payload).encode()
+              req = urllib.request.Request(
+                  base + path,
+                  data=data,
+                  method=method,
+                  headers={"Accept": "application/json", "Content-Type": "application/json"},
+              )
+              try:
+                  with urllib.request.urlopen(req, timeout=10) as response:
+                      return response.status, response.read()
+              except urllib.error.HTTPError as exc:
+                  return exc.code, exc.read()
+
+          status, body = request("/healthz")
+          assert status == 200, f"/healthz expected 200, got {status}"
+          health = json.loads(body)
+          assert health.get("status") == "ok", f"unexpected health response: {health!r}"
+          print("PASS /healthz returns 200")
+
+          status, body = request("/v1/public-key")
+          assert status == 200, f"/v1/public-key expected 200, got {status}"
+          key = json.loads(body)
+          assert key.get("alg", key.get("algorithm")) == "Ed25519", "unexpected signing algorithm"
+          key_id = key.get("key_id")
+          public_key_b64 = key.get("public_key_b64", key.get("public_key"))
+          assert isinstance(key_id, str) and key_id, "missing key_id"
+          assert isinstance(public_key_b64, str) and public_key_b64, "missing public key"
+          public_key = base64.b64decode(public_key_b64, validate=True)
+          assert len(public_key) == 32, f"unexpected Ed25519 public key length: {len(public_key)}"
+          fingerprint = hashlib.sha256(public_key).hexdigest()
+          print(f"PASS public verification key endpoint; algorithm=Ed25519; key_id={key_id}; sha256={fingerprint}")
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write("## Cyraduct production smoke test\n\n")
+              summary.write("- /healthz: HTTP 200\n")
+              summary.write("- /v1/public-key: valid Ed25519 public-key response\n")
+              summary.write(f"- Key ID: `{key_id}`\n")
+              summary.write(f"- Public-key SHA-256 fingerprint: `{fingerprint}`\n")
+              summary.write("\nThis run retrieves the public key from the same endpoint; independently confirm this fingerprint through a separate trusted channel before pinning it for remote receipt verification.\n")
+
+          payload = {
+              "agent_id": "cyraduct-production-smoke-test",
+              "framework": "langgraph",
+              "action_type": "smoke_test_no_side_effect",
+              "consequence_class": "low_risk",
+              "payload": {"test": "missing-credential-must-fail-closed"},
+              "policy_pack": "generic",
+          }
+          status, body = request("/v1/runtime/evaluate", method="POST", payload=payload)
+          assert status == 401, (
+              "unauthenticated runtime evaluation must return HTTP 401; "
+              f"got {status}: {body[:300]!r}"
+          )
+          print("PASS runtime evaluation rejects missing credentials with HTTP 401")
+          PY
