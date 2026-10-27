@@ -29,7 +29,7 @@ def app_transport(monkeypatch):
 async def test_langgraph_allowed_action_verifies_receipt_before_execution(app_transport):
     executed = []
     client = CyraductRuntimeClient(
-        "http://testserver",
+        "http://localhost",
         "langgraph-test-key",
         transport=app_transport,
     )
@@ -39,7 +39,7 @@ async def test_langgraph_allowed_action_verifies_receipt_before_execution(app_tr
         return {"ticket": "DEMO-001"}
 
     guarded = create_cyraduct_guarded_tool(
-        base_url="http://testserver",
+        base_url="http://localhost",
         api_key="langgraph-test-key",
         agent_id="test-langgraph-allowed",
         execute_action=execute_action,
@@ -60,13 +60,13 @@ async def test_langgraph_allowed_action_verifies_receipt_before_execution(app_tr
 async def test_langgraph_denied_action_never_reaches_executor(app_transport):
     executed = []
     client = CyraductRuntimeClient(
-        "http://testserver",
+        "http://localhost",
         "langgraph-test-key",
         transport=app_transport,
     )
 
     guarded = create_cyraduct_guarded_tool(
-        base_url="http://testserver",
+        base_url="http://localhost",
         api_key="langgraph-test-key",
         agent_id="test-langgraph-denied",
         execute_action=lambda payload: executed.append(payload),
@@ -86,7 +86,7 @@ async def test_langgraph_denied_action_never_reaches_executor(app_transport):
 async def test_tampered_receipt_fails_closed_before_executor(app_transport):
     executed = []
     client = CyraductRuntimeClient(
-        "http://testserver",
+        "http://localhost",
         "langgraph-test-key",
         transport=app_transport,
     )
@@ -100,7 +100,7 @@ async def test_tampered_receipt_fails_closed_before_executor(app_transport):
     client.evaluate = tampered_evaluate
 
     guarded = create_cyraduct_guarded_tool(
-        base_url="http://testserver",
+        base_url="http://localhost",
         api_key="langgraph-test-key",
         agent_id="test-langgraph-tampered",
         execute_action=lambda payload: executed.append(payload),
