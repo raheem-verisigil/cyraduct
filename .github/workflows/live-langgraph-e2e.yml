@@ -15,6 +15,7 @@ jobs:
       CYRADUCT_RUNTIME_API_KEY: ${{ secrets.CYRADUCT_E2E_RUNTIME_API_KEY }}
       CYRADUCT_TRUSTED_KEY_ID: ${{ secrets.CYRADUCT_E2E_TRUSTED_KEY_ID }}
       CYRADUCT_TRUSTED_PUBLIC_KEY_B64: ${{ secrets.CYRADUCT_E2E_TRUSTED_PUBLIC_KEY_B64 }}
+      CYRADUCT_TRUSTED_KEY_SHA256: ${{ secrets.CYRADUCT_E2E_TRUSTED_KEY_SHA256 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,20 +26,35 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
           python -m pip install langgraph langchain-core
-      - name: Require independently pinned credentials and key
+      - name: Require credentials and verify independently pinned key
         shell: bash
         run: |
           set -euo pipefail
           test -n "$CYRADUCT_RUNTIME_API_KEY" || { echo "::error::Missing CYRADUCT_E2E_RUNTIME_API_KEY repository secret"; exit 1; }
           test -n "$CYRADUCT_TRUSTED_KEY_ID" || { echo "::error::Missing CYRADUCT_E2E_TRUSTED_KEY_ID repository secret"; exit 1; }
           test -n "$CYRADUCT_TRUSTED_PUBLIC_KEY_B64" || { echo "::error::Missing CYRADUCT_E2E_TRUSTED_PUBLIC_KEY_B64 repository secret"; exit 1; }
+          test -n "$CYRADUCT_TRUSTED_KEY_SHA256" || { echo "::error::Missing CYRADUCT_E2E_TRUSTED_KEY_SHA256 repository secret (expected SHA-256 of the raw 32-byte Ed25519 public key, confirmed out of band)"; exit 1; }
           python - <<'PY'
-          import base64, hashlib, os
-          key = base64.b64decode(os.environ["CYRADUCT_TRUSTED_PUBLIC_KEY_B64"], validate=True)
+          import base64, hashlib, os, re
+          raw = os.environ["CYRADUCT_TRUSTED_PUBLIC_KEY_B64"]
+          # Accept base64 copied with whitespace or PEM line wrapping; reject unrelated formats.
+          raw = re.sub(r"-----BEGIN [^-]+-----|-----END [^-]+-----", "", raw)
+          compact = "".join(raw.split())
+          try:
+              key = base64.b64decode(compact, validate=True)
+          except Exception:
+              raise SystemExit("Public-key secret is not valid Base64. Store only the Base64 encoding of the raw 32-byte Ed25519 public key; whitespace/line breaks are allowed.")
           if len(key) != 32:
-              raise SystemExit("Pinned Ed25519 public key must decode to exactly 32 bytes")
-          print("Pinned key fingerprint (compare with an independently trusted value before dispatch): " + hashlib.sha256(key).hexdigest())
-          print("Pinned key ID is configured; value intentionally not echoed.")
+              raise SystemExit(f"Decoded Ed25519 public key must be exactly 32 bytes; got {len(key)}. Do not store a PEM file or private key.")
+          actual = hashlib.sha256(key).hexdigest()
+          expected = os.environ["CYRADUCT_TRUSTED_KEY_SHA256"].strip().lower()
+          if not re.fullmatch(r"[0-9a-f]{64}", expected):
+              raise SystemExit("CYRADUCT_E2E_TRUSTED_KEY_SHA256 must be 64 lowercase/uppercase hexadecimal characters.")
+          if actual != expected:
+              raise SystemExit("Pinned public-key fingerprint mismatch. Stop and independently confirm the key; no live test was run.")
+          print("Pinned Ed25519 key encoding and independently supplied SHA-256 fingerprint verified.")
+          print("Fingerprint: " + actual)
+          print("Key ID configured; value intentionally not echoed.")
           PY
       - name: Run live ALLOW/HOLD through LangGraph with in-memory executor
         run: python scripts/live_langgraph_e2e.py
