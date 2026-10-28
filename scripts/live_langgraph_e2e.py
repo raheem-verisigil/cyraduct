@@ -2,6 +2,7 @@
 import asyncio
 import json
 import os
+import re
 
 from integrations.langgraph.cyraduct_langgraph import create_cyraduct_guarded_tool
 from integrations.langgraph.demo_graph import build_demo_graph
@@ -11,7 +12,14 @@ async def main():
     base_url = os.environ.get("CYRADUCT_BASE_URL", "https://api.cyraduct.com")
     api_key = os.environ["CYRADUCT_RUNTIME_API_KEY"]
     key_id = os.environ["CYRADUCT_TRUSTED_KEY_ID"]
-    public_key = os.environ["CYRADUCT_TRUSTED_PUBLIC_KEY_B64"]
+    # The workflow validates decoded key length and an independently pinned
+    # SHA-256 fingerprint. Normalize copy/paste whitespace and PEM headers for
+    # the adapter/verifier, which expect Base64 of the raw 32-byte public key.
+    public_key = re.sub(
+        r"-----BEGIN [^-]+-----|-----END [^-]+-----", "",
+        os.environ["CYRADUCT_TRUSTED_PUBLIC_KEY_B64"],
+    )
+    public_key = "".join(public_key.split())
     calls = []
 
     def sink(payload):
