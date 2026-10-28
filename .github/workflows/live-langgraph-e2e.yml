@@ -11,6 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
+    test/live-langgraph-e2e
+
+      PYTHONPATH: ${{ github.workspace }}
+      main
       CYRADUCT_BASE_URL: https://api.cyraduct.com
       CYRADUCT_RUNTIME_API_KEY: ${{ secrets.CYRADUCT_E2E_RUNTIME_API_KEY }}
       CYRADUCT_TRUSTED_KEY_ID: ${{ secrets.CYRADUCT_E2E_TRUSTED_KEY_ID }}
