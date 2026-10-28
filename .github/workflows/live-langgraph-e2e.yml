@@ -1,0 +1,44 @@
+name: Cyraduct live LangGraph E2E (manual, harmless sink)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  live-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CYRADUCT_BASE_URL: https://api.cyraduct.com
+      CYRADUCT_RUNTIME_API_KEY: ${{ secrets.CYRADUCT_E2E_RUNTIME_API_KEY }}
+      CYRADUCT_TRUSTED_KEY_ID: ${{ secrets.CYRADUCT_E2E_TRUSTED_KEY_ID }}
+      CYRADUCT_TRUSTED_PUBLIC_KEY_B64: ${{ secrets.CYRADUCT_E2E_TRUSTED_PUBLIC_KEY_B64 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install integration dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install langgraph langchain-core
+      - name: Require independently pinned credentials and key
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CYRADUCT_RUNTIME_API_KEY" || { echo "::error::Missing CYRADUCT_E2E_RUNTIME_API_KEY repository secret"; exit 1; }
+          test -n "$CYRADUCT_TRUSTED_KEY_ID" || { echo "::error::Missing CYRADUCT_E2E_TRUSTED_KEY_ID repository secret"; exit 1; }
+          test -n "$CYRADUCT_TRUSTED_PUBLIC_KEY_B64" || { echo "::error::Missing CYRADUCT_E2E_TRUSTED_PUBLIC_KEY_B64 repository secret"; exit 1; }
+          python - <<'PY'
+          import base64, hashlib, os
+          key = base64.b64decode(os.environ["CYRADUCT_TRUSTED_PUBLIC_KEY_B64"], validate=True)
+          if len(key) != 32:
+              raise SystemExit("Pinned Ed25519 public key must decode to exactly 32 bytes")
+          print("Pinned key fingerprint (compare with an independently trusted value before dispatch): " + hashlib.sha256(key).hexdigest())
+          print("Pinned key ID is configured; value intentionally not echoed.")
+          PY
+      - name: Run live ALLOW/HOLD through LangGraph with in-memory executor
+        run: python scripts/live_langgraph_e2e.py
