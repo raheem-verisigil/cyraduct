@@ -151,3 +151,53 @@ async def test_tampered_signature_fails_closed_before_executor(app_transport):
     with pytest.raises(CyraductError, match="signature verification failed"):
         await graph.ainvoke({"action_text": "Invalid signature must not execute"})
     assert executed == []
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected_error"),
+    [
+        ("revoked", "not an active runtime ALLOW"),
+        ("expired", "Receipt expired"),
+        ("wrong_key_id", "Receipt key identity mismatch"),
+        ("payload_hash", "does not bind to the requested action"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_invalid_receipt_claims_never_reach_executor(
+    app_transport, mutation, expected_error
+):
+    """Adversarial receipt mutations must fail closed before any side effect."""
+    executed = []
+    client = CyraductRuntimeClient(
+        "http://localhost",
+        "langgraph-test-key",
+        transport=app_transport,
+    )
+    original_evaluate = client.evaluate
+
+    async def mutated_evaluate(action):
+        result = await original_evaluate(action)
+        receipt = result["authorization"]
+        if mutation == "revoked":
+            receipt["revoked"] = True
+        elif mutation == "expired":
+            receipt["expires_at"] = "2000-01-01T00:00:00+00:00"
+        elif mutation == "wrong_key_id":
+            receipt["signature"]["key_id"] = "untrusted-key-id"
+        elif mutation == "payload_hash":
+            receipt["action"]["parameters_hash"] = "tampered-payload-hash"
+        return result
+
+    client.evaluate = mutated_evaluate
+    guarded = create_cyraduct_guarded_tool(
+        base_url="http://localhost",
+        api_key="langgraph-test-key",
+        agent_id=f"test-langgraph-{mutation}",
+        execute_action=lambda payload: executed.append(payload),
+        client=client,
+    )
+    graph = build_demo_graph(guarded)
+
+    with pytest.raises(CyraductError, match=expected_error):
+        await graph.ainvoke({"action_text": "Adversarial receipt must not execute"})
+    assert executed == []
