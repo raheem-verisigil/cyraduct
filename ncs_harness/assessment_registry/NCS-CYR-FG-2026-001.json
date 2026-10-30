@@ -22,19 +22,16 @@
     }
   },
   "latest_completed_ci_run": {
+    "run_id": 41129013094,
+    "run_number": 127,
     "workflow": "NCS Finance Guard Harness",
-    "run_id": 41124081519,
-    "run_number": 97,
-    "commit_sha": "155595372efc8dd9a5824aaf64cdd45d21e307ef",
+    "commit_sha": "a9ee82b89a0e39a94da3a80beb7477bccb07ddb8",
     "status": "completed",
-    "conclusion": "failure",
-    "tests_passed": 62,
-    "tests_failed": 1,
-    "failure": {
-      "test": "tests/test_ncs_grade_compiler.py::test_variable_policy_observation_is_indeterminate",
-      "diagnosis": "One observed policy assertion failure was present among variable outcomes. Compiler precedence classified the declared policy profile as NOT_FIT_FOR_DECLARED_POLICY_PROFILE. The test expected INDETERMINATE, which conflicted with the conservative rule that an observed failure must remain visible."
-    },
-    "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41124081519"
+    "conclusion": "success",
+    "tests_passed": 71,
+    "tests_failed": 0,
+    "duration": "1.16s",
+    "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41129013094"
   },
   "remediation": {
     "commit_sha": "ad39b12f6d173af6d5b81a8d35ebacb7f55dbc33",
@@ -55,12 +52,29 @@
     "independent_validation_completed": false,
     "native_model_provider_runs_completed": false,
     "application_control_tests_completed": true,
-    "public_result_label": "INITIAL_CI_RUN_FAILED_ONE_TEST; REMEDIATION_COMMITTED; RERUN_PENDING"
+    "public_result_label": "INITIAL_CI_RUN_FAILED_ONE_TEST; REMEDIATION_COMMITTED; RERUN_PENDING",
+    "ncs_harness_ci_passed": true
   },
   "synchronization": {
     "canonical_assessment_id": "NCS-CYR-FG-2026-001",
     "mirror_records_required": true,
     "mirror_must_preserve_identical_result_digest": true,
     "mirror_must_not_claim_other_project_was_assessed": true
-  }
+  },
+  "run_history": [
+    {
+      "run_id": 41129013094,
+      "run_number": 127,
+      "workflow": "NCS Finance Guard Harness",
+      "commit_sha": "a9ee82b89a0e39a94da3a80beb7477bccb07ddb8",
+      "status": "completed",
+      "conclusion": "success",
+      "tests_passed": 71,
+      "tests_failed": 0,
+      "duration": "1.16s",
+      "evidence": "GitHub Actions job 124314833847 log",
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41129013094",
+      "notes": "Executed eight NCS harness test modules including newly added certificate lifecycle tests. 4 warnings: pytest-asyncio fixture loop-scope deprecation, httpx/starlette TestClient deprecation, FastAPI on_event deprecation (reported twice). No test failures."
+    }
+  ]
 }
