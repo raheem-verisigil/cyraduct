@@ -10,9 +10,9 @@ def _canon(value: Any) -> bytes:
 def digest(value: Any) -> str:
     return hashlib.sha256(_canon(value)).hexdigest()
 
-def build_policy_observation(*, baseline_observation: dict[str, Any], policy_pack_id: str, policy_version: str, policy_digest: str, policy_prompt_sha256: str, assertions: list[dict[str, str | None]], evaluator_method: str, evaluator_id: str | None, rubric_version: str) -> dict[str, Any]:
+def build_policy_observation(*, baseline_observation: dict[str, Any], raw_response: str, policy_pack_id: str, policy_version: str, policy_digest: str, policy_prompt_sha256: str, assertions: list[dict[str, str | None]], evaluator_method: str, evaluator_id: str | None, rubric_version: str) -> dict[str, Any]:
     """Attach an independently evaluated policy run to one exact baseline run."""
-    if not policy_pack_id or not policy_version or len(policy_digest) != 64 or len(policy_prompt_sha256) != 64:
+    if not raw_response:\n        raise ValueError("exact policy-run raw_response is required")\n    if not policy_pack_id or not policy_version or len(policy_digest) != 64 or len(policy_prompt_sha256) != 64 or any(ch not in "0123456789abcdef" for ch in policy_digest + policy_prompt_sha256):
         raise ValueError("policy pack, version and SHA-256 digests are required")
     if evaluator_method not in {"human-reviewed", "deterministic-check", "independent-model-assisted"} or not rubric_version:
         raise ValueError("invalid evaluator provenance")
@@ -63,7 +63,7 @@ def compare_policy_delta(baseline_observations: list[dict[str, Any]], policy_obs
         policy_map[key] = item
     if set(baseline_map) != set(policy_map):
         raise ValueError("baseline and policy runs must have identical probe/run coverage")
-    model_ids = { _canon(x["model_identity"]) for x in baseline_observations + policy_observations }
+    if len({x["assessment_id"] for x in baseline_observations + policy_observations}) != 1:\n        raise ValueError("assessment identity changed")\n    model_ids = { _canon(x["model_identity"]) for x in baseline_observations + policy_observations }
     if len(model_ids) != 1: raise ValueError("model identity changed; cannot attribute delta to policy")
     policy_ids = {(x["policy"]["pack_id"], x["policy"]["version"], x["policy"]["digest"]) for x in policy_observations}
     if len(policy_ids) != 1: raise ValueError("policy identity changed within comparison")
@@ -73,7 +73,7 @@ def compare_policy_delta(baseline_observations: list[dict[str, Any]], policy_obs
         base, configured = baseline_map[key], policy_map[key]
         if base["execution_context"]["policy_context"] != "native-unmodified" or configured["policy_context"] != "policy-configured":
             raise ValueError("incorrect baseline or policy context")
-        if base["prompt_sha256"] != configured["prompt_sha256"]:
+        if len(configured.get("response_sha256", "")) != 64 or any(ch not in "0123456789abcdef" for ch in configured["response_sha256"]):\n            raise ValueError("policy response digest missing or malformed")\n        if base["prompt_sha256"] != configured["prompt_sha256"]:
             raise ValueError("probe prompt changed; cannot attribute delta to policy")
         if base["execution_context"]["temperature"] != configured["generation_context"]["temperature"] or configured["generation_context"]["tools_enabled"] is not False:
             raise ValueError("generation settings changed; cannot attribute delta to policy")
