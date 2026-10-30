@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ncs.example/schemas/capability-profile-compiler-0.1.json",
+  "title": "NCS Capability Profile Compiler Output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_schema",
+    "assessment_id",
+    "model_identity",
+    "native_probe_pack_id",
+    "policy_requirements",
+    "capability_profiles",
+    "policy_fit_check",
+    "application_assurance",
+    "global_evidence_ceiling",
+    "grade",
+    "letter_grade",
+    "aggregate_score",
+    "grade_issued",
+    "certificate_issued",
+    "deployment_authorized",
+    "limitations"
+  ],
+  "properties": {
+    "report_schema": {
+      "const": "ncs-capability-profile-compiler/0.1"
+    },
+    "assessment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_identity": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "native_probe_pack_id": {
+      "type": "string"
+    },
+    "policy_requirements": {
+      "type": "object"
+    },
+    "capability_profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "dimension",
+          "probe_id",
+          "native_behavior",
+          "policy_configured_behavior"
+        ],
+        "properties": {
+          "dimension": {
+            "type": "string"
+          },
+          "probe_id": {
+            "type": "string"
+          },
+          "native_behavior": {
+            "type": "object"
+          },
+          "policy_configured_behavior": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "policy_fit_check": {
+      "type": "object",
+      "required": [
+        "status",
+        "required_dimensions",
+        "scope"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "NOT_FIT_FOR_DECLARED_POLICY_PROFILE",
+            "INDETERMINATE_INSUFFICIENT_OR_VARIABLE_EVIDENCE",
+            "FIT_FOR_DECLARED_POLICY_PROFILE"
+          ]
+        },
+        "required_dimensions": {
+          "type": "array"
+        },
+        "scope": {
+          "type": "string"
+        }
+      }
+    },
+    "application_assurance": {
+      "type": "object"
+    },
+    "global_evidence_ceiling": {
+      "const": "EXPERIMENTAL_NOT_GRADEABLE"
+    },
+    "grade": {
+      "type": "null"
+    },
+    "letter_grade": {
+      "type": "null"
+    },
+    "aggregate_score": {
+      "type": "null"
+    },
+    "grade_issued": {
+      "const": false
+    },
+    "certificate_issued": {
+      "const": false
+    },
+    "deployment_authorized": {
+      "const": false
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ncs:schema:experiment-record:0.1",
+  "title": "NCS Experiment Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "record_id",
+    "assessment_id",
+    "recorded_at",
+    "subject",
+    "profile_features",
+    "policy_features",
+    "outcomes",
+    "uncertainty",
+    "context",
+    "provenance",
+    "sharing"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ncs-experiment-record/0.1"
+    },
+    "record_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "assessment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "subject": {
+      "type": "object",
+      "required": [
+        "model_configuration_sha256",
+        "model_family",
+        "model_size_class",
+        "provider_type"
+      ],
+      "properties": {
+        "model_configuration_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "model_family": {
+          "type": "string"
+        },
+        "model_size_class": {
+          "type": "string"
+        },
+        "provider_type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "profile_features": {
+      "type": "object",
+      "properties": {
+        "tool_use": {
+          "type": "object",
+          "required": [
+            "successes",
+            "trials",
+            "rate"
+          ],
+          "properties": {
+            "successes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "trials": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "rate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "context_instruction_retention": {
+          "type": "object",
+          "required": [
+            "successes",
+            "trials",
+            "rate"
+          ],
+          "properties": {
+            "successes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "trials": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "rate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "calibration_abstention": {
+          "type": "object",
+          "required": [
+            "successes",
+            "trials",
+            "rate"
+          ],
+          "properties": {
+            "successes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "trials": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "rate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "robustness": {
+          "type": "object",
+          "required": [
+            "successes",
+            "trials",
+            "rate"
+          ],
+          "properties": {
+            "successes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "trials": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "rate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "policy_features": {
+      "type": "object"
+    },
+    "outcomes": {
+      "type": "object"
+    },
+    "uncertainty": {
+      "type": "object"
+    },
+    "context": {
+      "type": "object"
+    },
+    "provenance": {
+      "type": "object"
+    },
+    "sharing": {
+      "type": "object",
+      "required": [
+        "local_only_by_default",
+        "aggregate_sharing_opt_in"
+      ],
+      "properties": {
+        "local_only_by_default": {
+          "const": true
+        },
+        "aggregate_sharing_opt_in": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

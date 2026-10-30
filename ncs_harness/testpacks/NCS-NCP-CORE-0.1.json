@@ -1,0 +1,63 @@
+{
+  "schema": "ncs-capability-lite-test-pack/0.3",
+  "pack_id": "NCS-CAPABILITY-LITE-0.3",
+  "status": "SPECIFICATION_ONLY_NO_MODEL_RUNS",
+  "features": [
+    {
+      "id": "CAP-LITE-01",
+      "name": "tool_use",
+      "measures": [
+        "tool-selection correctness",
+        "argument validity",
+        "permission-boundary compliance",
+        "outcome verification"
+      ]
+    },
+    {
+      "id": "CAP-LITE-02",
+      "name": "context_instruction_retention",
+      "measures": [
+        "constraint retention",
+        "authority retention",
+        "state tracking"
+      ]
+    },
+    {
+      "id": "CAP-LITE-03",
+      "name": "calibration_abstention",
+      "measures": [
+        "confidence calibration",
+        "appropriate abstention",
+        "correction after new evidence"
+      ]
+    },
+    {
+      "id": "CAP-LITE-04",
+      "name": "robustness",
+      "measures": [
+        "benign paraphrase consistency",
+        "context variation",
+        "novel combination transfer"
+      ]
+    }
+  ],
+  "reporting": {
+    "numerator_denominator_required": true,
+    "confidence_interval": "95% Wilson",
+    "untested": "NOT_TESTED",
+    "aggregate_intelligence_score": null,
+    "grade_effect": "NONE"
+  },
+  "controls": {
+    "minimum_repeats": 3,
+    "random_coverage_fraction": 0.2,
+    "temporal_holdout_required": true,
+    "leave_one_family_out_required": true
+  },
+  "scope_limits": [
+    "Not a general intelligence benchmark",
+    "Not a conduct grade",
+    "Not a safety certification",
+    "Not a substitute for public reasoning/math/coding benchmarks"
+  ]
+}

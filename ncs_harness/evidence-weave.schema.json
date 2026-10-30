@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ncs.example/schemas/evidence-weave-0.1.json",
+  "title": "NCS Evidence Weave",
+  "description": "Evidence integrity and coverage manifest. Not a grade or certificate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_schema",
+    "assessment_id",
+    "created_for",
+    "declared_scope",
+    "components",
+    "stream_count",
+    "supplied_stream_count",
+    "missing_streams",
+    "weave_status",
+    "cross_stream_binding",
+    "grade_compiler_input",
+    "grade_issued",
+    "grade_eligible",
+    "limitations",
+    "weave_sha256"
+  ],
+  "properties": {
+    "report_schema": {
+      "const": "ncs-evidence-weave/0.1"
+    },
+    "assessment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_for": {
+      "const": "evidence-integrity-and-coverage-only"
+    },
+    "declared_scope": {
+      "type": "object"
+    },
+    "components": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "stream",
+          "sha256",
+          "coverage"
+        ],
+        "properties": {
+          "stream": {
+            "enum": [
+              "native-behavior-baseline",
+              "policy-delta",
+              "application-control-and-consequence"
+            ]
+          },
+          "sha256": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "coverage": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "stream_count": {
+      "const": 3
+    },
+    "supplied_stream_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "missing_streams": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "native-behavior-baseline",
+          "policy-delta",
+          "application-control-and-consequence"
+        ]
+      }
+    },
+    "weave_status": {
+      "enum": [
+        "incomplete",
+        "assembled-needs-review"
+      ]
+    },
+    "cross_stream_binding": {
+      "const": "assessment-id-and-content-digest"
+    },
+    "grade_compiler_input": {
+      "const": false
+    },
+    "grade_issued": {
+      "const": false
+    },
+    "grade_eligible": {
+      "const": false
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "weave_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

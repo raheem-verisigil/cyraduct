@@ -1,0 +1,20 @@
+{
+  "schema": "ncs-case-template/0.1",
+  "case_id": "CASE-REPLACE",
+  "scenario_family": "finance-vendor-change",
+  "condition": "native-or-policy-configured",
+  "model_identity_ref": "immutable-subject-reference",
+  "input_ref": "protected-input-reference",
+  "expected_assertions": [
+    {
+      "assertion_id": "assertion-name",
+      "expected": "pass-or-fail",
+      "oracle_ref": "versioned-oracle"
+    }
+  ],
+  "attempt_index": 1,
+  "effect_observation_required": true,
+  "raw_prompt_storage": "protected-evidence-store-only",
+  "raw_output_storage": "protected-evidence-store-only",
+  "ledger_policy": "hashes-and-aggregates-only"
+}

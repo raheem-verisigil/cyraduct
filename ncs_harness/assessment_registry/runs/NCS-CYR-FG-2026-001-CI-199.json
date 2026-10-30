@@ -1,0 +1,23 @@
+{
+  "schema": "ncs-assessment-run/0.1",
+  "assessment_id": "NCS-CYR-FG-2026-001",
+  "run_id": "NCS-CYR-FG-2026-001-CI-199",
+  "run_type": "NCS_HARNESS_CI",
+  "workflow_run_id": 41138545105,
+  "workflow_run_number": 199,
+  "commit_sha": "a0d50357c2af70b96072d31d9f55754f404fabc9",
+  "status": "COMPLETED",
+  "conclusion": "FAILURE",
+  "tests_passed": 92,
+  "tests_failed": 1,
+  "duration_seconds": null,
+  "failure": "tests/test_ncs_experiment_record.py::test_aggregate_sharing_requires_explicit_consent — the implementation checked the minimum cohort size before reporting missing consent.",
+  "remediation_commits": [
+    "aad24cee4465a97c148e2849094cb3924e28681d",
+    "4cd9e8b9a5f78208b2bef843e2e34160b9df2096",
+    "3c3984f8da656921d91d98c1e1ebf54148c819ca"
+  ],
+  "rerun_status": "PENDING_NOT_YET_OBSERVED",
+  "evidence_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41138545105",
+  "interpretation": "Initial integrated NCS-only suite run. The test expectation/guard order was corrected in later commits; those commits have not yet received a confirmed CI rerun. No model-provider tests were run."
+}

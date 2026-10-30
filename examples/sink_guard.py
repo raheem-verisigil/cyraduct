@@ -1,17 +1,18 @@
 """Minimal local sink guard for a Cyraduct receipt.
 
-The sink can run this after fetching the published public key. It does not
-call Cyraduct while enforcing the signature, expiry, and optional action hash.
-Revocation still requires a current revocation source or the attested verify
-endpoint, depending on the deployment's threat model.
+Uses the same canonical Ed25519 verifier as the standalone audit utility.
+The sink does not need to call Cyraduct to verify immutable receipt claims,
+signature, expiry, and an optional expected action hash. Revocation and
+consumption still require a current trusted lifecycle source or a broker
+protocol; a self-contained signed receipt cannot prove it has not since been
+revoked.
 """
 from __future__ import annotations
 
-import base64
 from datetime import datetime, timezone
 from typing import Any
 
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+from verify_receipt import verify as verify_signature
 
 
 def require_receipt(
@@ -20,13 +21,10 @@ def require_receipt(
     *,
     expected_action_hash: str | None = None,
 ) -> None:
-    """Raise ValueError unless the receipt is locally safe to rely on."""
+    """Raise ValueError unless the receipt's signed claims and expiry verify."""
     try:
-        receipt_id = receipt["receipt_id"]
         action_hash = receipt["action_hash"]
         expires_at = receipt["expires_at"]
-        prev_hash = receipt.get("prev_receipt_hash") or ""
-        signature_b64 = receipt["signature"]["value"]
     except (KeyError, TypeError) as exc:
         raise ValueError(f"malformed Cyraduct receipt: {exc}") from exc
 
@@ -35,17 +33,16 @@ def require_receipt(
 
     try:
         expiry = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
-    except ValueError as exc:
+    except (ValueError, AttributeError) as exc:
         raise ValueError("receipt expiry is not a valid timestamp") from exc
+    if expiry.tzinfo is None:
+        expiry = expiry.replace(tzinfo=timezone.utc)
     if expiry <= datetime.now(timezone.utc):
         raise ValueError("receipt is expired")
 
-    message = f"{receipt_id}|{action_hash}|{expires_at}|{prev_hash}".encode()
-    try:
-        public_key = Ed25519PublicKey.from_public_bytes(base64.b64decode(public_key_b64))
-        public_key.verify(base64.b64decode(signature_b64), message)
-    except Exception as exc:
-        raise ValueError(f"receipt signature is invalid: {exc}") from exc
+    valid, reason = verify_signature(receipt, public_key_b64)
+    if not valid:
+        raise ValueError(f"receipt signature is invalid: {reason}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,70 @@
+{
+  "schema": "ncs-experiment-record/0.1",
+  "record_id": "REPLACE-WITH-UNIQUE-ID",
+  "assessment_id": "REPLACE-WITH-ASSESSMENT-ID",
+  "recorded_at": "RFC3339-UTC",
+  "subject": {
+    "model_configuration_sha256": "64-character-lowercase-sha256",
+    "model_family": "declared-family",
+    "model_size_class": "declared-or-unknown",
+    "provider_type": "hosted-api-or-self-hosted"
+  },
+  "profile_features": {
+    "tool_use": {
+      "successes": 0,
+      "trials": 1
+    },
+    "context_instruction_retention": {
+      "successes": 0,
+      "trials": 1
+    },
+    "calibration_abstention": {
+      "successes": 0,
+      "trials": 1
+    },
+    "robustness": {
+      "successes": 0,
+      "trials": 1
+    }
+  },
+  "policy_features": {
+    "policy_pack_sha256": "64-character-lowercase-sha256",
+    "rule_count": 0,
+    "control_types": [],
+    "explicitness": "declared",
+    "examples_present": false
+  },
+  "outcomes": {
+    "attempt_level": {
+      "attempts": 0,
+      "violations": 0,
+      "utility_successes": 0,
+      "over_refusals": 0
+    },
+    "effect_level": {
+      "effects_observed": 0,
+      "violations": 0,
+      "unauthorized_effects": 0
+    }
+  },
+  "uncertainty": {
+    "attempt_level_ci95": null,
+    "effect_level_ci95": null,
+    "note": "Populate intervals from observed counts; do not invent precision."
+  },
+  "context": {
+    "suite_version": "NCS-WEEK1-0.1",
+    "suite_sha256": "64-character-lowercase-sha256",
+    "environment": "local-isolated",
+    "assurance_level": "RAL-1"
+  },
+  "provenance": {
+    "evidence_manifest_sha256": "64-character-lowercase-sha256",
+    "runner_commit_sha": "40-character-lowercase-git-sha",
+    "signer_key_id": "assigned-at-signing"
+  },
+  "sharing": {
+    "local_only_by_default": true,
+    "aggregate_sharing_opt_in": false
+  }
+}

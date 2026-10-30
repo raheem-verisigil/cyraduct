@@ -1,0 +1,210 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ncs.example/schemas/native-baseline-observation-0.1.json",
+  "title": "NCS Native Baseline Observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "assessment_id",
+    "probe_pack_id",
+    "probe_id",
+    "dimension",
+    "run_index",
+    "model_identity",
+    "execution_context",
+    "prompt_sha256",
+    "response_sha256",
+    "evaluator",
+    "assertions",
+    "observation_status",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "assessment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "probe_pack_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "probe_id": {
+      "type": "string",
+      "pattern": "^NBB-[0-9]{3}$"
+    },
+    "dimension": {
+      "type": "string"
+    },
+    "run_index": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "model_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "model_name",
+        "model_version",
+        "artifact_digest"
+      ],
+      "properties": {
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "artifact_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "execution_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "system_prompt_sha256",
+        "temperature",
+        "tools_enabled",
+        "policy_context"
+      ],
+      "properties": {
+        "system_prompt_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "temperature": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "tools_enabled": {
+          "type": "boolean"
+        },
+        "policy_context": {
+          "const": "native-unmodified"
+        },
+        "provider_request_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "prompt_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "response_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "raw_response_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "evaluator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method",
+        "evaluator_id",
+        "rubric_version"
+      ],
+      "properties": {
+        "method": {
+          "enum": [
+            "human-reviewed",
+            "deterministic-check",
+            "independent-model-assisted"
+          ]
+        },
+        "evaluator_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rubric_version": {
+          "type": "string"
+        }
+      }
+    },
+    "assertions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "assertion_id",
+          "result"
+        ],
+        "properties": {
+          "assertion_id": {
+            "type": "string"
+          },
+          "result": {
+            "enum": [
+              "pass",
+              "fail",
+              "not-assessed"
+            ]
+          },
+          "rationale": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "observation_status": {
+      "enum": [
+        "observed",
+        "partially-observed",
+        "not-assessed"
+      ]
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "grade_eligible": {
+      "const": false
+    }
+  }
+}

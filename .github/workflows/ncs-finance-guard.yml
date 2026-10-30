@@ -1,0 +1,49 @@
+name: NCS Finance Guard Harness
+
+on:
+  pull_request:
+    paths:
+      - "ncs_harness/**"
+      - "programme/**"
+      - "tests/test_ncs_*.py"
+      - "app/**"
+      - "policy_packs/finance_vendor_change_v1.json"
+      - ".github/workflows/ncs-finance-guard.yml"
+  push:
+    branches:
+      - "ncs/finance-guard-assessment"
+    paths:
+      - "ncs_harness/**"
+      - "tests/test_ncs_*.py"
+      - "app/**"
+      - "policy_packs/finance_vendor_change_v1.json"
+      - ".github/workflows/ncs-finance-guard.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  ncs-finance-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CYRADUCT_ENV: test
+      CYRADUCT_DATABASE_URL: sqlite:///./ncs_harness_test.db
+      CYRADUCT_ADMIN_KEY: ci-test-admin-key-not-for-production
+      CYRADUCT_SIGNING_SECRET: ci-test-signing-secret-not-for-production
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install application and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+      - name: Run NCS assessment tests
+        run: |
+          pytest -q tests/test_ncs_finance_guard.py tests/test_ncs_sink_guard_compat.py tests/test_ncs_evidence_collector.py tests/test_ncs_native_baseline.py tests/test_ncs_policy_delta.py tests/test_ncs_evidence_weave.py tests/test_ncs_grade_compiler.py tests/test_ncs_certificate_lifecycle.py tests/test_ncs_experiment_record.py tests/test_ncs_capability_lite.py tests/test_ncs_case_generator.py tests/test_ncs_oracle.py tests/test_ncs_learner_v0.py
