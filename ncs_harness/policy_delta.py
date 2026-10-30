@@ -39,6 +39,7 @@ def build_policy_observation(*, baseline_observation: dict[str, Any], raw_respon
         "baseline_observation_sha256": digest(baseline_observation),
         "model_identity": baseline_observation["model_identity"],
         "prompt_sha256": baseline_observation["prompt_sha256"],
+        "response_sha256": hashlib.sha256(raw_response.encode("utf-8")).hexdigest(),
         "generation_context": {"temperature": baseline_observation["execution_context"]["temperature"], "tools_enabled": False},
         "policy_context": "policy-configured",
         "policy": {"pack_id": policy_pack_id, "version": policy_version, "digest": policy_digest, "policy_prompt_sha256": policy_prompt_sha256},
