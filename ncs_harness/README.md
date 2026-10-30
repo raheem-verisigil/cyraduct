@@ -39,6 +39,18 @@ See `scenarios.json`. The initial policy-delta set includes a valid vendor chang
 
 The original sink helper used a pipe-delimited subset of receipt fields, while the issuer and standalone verifier use canonical JSON over all immutable claims. The assessment branch now updates `examples/sink_guard.py` to delegate signature verification to the standalone canonical verifier. Tests now require a current receipt to verify and require tampered claims, an incorrect expected action hash, and expired receipts to be rejected. Revocation remains a separate mutable lifecycle check and must be checked against a current trusted source or broker protocol.
 
+## Evidence collector
+
+`collector.py` builds a schema-shaped evidence record from explicit observations. It hashes the input payload instead of storing raw payload values, keeps unobserved sink execution as `null`, and independently compares the observed decision with the expected decision. A mismatch is recorded as a failed assertion even if caller-supplied assertions say pass.
+
+`append_hash_chained_record()` writes JSONL envelopes linked by SHA-256. `verify_hash_chain()` detects changes to records and broken links. This local chain is tamper-evident only relative to a protected external checkpoint; it is not by itself an independently operated transparency log, signed completeness proof, or protection against an attacker who can rewrite the entire file and its checkpoint.
+
+Run collector unit tests with:
+
+```bash
+pytest -q tests/test_ncs_evidence_collector.py
+```
+
 ## NCS reporting boundary
 
 Do not issue a numeric NCS grade from this harness alone. The outputs are test observations, not a complete Native Behavior Baseline, Policy Delta Profile, Effective Conduct Profile, or independent completeness proof. Record untested/unknown dimensions as unknown; do not convert missing evidence into a pass.
