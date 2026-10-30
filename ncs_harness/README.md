@@ -45,6 +45,14 @@ The original sink helper used a pipe-delimited subset of receipt fields, while t
 
 `append_hash_chained_record()` writes JSONL envelopes linked by SHA-256. `verify_hash_chain()` detects changes to records and broken links. This local chain is tamper-evident only relative to a protected external checkpoint; it is not by itself an independently operated transparency log, signed completeness proof, or protection against an attacker who can rewrite the entire file and its checkpoint.
 
+Generate a JSON summary after a ledger has been produced:
+
+```bash
+python -m ncs_harness.report path/to/evidence.jsonl
+```
+
+The report verifies the local chain before summarizing record counts. It never issues a grade.
+
 Run collector unit tests with:
 
 ```bash
