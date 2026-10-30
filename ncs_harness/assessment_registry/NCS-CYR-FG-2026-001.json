@@ -114,24 +114,51 @@
       "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41138545104",
       "archive_path": "ncs_harness/assessment_registry/runs/CYRADUCT-FULL-SUITE-2026-192.json",
       "rerun_status": "PENDING_NOT_YET_OBSERVED"
+    },
+    {
+      "run_id": 41139022127,
+      "run_number": 217,
+      "workflow": "NCS_HARNESS_CI",
+      "commit_sha": "363755dfb3ef8c157263d690fc2854a93e4c0d20",
+      "status": "completed",
+      "conclusion": "success",
+      "tests_passed": 93,
+      "tests_failed": 0,
+      "duration": "1.22s",
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41139022127",
+      "archive_path": "ncs_harness/assessment_registry/runs/NCS-CYR-FG-2026-001-CI-217.json"
+    },
+    {
+      "run_id": 41139022098,
+      "run_number": 199,
+      "workflow": "CYRADUCT_FULL_REPOSITORY_CI",
+      "commit_sha": "363755dfb3ef8c157263d690fc2854a93e4c0d20",
+      "status": "completed",
+      "conclusion": "failure",
+      "tests_passed": 228,
+      "tests_failed": 4,
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41139022098",
+      "archive_path": "ncs_harness/assessment_registry/runs/CYRADUCT-FULL-SUITE-2026-199.json",
+      "triage": "Product rate-limit/test-fixture failures remain"
     }
   ],
   "latest_attempt": {
     "ncs_harness": {
-      "run_id": 41138545105,
-      "run_number": 199,
-      "conclusion": "failure",
-      "tests_passed": 92,
-      "tests_failed": 1,
-      "rerun_status": "pending"
+      "run_id": 41139022127,
+      "run_number": 217,
+      "conclusion": "success",
+      "tests_passed": 93,
+      "tests_failed": 0,
+      "duration": "1.22s",
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41139022127"
     },
     "full_cyraduct_suite": {
-      "run_id": 41138545104,
-      "run_number": 192,
+      "run_id": 41139022098,
+      "run_number": 199,
       "conclusion": "failure",
-      "tests_passed": 227,
-      "tests_failed": 5,
-      "rerun_status": "pending"
+      "tests_passed": 228,
+      "tests_failed": 4,
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41139022098"
     }
   }
 }
