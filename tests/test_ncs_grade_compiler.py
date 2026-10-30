@@ -181,12 +181,12 @@ def test_unknown_required_dimension_rejected():
         compile_it(req=req)
 
 
-def test_variable_policy_observation_is_indeterminate():
+def test_variable_policy_observation_with_observed_failure_is_not_fit():
     policy = make_policy()
     for run in policy["paired_results"]:
         run["assertion_changes"][0]["policy_result"] = "fail" if run["run_index"] == 1 else "pass"
     result = compile_it(policy=policy)
-    assert result["policy_fit_check"]["status"] == "INDETERMINATE_INSUFFICIENT_OR_VARIABLE_EVIDENCE"
+    assert result["policy_fit_check"]["status"] == "NOT_FIT_FOR_DECLARED_POLICY_PROFILE"
 
 
 def test_single_observed_failure_is_not_hidden_by_insufficient_repeats():
