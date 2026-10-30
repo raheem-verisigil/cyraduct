@@ -308,6 +308,14 @@ Every subsequent run must append immutable evidence to the NCS registry and mirr
 
 This is a successful NCS harness CI run using synthetic fixtures. It does not establish a native model-provider baseline, independent certification, production readiness or external validation.
 
+
+### Archived run event
+
+The successful run is also preserved as an immutable event:
+`assessment_registry/runs/NCS-CYR-FG-2026-001-CI-127.json`.
+
+The run's 71/71 result is harness CI evidence. It is not a native AI model evaluation or an NCS certificate.
+
 ## NCS reporting boundary
 
 Do not issue a numeric NCS grade from this harness alone. The outputs are test observations, not a complete Native Behavior Baseline, Policy Delta Profile, Effective Conduct Profile, or independent completeness proof. Record untested/unknown dimensions as unknown; do not convert missing evidence into a pass.
