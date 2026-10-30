@@ -1,0 +1,22 @@
+{
+  "schema": "ncs-assessment-run/0.1",
+  "assessment_id": "NCS-CYR-FG-2026-001",
+  "run_id": "CYRADUCT-FULL-SUITE-2026-199",
+  "run_type": "CYRADUCT_FULL_REPOSITORY_CI",
+  "workflow_run_id": 41139022098,
+  "workflow_run_number": 199,
+  "commit_sha": "363755dfb3ef8c157263d690fc2854a93e4c0d20",
+  "status": "COMPLETED",
+  "conclusion": "FAILURE",
+  "tests_passed": 228,
+  "tests_failed": 4,
+  "failures": [
+    "tests/test_ncs_sink_guard_compat.py::test_sink_guard_rejects_expired_receipt — HTTP 429 rate limit before receipt assertion.",
+    "tests/test_private_record_access.py::test_receipt_queries_require_authentication — HTTP 429 rate limit.",
+    "tests/test_private_record_access.py::test_test_key_receipt_query_is_limited_to_test_namespace — HTTP 429 rate limit.",
+    "tests/test_rate_limiting.py::test_broker_execute_rate_limit_is_tighter_than_advisory — KeyError: receipt, consistent with an unexpected rate-limited response shape."
+  ],
+  "rerun_status": "PRODUCT_TEST_TRIAGE_REQUIRED",
+  "evidence_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41139022098",
+  "interpretation": "Expanded full repository suite did not pass. NCS-only suite passed independently. Remaining failures are product test fixture/rate-limit isolation issues and must not be hidden by the NCS-only pass."
+}
