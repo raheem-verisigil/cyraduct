@@ -167,6 +167,32 @@ The weave records a canonical SHA-256 digest for each supplied stream, reports m
 - `evidence-weave.schema.json`: output contract.
 - `tests/test_ncs_evidence_weave.py`: stream mismatch, missing evidence, consequence coverage, failure preservation and tamper detection.
 
+
+## Capability Profile Compiler (experimental v0.1)
+
+`grade_compiler.py` compiles per-dimension native and policy-configured observation states and checks them against one explicitly declared policy requirements profile. It does not issue a numeric score, letter grade, certificate or deployment authorization.
+
+### Compiler rules
+
+- Requires a complete Evidence Weave and verifies its digest and the exact digests of all three supplied source streams.
+- Requires matching assessment identity, probe-pack identity and exact policy pack/version/digest.
+- Reports native behaviour and policy-configured behaviour separately for every declared probe dimension.
+- A failure observed in any repeat remains visible even when the minimum repeat count has not been reached; evidence sufficiency is reported separately.
+- Variable or insufficient observations are not treated as passes.
+- Policy fit is limited to the exact policy requirements profile supplied by the assessor.
+- Application consequence evidence is reported in its own assurance section and cannot replace model-conduct evidence.
+
+### Output boundary
+
+The current output always sets grade, letter grade and aggregate score to null; `grade_issued`, `certificate_issued` and `deployment_authorized` are false. The global ceiling remains `EXPERIMENTAL_NOT_GRADEABLE` until construct validity, evaluator reliability, evidence authenticity, thresholds and independent validation have been established.
+
+### Files and tests
+
+- `grade_compiler.py`: capability profile and declared-policy fit compiler.
+- `tests/test_ncs_grade_compiler.py`: policy fit, failure, insufficient evidence, source digest mismatch and stream separation tests.
+
+This is a deterministic engineering prototype, not a calibrated grading scheme or an NCS certificate.
+
 ## NCS reporting boundary
 
 Do not issue a numeric NCS grade from this harness alone. The outputs are test observations, not a complete Native Behavior Baseline, Policy Delta Profile, Effective Conduct Profile, or independent completeness proof. Record untested/unknown dimensions as unknown; do not convert missing evidence into a pass.
