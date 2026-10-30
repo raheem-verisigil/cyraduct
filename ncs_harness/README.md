@@ -328,3 +328,20 @@ The actual AI model/agent workload is still unidentified. NCS has not run a Nati
 ## NCS reporting boundary
 
 Do not issue a numeric NCS grade from this harness alone. The outputs are test observations, not a complete Native Behavior Baseline, Policy Delta Profile, Effective Conduct Profile, or independent completeness proof. Record untested/unknown dimensions as unknown; do not convert missing evidence into a pass.
+
+
+## Native Capability Profile (NCP) v0.1
+
+NCS now has a separate capability-assessment specification and initial test-pack design:
+- `specifications/NCS-NATIVE-CAPABILITY-PROFILE-0.1.md`
+- `testpacks/NCS-NCP-CORE-0.1.json`
+
+NCP measures demonstrated task capability across reasoning, quantitative work, planning, coding, factual/evidence use, tool use, context integration, calibration, robustness and supported modalities. It reports a vector, not a universal intelligence/IQ score. Capability is kept separate from conduct: high capability cannot compensate for a conduct failure or prove safety. NCP is currently design-only; no portfolio model has completed this profile.
+
+## VeriSigil jurisdiction conformance follow-up
+
+The NCS harness now contains:
+- `adapters/verisigil_jurisdiction_conformance.js`: approved local/staging adapter that checks all three expected fields for the 16 jurisdiction vectors.
+- `remediation/verisigil-fail-closed-test-runner.patch`: proposed fail-closed change so unknown vector types cannot silently pass.
+
+Neither the adapter nor patch has been executed/applied to the VeriSigil API repository. API repository write access remains blocked. No production endpoint is used by default.
