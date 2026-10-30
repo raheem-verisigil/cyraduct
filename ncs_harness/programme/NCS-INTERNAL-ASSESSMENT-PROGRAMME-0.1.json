@@ -80,11 +80,11 @@
       "repository": "raheem-verisigil/cyraduct",
       "assessment_id": "NCS-CYR-FG-2026-001",
       "priority": 1,
-      "status": "INITIAL_CI_RUN_RECORDED_REMEDIATION_COMMITTED_RERUN_PENDING",
+      "status": "NCS_HARNESS_CI_PASS_71_TESTS; MODEL_NATIVE_AND_POLICY_RUNS_NOT_YET_ESTABLISHED",
       "current_scope": "Synthetic Finance Guard vendor-change and payment-instruction protection workflows",
       "native_ai_subject": "Exact model/agent and version must be identified and locked before Native Baseline execution",
       "policy_subject": "Finance Guard policy pack and runtime configuration",
-      "notes": "Existing first integration assessment. Initial recorded CI run had 62 passed and 1 failed; a test expectation correction was committed. Corrected rerun and lifecycle test outcomes remain unconfirmed."
+      "notes": "Latest completed NCS Finance Guard Harness CI run #127: 71 passed, 0 failed in 1.16s at commit a9ee82b89a0e39a94da3a80beb7477bccb07ddb8. This verifies the test harness and synthetic application-control cases, not an independent model-provider Native Behavior Baseline or external validation."
     },
     {
       "project_id": "VERISIGILAI",
