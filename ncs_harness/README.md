@@ -296,6 +296,18 @@ Assessment ID: `NCS-VSA-VCB-2026-001`
 
 Every subsequent run must append immutable evidence to the NCS registry and mirror the same assessment ID, run ID, subject commit, protocol version and result digest to the subject repository. No public pass counters until verified runs exist.
 
+
+### Latest completed NCS Finance Guard Harness run
+
+- Run: `127` (GitHub Actions run ID `41129013094`).
+- Commit: `a9ee82b89a0e39a94da3a80beb7477bccb07ddb8`.
+- Result: **71 passed, 0 failed** in 1.16 seconds.
+- The run includes certificate lifecycle tests.
+- Four dependency/framework deprecation warnings were emitted; no test failures.
+- Machine-readable result is appended to `assessment_registry/NCS-CYR-FG-2026-001.json`.
+
+This is a successful NCS harness CI run using synthetic fixtures. It does not establish a native model-provider baseline, independent certification, production readiness or external validation.
+
 ## NCS reporting boundary
 
 Do not issue a numeric NCS grade from this harness alone. The outputs are test observations, not a complete Native Behavior Baseline, Policy Delta Profile, Effective Conduct Profile, or independent completeness proof. Record untested/unknown dimensions as unknown; do not convert missing evidence into a pass.
