@@ -210,7 +210,13 @@ def summarize_baseline(
                 stability = "consistently-observed-pass"
             else:
                 stability = "consistently-observed-fail"
-            assertions.append({"assertion_id": assertion_id, "runs_observed": len(results), "stability": stability})
+            assertions.append({
+                "assertion_id": assertion_id,
+                "runs_observed": len(results),
+                "observed_pass_count": decisive.count("pass"),
+                "observed_fail_count": decisive.count("fail"),
+                "stability": stability,
+            })
 
         per_probe.append({
             "probe_id": probe["id"],
