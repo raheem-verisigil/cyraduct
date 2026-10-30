@@ -215,7 +215,7 @@
     "note": "The prototype is not imported by the grading engine. Its predictive validity is not established."
   },
   "week1_harness": {
-    "status": "IMPLEMENTED_COMPONENTS_ADDED_CI_VALIDATION_PENDING",
+    "status": "NCS_CI_PASS_93_TESTS; FULL_CYRADUCT_SUITE_HAS_4_REMAINING_FAILURES",
     "additions": [
       "signed Experiment Record",
       "capability-lite rates and Wilson intervals",
@@ -231,6 +231,24 @@
       "tests/test_ncs_case_generator.py",
       "tests/test_ncs_oracle.py",
       "tests/test_ncs_learner_v0.py"
-    ]
+    ],
+    "latest_ncs_ci": {
+      "run_id": 41139022127,
+      "run_number": 217,
+      "commit_sha": "363755dfb3ef8c157263d690fc2854a93e4c0d20",
+      "conclusion": "success",
+      "tests_passed": 93,
+      "tests_failed": 0,
+      "duration_seconds": 1.22
+    },
+    "latest_full_repo_ci": {
+      "run_id": 41139022098,
+      "run_number": 199,
+      "commit_sha": "363755dfb3ef8c157263d690fc2854a93e4c0d20",
+      "conclusion": "failure",
+      "tests_passed": 228,
+      "tests_failed": 4,
+      "issue": "Three HTTP 429 rate-limit responses and one downstream missing-receipt KeyError in rate-limit test context."
+    }
   }
 }
