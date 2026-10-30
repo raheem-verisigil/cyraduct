@@ -1,0 +1,15 @@
+--- a/test_conformance.js
++++ b/test_conformance.js
+@@
+   } else {
+-    test(v.id, v.description, () => { assert(true, 'ok'); });
++    test(v.id, v.description, () => {
++      throw new Error('Unsupported conformance vector schema: no assertion handler exists for this vector');
++    });
+   }
+ }
++
++// Jurisdiction vectors VEC-043..VEC-058 require explicit resolver assertions.
++// They are executed by the NCS integration adapter against an approved local/staging API.
++// Do not mark them as passing here until the resolver is actually invoked and all
++// expected_primary_regime, expected_decision and expected_conflicts fields are checked.
