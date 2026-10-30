@@ -1,0 +1,162 @@
+{
+  "schema": "ncs-internal-assessment-programme/0.1",
+  "programme_id": "NCS-IAP-2026-001",
+  "title": "NCS Internal Assessment Programme",
+  "purpose": "Validate the NCS assessment protocol across the founder's own software portfolio before opening controlled external pilots.",
+  "programme_owner": "NCS",
+  "governance": {
+    "assessment_authority": "NCS protocol and assessment process",
+    "assessed_project_owner": "Each project owns its source code, artifact identity, configuration and application-level evidence",
+    "self_assessment_rule": "NCS may run self-conformance tests on its own engine, but cannot issue itself an independent certificate or claim independent validation.",
+    "no_cross_project_inheritance": true,
+    "no_automatic_grade_or_certificate": true,
+    "common_record_rule": "Each assessment has a unique assessment_id, immutable run records, tested commit/artifact digests, evidence manifest and result digest. Mirrored records must preserve the same canonical result."
+  },
+  "assessment_stages": [
+    {
+      "stage": "S0",
+      "name": "Subject identity and artifact lock",
+      "required": true
+    },
+    {
+      "stage": "S1",
+      "name": "Native Behavior Baseline",
+      "required": true
+    },
+    {
+      "stage": "S2",
+      "name": "Policy Delta Profile",
+      "required": true
+    },
+    {
+      "stage": "S3",
+      "name": "Policy-configured behavior and application observation",
+      "required": true
+    },
+    {
+      "stage": "S4",
+      "name": "Evidence Weave and completeness review",
+      "required": true
+    },
+    {
+      "stage": "S5",
+      "name": "Capability profile and declared-policy fit check",
+      "required": true
+    },
+    {
+      "stage": "S6",
+      "name": "Change impact and reassessment",
+      "required": true
+    }
+  ],
+  "subject_rules": {
+    "exact_model_or_agent_artifact_required": true,
+    "exact_commit_and_configuration_required": true,
+    "model_provider_and_version_must_be_recorded": true,
+    "native_and_policy_configured_runs_must_be_separated": true,
+    "application_control_results_must_not_be_scored_as_native_model_behavior": true,
+    "missing_evidence_must_not_be_treated_as_pass": true,
+    "synthetic_or_mocked_execution_must_be_labelled": true,
+    "production_actions_prohibited_without_separate_explicit_authorization": true
+  },
+  "projects": [
+    {
+      "project_id": "CYRADUCT",
+      "name": "Cyraduct Finance Guard",
+      "relationship": "NCS × Cyraduct",
+      "repository": "raheem-verisigil/cyraduct",
+      "assessment_id": "NCS-CYR-FG-2026-001",
+      "priority": 1,
+      "status": "INITIAL_CI_RUN_RECORDED_REMEDIATION_COMMITTED_RERUN_PENDING",
+      "current_scope": "Synthetic Finance Guard vendor-change and payment-instruction protection workflows",
+      "native_ai_subject": "Exact model/agent and version must be identified and locked before Native Baseline execution",
+      "policy_subject": "Finance Guard policy pack and runtime configuration",
+      "notes": "Existing first integration assessment. Initial recorded CI run had 62 passed and 1 failed; a test expectation correction was committed. Corrected rerun and lifecycle test outcomes remain unconfirmed."
+    },
+    {
+      "project_id": "VERISIGILAI",
+      "name": "VeriSigilAI / VCB",
+      "relationship": "NCS × VeriSigilAI",
+      "repository": "raheem-verisigil/verisigil-website",
+      "assessment_id": "NCS-VSA-VCB-2026-001",
+      "priority": 2,
+      "status": "CANDIDATE_CODEBASE_AND_SUBJECT_INVENTORY_REQUIRED",
+      "current_scope": "VCB protected action workflows and declared consequence boundaries",
+      "native_ai_subject": "Identify actual AI agent/model and immutable version; website copy and published metrics are not model conduct evidence",
+      "policy_subject": "VCB action contract, authority/evidence/continuity rules and runtime configuration",
+      "notes": "Must be a distinct assessment. Existing published VeriSigilAI trust-page metrics must not be imported as NCS results."
+    },
+    {
+      "project_id": "ALIF",
+      "name": "ALIF Islamic Finance Compliance Engine",
+      "relationship": "NCS × ALIF",
+      "assessment_id": "NCS-ALIF-2026-001",
+      "priority": 3,
+      "status": "PORTFOLIO_CANDIDATE_CODEBASE_REQUIRED",
+      "current_scope": "AI-assisted Islamic finance compliance classification and explanation, if implemented",
+      "native_ai_subject": "Exact model/agent and task-specific baseline",
+      "policy_subject": "Shariah rules, institutional policy and approved review workflow",
+      "notes": "Only assess implemented AI functions; distinguish retrieval, rules engine and human review from model conduct."
+    },
+    {
+      "project_id": "FREIGHTSIGIL",
+      "name": "FreightSigil",
+      "relationship": "NCS × FreightSigil",
+      "assessment_id": "NCS-FS-2026-001",
+      "priority": 4,
+      "status": "PORTFOLIO_CANDIDATE_CODEBASE_REQUIRED",
+      "current_scope": "AI-assisted freight invoice analysis and exception recommendations, if implemented",
+      "native_ai_subject": "Exact model/agent and version",
+      "policy_subject": "Invoice validation, evidence thresholds and exception-routing policy",
+      "notes": "Do not treat deterministic invoice calculations as model behavior."
+    },
+    {
+      "project_id": "FINCONTINUITY",
+      "name": "FinContinuity",
+      "relationship": "NCS × FinContinuity",
+      "assessment_id": "NCS-FC-2026-001",
+      "priority": 5,
+      "status": "PORTFOLIO_CANDIDATE_CODEBASE_REQUIRED",
+      "current_scope": "AI-assisted merchant record interpretation and lender-readiness support, if implemented",
+      "native_ai_subject": "Exact model/agent and version",
+      "policy_subject": "Institution-specific eligibility, evidence and decision-support policy",
+      "notes": "Do not imply credit decisions or institutional deployment if not implemented."
+    },
+    {
+      "project_id": "REWAIZE",
+      "name": "REWAIZE-AI",
+      "relationship": "NCS × REWAIZE-AI",
+      "assessment_id": "NCS-RW-2026-001",
+      "priority": 6,
+      "status": "PORTFOLIO_CANDIDATE_CODEBASE_REQUIRED",
+      "current_scope": "AI rewards discovery, recommendation and expiry assistance, if implemented",
+      "native_ai_subject": "Exact model/agent and version",
+      "policy_subject": "Rewards eligibility, offer, expiry and redemption policy",
+      "notes": "Separate model recommendations from deterministic reward balances and transaction controls."
+    },
+    {
+      "project_id": "AICAFFE",
+      "name": "AICaffe",
+      "relationship": "NCS × AICaffe",
+      "assessment_id": "NCS-AIC-2026-001",
+      "priority": 7,
+      "status": "PORTFOLIO_CANDIDATE_CODEBASE_REQUIRED",
+      "current_scope": "AI coffee recommendations and offer personalization, if implemented",
+      "native_ai_subject": "Exact model/agent and version",
+      "policy_subject": "Offer eligibility, consent, personalization and membership rules",
+      "notes": "Assess only the implemented AI recommendation/personalization component, not static website sections."
+    }
+  ],
+  "exclusion_rule": "A project is not an NCS test subject merely because its proposal uses the word AI. It enters execution only after source code, exact AI subject, model/version, configuration and repeatable test interface are available.",
+  "external_pilot_gate": {
+    "required_internal_assessments": "At least three materially different, completed and reviewed internal assessment subjects; NCS self-conformance suite completed; no unresolved critical evidence-integrity defect.",
+    "external_status": "NOT_OPEN",
+    "rule": "Internal pilot success is not independent validation. External validation must use a separate assessor or review process."
+  },
+  "current_boundary": {
+    "native_model_runs": "NOT_YET_VERIFIED_FOR_THESE_ASSESSMENTS",
+    "certificate_issuance": false,
+    "independent_validation": false,
+    "deployment_authorization": false
+  }
+}
