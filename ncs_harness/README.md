@@ -194,6 +194,32 @@ The current output always sets grade, letter grade and aggregate score to null; 
 
 This is a deterministic engineering prototype, not a calibrated grading scheme or an NCS certificate.
 
+
+## Certificate Lifecycle and Change Impact (experimental v0.1)
+
+`certificate_lifecycle.py` adds two non-issuing operations:
+
+1. `build_certificate_candidate` prepares a candidate envelope bound to the Evidence Weave, Capability Profile and exact model artifact digest. It reports missing Build Record evidence and unimplemented scheme requirements as blockers.
+2. `assess_change_impact` maps declared model, prompt, policy, probe, evaluator and application changes to affected evidence streams and reassessment scope.
+
+### Certificate status boundary
+
+- The current prototype always returns `certificate_status: NOT_ISSUED` and `issuance_eligible: false`.
+- No certificate ID, signature, issue/expiry timestamp, transparency receipt or revocation state is fabricated.
+- Missing or unverified artifact and Build Record evidence is a blocker.
+- A material change to model weights, base model, adapter, tokenizer, quantization or model version requires full native and derived reassessment.
+- A policy change triggers policy delta and fit reassessment; application connector/sink changes trigger application assurance reassessment.
+- Unknown change types are rejected for manual classification.
+- If a future issued certificate is affected, the engine recommends suspension/revocation review but does not mutate certificate status.
+
+### Files and tests
+
+- `certificate_lifecycle.py`: non-issuing candidate and change-impact operations.
+- `certificate-candidate.schema.json`: explicit NOT_ISSUED candidate contract.
+- `tests/test_ncs_certificate_lifecycle.py`: artifact and Build Record blockers, change classification, unknown changes and digest tampering.
+
+These rules are experimental. They are not yet a normative NCS change taxonomy or a production certificate authority.
+
 ## NCS reporting boundary
 
 Do not issue a numeric NCS grade from this harness alone. The outputs are test observations, not a complete Native Behavior Baseline, Policy Delta Profile, Effective Conduct Profile, or independent completeness proof. Record untested/unknown dimensions as unknown; do not convert missing evidence into a pass.
