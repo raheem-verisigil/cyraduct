@@ -1,0 +1,23 @@
+{
+  "schema": "ncs-assessment-run/0.1",
+  "assessment_id": "NCS-CYR-FG-2026-001",
+  "run_id": "CYRADUCT-FULL-SUITE-2026-192",
+  "run_type": "CYRADUCT_FULL_REPOSITORY_CI",
+  "workflow_run_id": 41138545104,
+  "workflow_run_number": 192,
+  "commit_sha": "a0d50357c2af70b96072d31d9f55754f404fabc9",
+  "status": "COMPLETED",
+  "conclusion": "FAILURE",
+  "tests_passed": 227,
+  "tests_failed": 5,
+  "failures": [
+    "NCS Experiment Record consent-order test (same issue as NCS-only run; fixed in later commit).",
+    "tests/test_ncs_sink_guard_compat.py::test_sink_guard_rejects_expired_receipt — HTTP 429 rate limit before receipt assertion.",
+    "tests/test_private_record_access.py::test_receipt_queries_require_authentication — HTTP 429 rate limit.",
+    "tests/test_private_record_access.py::test_test_key_receipt_query_is_limited_to_test_namespace — HTTP 429 rate limit.",
+    "tests/test_rate_limiting.py::test_broker_execute_rate_limit_is_tighter_than_advisory — KeyError: receipt."
+  ],
+  "rerun_status": "PENDING_NOT_YET_OBSERVED",
+  "evidence_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41138545104",
+  "interpretation": "Full repository suite did not pass. Four product test failures appear associated with rate-limit/test-fixture interaction or response-shape assumptions and must be triaged independently; they are not evidence of an NCS model assessment."
+}
