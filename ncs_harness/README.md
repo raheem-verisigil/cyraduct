@@ -316,6 +316,15 @@ The successful run is also preserved as an immutable event:
 
 The run's 71/71 result is harness CI evidence. It is not a native AI model evaluation or an NCS certificate.
 
+
+### VeriSigilAI runtime API source audit
+
+The runtime/SDK repository is `raheem-verisigil/verisigil-api`. Static inspection of `test_conformance.js` and `conformance_vectors.json` found 16 of 80 vectors (VEC-043–VEC-058, jurisdiction resolution) falling through to a generic `assert(true)` branch. Their expected primary regime, decision and conflict fields are not asserted by the current test runner.
+
+This is a source-level finding, not a runtime test. The 16 cases must be given explicit assertions and unknown vector types must fail rather than silently pass. The connected GitHub integration denied branch creation in the API repository, so no code change or CI execution was performed there. The finding and run record are stored in the NCS registry and mirrored to the VeriSigilAI website repository.
+
+The actual AI model/agent workload is still unidentified. NCS has not run a Native Behavior Baseline or Policy Delta against a model.
+
 ## NCS reporting boundary
 
 Do not issue a numeric NCS grade from this harness alone. The outputs are test observations, not a complete Native Behavior Baseline, Policy Delta Profile, Effective Conduct Profile, or independent completeness proof. Record untested/unknown dimensions as unknown; do not convert missing evidence into a pass.
