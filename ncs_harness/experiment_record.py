@@ -184,11 +184,16 @@ def verify_experiment_record(
         return False, "signature-or-envelope-invalid"
 
 
-def shareable_aggregate(envelopes: list[dict[str, Any]], *, minimum_cohort_size: int = 5) -> dict[str, Any]:
+def shareable_aggregate(envelopes: list[dict[str, Any]], *, trusted_public_keys: dict[str, bytes], minimum_cohort_size: int = 5) -> dict[str, Any]:
     """Aggregate only a consented cohort; suppress small or linkable groups."""
     if minimum_cohort_size < 5:
         raise ValueError("minimum_cohort_size cannot be below five")
     records = [item.get("record", {}) for item in envelopes]
+    for envelope in envelopes:
+        key_id = envelope.get("integrity", {}).get("signature", {}).get("key_id")
+        public_key = trusted_public_keys.get(key_id)
+        if public_key is None or verify_experiment_record(envelope, public_key_pem=public_key)[0] is not True:
+            raise ValueError("every shared record must have a valid signature from a trusted key")
     if any(item.get("sharing", {}).get("aggregate_sharing_opt_in") is not True for item in records):
         raise PermissionError("every record in a shared cohort must have explicit opt-in consent")
     if len(envelopes) < minimum_cohort_size:
