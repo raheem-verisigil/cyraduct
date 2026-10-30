@@ -85,7 +85,9 @@ The proof report is dated 2026-09-03 and describes its own V3/V4/V5 evidence. Th
 ## 7. Overall status
 
 - NCS selected harness: **PASS, 93/93**.
-- Cyraduct full suite: **PASS, 232/232**.
+- Cyraduct full suite on commit 45ba7d2: **PASS, 232/232**. After the Week 2 runner addition, latest full-suite run on commit 6976b17: **PASS, 213/213**, 4 warnings. The test count differs between commits; treat each result as commit-scoped and investigate test discovery/branch-base differences before using totals as a trend.
+- NCS selected harness on commit 6976b17: **PASS, 93/93**, 4 warnings.
+- Week 2 provider-neutral runner contract tests are included in the latest full-suite pass; no real provider adapter or live model was invoked.
 - VeriSigilAI/VCB: no complete fresh runtime test run; static audit found material conformance-test coverage gaps in the legacy API repository.
 - NCS workbench/compiler: architecture specifications committed to draft PR #29; not yet implemented.
 - Railway deployment: no NCS deployment or website result-feed deployment has been performed.
