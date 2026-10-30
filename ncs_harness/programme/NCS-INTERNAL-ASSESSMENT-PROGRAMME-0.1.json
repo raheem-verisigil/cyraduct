@@ -90,14 +90,14 @@
       "project_id": "VERISIGILAI",
       "name": "VeriSigilAI / VCB",
       "relationship": "NCS × VeriSigilAI",
-      "repository": "raheem-verisigil/verisigil-website",
+      "repository": "raheem-verisigil/verisigil-api (runtime/SDK); raheem-verisigil/verisigil-website (public status)",
       "assessment_id": "NCS-VSA-VCB-2026-001",
       "priority": 2,
-      "status": "REGISTERED_SOURCE_REVIEW_COMPLETE_RUNTIME_TESTS_BLOCKED",
+      "status": "RUNTIME_API_IDENTIFIED_STATIC_AUDIT_FOUND_16_UNASSERTED_VECTORS_EXECUTION_PENDING",
       "current_scope": "VCB protected action workflows and declared consequence boundaries",
       "native_ai_subject": "Identify actual AI agent/model and immutable version; website copy and published metrics are not model conduct evidence",
       "policy_subject": "VCB action contract, authority/evidence/continuity rules and runtime configuration",
-      "notes": "Dedicated subject assessment record created in VeriSigilAI repository and mirrored to the temporary NCS registry in Cyraduct. Reviewed README/index/trust files; executable model/agent runtime and immutable model identity not established. Native and policy-delta tests blocked; application assurance matrix specified but not executed."
+      "notes": "NCS source audit identified the runtime API/SDK. The current 80-vector conformance runner does not assert expected outcomes for 16 jurisdiction vectors VEC-043–VEC-058; these fall through to assert(true). This is a static source finding, not a runtime test. No AI model/agent workload has been identified for Native Baseline/Policy Delta. GitHub integration denied write access to verisigil-api, so no NCS workflow or fix could be committed there."
     },
     {
       "project_id": "ALIF",
