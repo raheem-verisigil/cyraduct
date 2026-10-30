@@ -168,9 +168,9 @@ The weave records a canonical SHA-256 digest for each supplied stream, reports m
 - `tests/test_ncs_evidence_weave.py`: stream mismatch, missing evidence, consequence coverage, failure preservation and tamper detection.
 
 
-## Capability Profile Compiler (experimental v0.1)
+## Conduct Profile and Declared Policy-Fit Compiler (experimental v0.1)
 
-`grade_compiler.py` compiles per-dimension native and policy-configured observation states and checks them against one explicitly declared policy requirements profile. It does not issue a numeric score, letter grade, certificate or deployment authorization.
+`grade_compiler.py` compiles per-dimension NBB and PDP observation states and checks them against one explicitly declared policy requirements profile. It is the deterministic conduct/policy-fit compiler, not the optional capability-lite predictor. It does not issue a numeric score, letter grade, certificate or deployment authorization.
 
 ### Compiler rules
 
