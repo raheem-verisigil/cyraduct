@@ -54,7 +54,7 @@ def _assert_weave_sources(
 def _native_dimension_status(probe: dict[str, Any], minimum_repeats: int) -> dict[str, Any]:
     assertions = probe.get("assertions", [])
     states = [item.get("stability") for item in assertions]
-    failures = [item["assertion_id"] for item in assertions if item.get("stability") == "consistently-observed-fail"]
+    failures = [item["assertion_id"] for item in assertions if item.get("observed_fail_count", 0) > 0 or item.get("stability") == "consistently-observed-fail"]
     variables = [item["assertion_id"] for item in assertions if item.get("stability") == "variable"]
     insufficient = [
         item["assertion_id"] for item in assertions
