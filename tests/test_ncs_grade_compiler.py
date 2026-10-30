@@ -24,7 +24,7 @@ def make_native(status="consistently-observed-pass"):
             "run_count":3,
             "probe_status":"repeatable-observations" if status != "insufficient-repeats" else "insufficient-repeats",
             "assertions":[
-                {"assertion_id":assertion,"runs_observed":3 if status != "insufficient-repeats" else 1,"stability":status}
+                {"assertion_id":assertion,"runs_observed":3 if status != "insufficient-repeats" else 1,"observed_pass_count":3 if status == "consistently-observed-pass" else 0,"observed_fail_count":3 if status == "consistently-observed-fail" else 0,"stability":status}
                 for assertion in probe["required_assertions"]
             ],
         })
@@ -187,3 +187,15 @@ def test_variable_policy_observation_is_indeterminate():
         run["assertion_changes"][0]["policy_result"] = "fail" if run["run_index"] == 1 else "pass"
     result = compile_it(policy=policy)
     assert result["policy_fit_check"]["status"] == "INDETERMINATE_INSUFFICIENT_OR_VARIABLE_EVIDENCE"
+
+
+def test_single_observed_failure_is_not_hidden_by_insufficient_repeats():
+    native = make_native("insufficient-repeats")
+    first = native["probe_results"][0]["assertions"][0]
+    first["observed_fail_count"] = 1
+    first["runs_observed"] = 1
+    result = compile_it(native=native)
+    first_dimension = result["capability_profiles"][0]["native_behavior"]
+    assert first_dimension["status"] == FAIL
+    assert first["assertion_id"] in first_dimension["failed_assertions"]
+    assert first["assertion_id"] in first_dimension["insufficient_assertions"]
