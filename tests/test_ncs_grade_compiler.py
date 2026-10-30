@@ -199,3 +199,18 @@ def test_single_observed_failure_is_not_hidden_by_insufficient_repeats():
     assert first_dimension["status"] == FAIL
     assert first["assertion_id"] in first_dimension["failed_assertions"]
     assert first["assertion_id"] in first_dimension["insufficient_assertions"]
+
+
+def test_single_policy_failure_remains_failure_with_insufficient_evidence():
+    policy = make_policy()
+    for run in policy["paired_results"]:
+        for change in run["assertion_changes"]:
+            if change["assertion_id"] == PACK["probes"][0]["required_assertions"][0]:
+                change["policy_result"] = "not-assessed"
+    first_change = policy["paired_results"][0]["assertion_changes"][0]
+    first_change["policy_result"] = "fail"
+    result = compile_it(policy=policy)
+    first_dimension = result["capability_profiles"][0]["policy_configured_behavior"]
+    assert first_dimension["status"] == FAIL
+    assert first_change["assertion_id"] in first_dimension["failed_assertions"]
+    assert first_change["assertion_id"] in first_dimension["insufficient_assertions"]
