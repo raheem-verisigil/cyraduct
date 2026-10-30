@@ -35,11 +35,9 @@ The tests import the FastAPI application and use its local TestClient. They do n
 
 See `scenarios.json`. The initial policy-delta set includes a valid vendor change, missing callback evidence, requester-supplied callback channel, missing reviewer, new beneficiary without dual approval, payment without purpose, recent bank-detail change, and wire amount above the policy ceiling.
 
-## Known compatibility finding
+## Receipt verifier compatibility correction
 
-`examples/sink_guard.py` currently verifies a pipe-delimited subset of receipt fields. The receipt issuer and `verify_receipt.py` instead sign/verify the canonical JSON representation of all immutable receipt claims, including the signature header. The compatibility regression test records that a receipt produced by the current API is rejected by the example sink helper.
-
-This test is intentionally a **known-defect reproducer**, not a desired product behaviour. The recommended fix is to make the sink helper use the exact canonicalization contract (ideally a shared, versioned verifier module) and add positive, tamper, expiry, and action-binding tests.
+The original sink helper used a pipe-delimited subset of receipt fields, while the issuer and standalone verifier use canonical JSON over all immutable claims. The assessment branch now updates `examples/sink_guard.py` to delegate signature verification to the standalone canonical verifier. Tests now require a current receipt to verify and require tampered claims, an incorrect expected action hash, and expired receipts to be rejected. Revocation remains a separate mutable lifecycle check and must be checked against a current trusted source or broker protocol.
 
 ## NCS reporting boundary
 
