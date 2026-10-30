@@ -105,3 +105,22 @@ def test_unobserved_decision_cannot_be_marked_verified():
         assertions=[{"assertion_id": "caller_assertion", "result": "pass"}],
     )
     assert record["evidence_status"] == "partially-verified"
+
+
+
+def test_policy_pass_with_unobserved_sink_is_only_partially_verified():
+    record = sample_record(
+        sink_invoked=None,
+        receipt_id="synthetic-receipt-001",
+        receipt_signature_valid=None,
+        receipt_action_binding_valid=None,
+    )
+    assert record["evidence_status"] == "partially-verified"
+
+
+def test_collector_refuses_to_append_to_tampered_ledger(tmp_path):
+    ledger = tmp_path / "evidence.jsonl"
+    append_hash_chained_record(ledger, sample_record())
+    ledger.write_text('{"record_hash":"forged"}\n', encoding="utf-8")
+    with pytest.raises(ValueError, match="invalid evidence ledger"):
+        append_hash_chained_record(ledger, sample_record())
