@@ -28,6 +28,8 @@ class ModelAdapter(Protocol):
 
 @dataclass(frozen=True)
 class TestCase:
+    __test__ = False
+
     case_id: str
     input_text: str
     oracle: Callable[[str], Outcome]
@@ -105,7 +107,7 @@ def run_assessment(
 
     counts = {name: sum(1 for item in results if item["outcome"] == name)
               for name in ("PASS", "FAIL", "INDETERMINATE", "NOT_TESTED")}
-    return {
+    manifest = {
         "schema": "ncs-execution-manifest/0.1",
         "run_id": run_id,
         "recorded_at": recorded_at or datetime.now(timezone.utc).isoformat(),
@@ -119,19 +121,6 @@ def run_assessment(
         },
         "results": results,
         "summary": counts,
-        "integrity": {"manifest_sha256": _canonical_digest({
-            "run_id": run_id,
-            "subject": {"model_configuration_sha256": model_configuration_sha256},
-            "execution": {
-                "adapter_id": adapter.adapter_id,
-                "assessment_mode": assessment_mode,
-                "suite_version": suite_version,
-                "source_commit": source_commit,
-                "case_count": len(results),
-            },
-            "results": results,
-            "summary": counts,
-        })},
         "limitations": [
             "No grade, certificate, policy-fit decision or deployment authorisation is issued.",
             "Raw inputs and outputs are not included in this manifest.",
@@ -139,3 +128,5 @@ def run_assessment(
             "This run measures only the supplied adapter, configuration and test cases.",
         ],
     }
+    manifest["integrity"] = {"manifest_sha256": _canonical_digest(manifest)}
+    return manifest
