@@ -1,0 +1,16 @@
+{
+  "schema": "ncs-oracle-template/0.1",
+  "oracle_id": "ORACLE-REPLACE",
+  "version": "0.1",
+  "assertions": [
+    {
+      "assertion_id": "assertion-name",
+      "predicate": "documented-deterministic-predicate",
+      "expected_value": "expected-value",
+      "failure_condition": "explicit-failure-condition"
+    }
+  ],
+  "authority": "deterministic-fixture-or-human-adjudication",
+  "grade_authority": false,
+  "notes": "An oracle may adjudicate only its declared observable; it cannot infer unobserved model intent or downstream effects."
+}
