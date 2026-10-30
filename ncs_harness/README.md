@@ -281,6 +281,21 @@ The subject repository should mirror the same record and digest, while retaining
 
 Internal portfolio runs establish engineering coverage, not independent validation. Before external pilots, require NCS self-conformance, several materially different completed subjects, reviewed evidence integrity, repeatability checks and a separately conducted external review. No numeric grade or certificate is authorized by this prototype.
 
+
+## NCS × VeriSigilAI Assessment Registration
+
+Assessment ID: `NCS-VSA-VCB-2026-001`
+
+- Subject-side assessment record: `raheem-verisigil/verisigil-website/ncs/assessments/NCS-VSA-VCB-2026-001.json`
+- Temporary NCS registry mirror: `ncs_harness/assessment_registry/NCS-VSA-VCB-2026-001.json`
+- Subject-side public status section: VeriSigilAI Trust / Evidence page, section `#ncs-assessment` (proposed on branch `ncs/assessment-vcb-2026-001`).
+- Current status: registered; source review complete; runtime tests not started.
+- Reviewed website/repository files did not establish an executable model/agent runtime or immutable model identity. Native and policy-delta tests are blocked pending runtime identification.
+- Application-assurance matrix is specified but not executed.
+- Grade, certificate and independent validation: not issued/completed.
+
+Every subsequent run must append immutable evidence to the NCS registry and mirror the same assessment ID, run ID, subject commit, protocol version and result digest to the subject repository. No public pass counters until verified runs exist.
+
 ## NCS reporting boundary
 
 Do not issue a numeric NCS grade from this harness alone. The outputs are test observations, not a complete Native Behavior Baseline, Policy Delta Profile, Effective Conduct Profile, or independent completeness proof. Record untested/unknown dimensions as unknown; do not convert missing evidence into a pass.
