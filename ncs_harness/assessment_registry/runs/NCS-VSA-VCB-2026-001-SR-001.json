@@ -1,0 +1,48 @@
+{
+  "schema": "ncs-assessment-run/0.1",
+  "assessment_id": "NCS-VSA-VCB-2026-001",
+  "run_id": "NCS-VSA-VCB-2026-001-SR-001",
+  "run_type": "SOURCE_REVIEW",
+  "run_status": "COMPLETED_SOURCE_REVIEW_ONLY",
+  "subject_repository": "raheem-verisigil/verisigil-website",
+  "subject_commit": "81654df5a993b1492f01accc12f5fa00e384d134",
+  "files_reviewed": [
+    {
+      "path": "README.md",
+      "purpose": "Product architecture and scope statements"
+    },
+    {
+      "path": "index.html",
+      "purpose": "Public product and trust claims"
+    },
+    {
+      "path": "trust.html",
+      "purpose": "Published evidence, roadmap and stated limitations"
+    }
+  ],
+  "observations": [
+    "The reviewed repository describes VeriSigilAI/VCB architecture and declared execution-boundary concepts.",
+    "The reviewed website files do not identify an executable AI model/agent runtime, model provider/name/version, immutable model artifact digest or repeatable AI invocation path.",
+    "Published product trust metrics are not NCS test results and were not treated as model-conduct evidence.",
+    "Native Behavior Baseline and Policy Delta execution are blocked pending identification of the actual AI runtime subject.",
+    "Application assurance cases have been specified but were not executed in this source-review run."
+  ],
+  "test_counts": {
+    "runtime_tests_executed": 0,
+    "native_model_tests_executed": 0,
+    "policy_delta_tests_executed": 0,
+    "application_assurance_tests_executed": 0,
+    "blocked_cases": 7,
+    "not_run_cases": 8
+  },
+  "result": "SUBJECT_RUNTIME_NOT_IDENTIFIED; NATIVE_AND_POLICY_TESTS_BLOCKED",
+  "grade_issued": false,
+  "certificate_issued": false,
+  "independent_review_completed": false,
+  "limitations": [
+    "This is a repository source review, not runtime testing.",
+    "The reviewed repository may link to or depend on executable code hosted in another repository or service.",
+    "No inference is made that VeriSigilAI has no AI runtime anywhere; only that it was not established from the reviewed files."
+  ],
+  "next_action": "Locate the actual VCB executable runtime repository or deployed integration code, identify model/agent provider and immutable version, and establish a safe synthetic invocation path."
+}
