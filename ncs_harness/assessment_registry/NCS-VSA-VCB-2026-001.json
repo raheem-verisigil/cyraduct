@@ -23,9 +23,21 @@
       "model_version": null,
       "artifact_digest": null,
       "agent_runtime": null,
-      "status": "NOT_IDENTIFIED",
-      "reason": "The reviewed repository files establish the VCB product architecture and public trust presentation, but do not identify a concrete model/agent runtime, provider, version, immutable artifact or repeatable AI invocation path. The project website and published trust metrics are not themselves an AI model test subject."
-    }
+      "status": "MODEL_AGENT_WORKLOAD_NOT_IDENTIFIED",
+      "reason": "A separate runtime governance API/SDK repository has been identified. Its README and SDK describe a deterministic governance runtime, not a named AI model or agent workload. No model provider/version/artifact or repeatable pre-policy and post-policy AI invocation path has been established."
+    },
+    "repositories": [
+      {
+        "role": "public_website_and_assessment_display",
+        "repository": "raheem-verisigil/verisigil-website",
+        "commit": "81654df5a993b1492f01accc12f5fa00e384d134"
+      },
+      {
+        "role": "runtime_governance_api_and_sdk",
+        "repository": "raheem-verisigil/verisigil-api",
+        "commit": "99072f711a8271479f0984e89d12cc205ef61a89"
+      }
+    ]
   },
   "assessment_scope": {
     "objective": "Assess the AI conduct before project-specific policy and after VCB policy/configuration, then separately assess whether declared consequence-boundary controls and receipts match observed application outcomes.",
@@ -45,8 +57,8 @@
       {
         "id": "APPLICATION_ASSURANCE",
         "name": "VCB consequence-boundary assurance",
-        "status": "SOURCE_REVIEW_ONLY",
-        "description": "Test authority, evidence, continuity, action/parameter binding, expiry/revocation, fail-closed behavior, receipt verification, replay and sink-state outcomes in an isolated synthetic target."
+        "status": "SOURCE_AUDIT_COMPLETE_EXECUTION_PENDING",
+        "description": "Runtime governance API/SDK and conformance-vector test harness identified. Static review found 16 jurisdiction vectors (VEC-043–VEC-058) fall through to a no-op assertion. Runtime execution and remediation validation remain pending."
       }
     ],
     "prohibited_claims": [
@@ -178,14 +190,13 @@
     "Canonical evidence manifest and result digest"
   ],
   "current_findings": {
-    "source_review": "The reviewed README and website describe VCB's declared execution-boundary architecture and bounded claims. The reviewed files do not establish an executable AI agent/model or a reproducible model test harness.",
+    "source_review": "Website and runtime API/SDK repositories identified. Website source reviewed. API README, SDK, conformance runner, vectors and formal verifier source reviewed.",
     "runtime_tests_executed": 0,
     "native_model_tests_executed": 0,
+    "policy_delta_tests_executed": 0,
     "application_assurance_tests_executed": 0,
-    "pass_count": 0,
-    "fail_count": 0,
-    "blocked_count": 7,
-    "not_run_count": 8,
+    "static_test_harness_findings": 3,
+    "critical_test_harness_issue": "16 of 80 vectors are jurisdiction-resolution vectors whose expected fields are not asserted by the current test runner; they fall through to assert(true).",
     "grade_issued": false,
     "certificate_issued": false,
     "independent_review_completed": false
@@ -230,5 +241,18 @@
     "commit_sha": "a9ee82b89a0e39a94da3a80beb7477bccb07ddb8",
     "result": "71 passed, 0 failed",
     "relevance": "NCS harness CI verification only; this is not a VeriSigilAI runtime test and must not be attributed to this subject assessment."
-  }
+  },
+  "source_review_runs": [
+    {
+      "run_id": "NCS-VSA-VCB-2026-001-SR-001",
+      "path": "runs/NCS-VSA-VCB-2026-001-SR-001.json",
+      "status": "COMPLETED_SOURCE_REVIEW_ONLY"
+    },
+    {
+      "run_id": "NCS-VSA-VCB-2026-001-SR-002",
+      "path": "runs/NCS-VSA-VCB-2026-001-SR-002.json",
+      "status": "COMPLETED_STATIC_REVIEW_ONLY"
+    }
+  ],
+  "access_limitation": "The connected GitHub integration denied branch creation in raheem-verisigil/verisigil-api (HTTP 403 Resource not accessible by integration). No files were written to that repository and no CI run was triggered there. Assessment records and mirrors are stored in the subject website repository and temporary NCS registry in Cyraduct."
 }
