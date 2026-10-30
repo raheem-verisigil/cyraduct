@@ -81,3 +81,27 @@ def test_hash_chained_ledger_detects_tampering(tmp_path):
     valid, reason = verify_hash_chain(ledger)
     assert valid is False
     assert reason == "record_hash_mismatch_at_line_1"
+
+
+
+def test_decision_mismatch_is_failed_even_if_caller_assertions_pass():
+    record = sample_record(
+        application_decision="deny",
+        expected_decision="allow",
+        assertions=[{"assertion_id": "caller_assertion", "result": "pass"}],
+    )
+    assert record["evidence_status"] == "failed"
+    decision_assertion = next(
+        item for item in record["observation"]["assertions"]
+        if item["assertion_id"] == "ncs_expected_decision_match"
+    )
+    assert decision_assertion["result"] == "fail"
+
+
+def test_unobserved_decision_cannot_be_marked_verified():
+    record = sample_record(
+        application_decision=None,
+        expected_decision="allow",
+        assertions=[{"assertion_id": "caller_assertion", "result": "pass"}],
+    )
+    assert record["evidence_status"] == "partially-verified"
