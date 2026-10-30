@@ -1,0 +1,86 @@
+{
+  "schema": "ncs-assessment-run/0.1",
+  "assessment_id": "NCS-VSA-VCB-2026-001",
+  "run_id": "NCS-VSA-VCB-2026-001-SR-002",
+  "run_type": "RUNTIME_REPOSITORY_AND_TEST_HARNESS_SOURCE_AUDIT",
+  "run_status": "COMPLETED_STATIC_REVIEW_ONLY",
+  "subject_repository": "raheem-verisigil/verisigil-api",
+  "subject_commit": "99072f711a8271479f0984e89d12cc205ef61a89",
+  "files_reviewed": [
+    {
+      "path": "README.md",
+      "blob_sha": "10ec4b063017f785d339a899e5cf691e25e9d1e0",
+      "finding": "Declares VGS runtime API, 80 conformance vectors and Node.js test suite."
+    },
+    {
+      "path": "verisigil_sdk.js",
+      "blob_sha": "8d865daf17a341281d737c487fffc02a6393f04e",
+      "finding": "SDK implements canonical serialization, evidence records, and client-side governance integration."
+    },
+    {
+      "path": "test_conformance.js",
+      "blob_sha": "fb10290438773e207be6fe5b589dd3ffcfa62d94",
+      "finding": "Test runner handles five explicit expected-field categories and falls back to a no-op assertion for other vector types."
+    },
+    {
+      "path": "conformance_vectors.json",
+      "blob_sha": "c018aaacca6106fdae0e17709a76f56908377b36",
+      "finding": "80 vectors; 16 jurisdiction-resolution vectors contain expected_primary_regime/expected_decision/expected_conflicts, none of which are asserted by the current test runner."
+    },
+    {
+      "path": "requirements.txt",
+      "blob_sha": "61d7373e26bb7b6dd2d27b78b5def64aa3e7782d",
+      "finding": "Python API dependency declarations."
+    },
+    {
+      "path": "vfgs.py",
+      "blob_sha": "76dc7197396105b76c6760e35e73f1b63c50c38d",
+      "finding": "Formal governance verifier source with optional Z3 and Hypothesis imports."
+    },
+    {
+      "path": "main.py",
+      "blob_sha": "7e9eeb726cf0457332304c458c09a1c8b17d3b0b",
+      "finding": "GitHub connector returned no file content for the README-declared API entrypoint; source implementation could not be inspected in this review."
+    }
+  ],
+  "findings": [
+    {
+      "id": "NCS-VSA-F001",
+      "severity": "HIGH",
+      "title": "16 jurisdiction conformance vectors are no-op assertions",
+      "detail": "The 80-vector runner has explicit branches for expected_canonical (20), expected_weight (10), expected_allowed (12), expected_halt_required (12), and expected_pre_remediation_evidence_class (10). The remaining 16 vectors VEC-043 through VEC-058 contain expected_primary_regime, expected_decision and expected_conflicts. They enter the generic fallback branch `assert(true, 'ok')`, so these cases are counted as passed without checking their expected outcomes.",
+      "consequence": "The README's 80/80 conformance statement overstates exercised assertion coverage for the current test_conformance.js implementation. The 16 jurisdiction cases are not validated by this runner as written.",
+      "remediation": "Add explicit jurisdiction resolver assertions for all three expected fields; add negative/edge cases; fail closed on unknown expected-vector schema instead of a no-op pass."
+    },
+    {
+      "id": "NCS-VSA-F002",
+      "severity": "MEDIUM",
+      "title": "AI model/agent subject remains unidentified",
+      "detail": "The inspected API repository describes runtime governance infrastructure and provides an SDK/API interface, but the reviewed artifacts do not identify a specific AI model, provider, model version, immutable model artifact, or an agent workload whose behavior can be measured before and after VCB policy.",
+      "consequence": "NCS can assess the deterministic policy/runtime implementation separately, but cannot yet claim a Native Behavior Baseline or Policy Delta Profile for an AI model.",
+      "remediation": "Identify an actual AI agent/model integration that calls the VCB API/SDK and provide a synthetic invocation path with exact model and configuration identity."
+    },
+    {
+      "id": "NCS-VSA-F003",
+      "severity": "MEDIUM",
+      "title": "API entrypoint source not inspectable in current retrieval",
+      "detail": "README declares main.py as the API implementation, but the source retrieval returned an empty content body. This is a retrieval limitation and does not establish that the deployed API lacks an implementation.",
+      "consequence": "The API routing and full server-side enforcement path could not be independently source-reviewed in this pass.",
+      "remediation": "Provide access to the API source file through a readable GitHub path or repository checkout."
+    }
+  ],
+  "static_counts": {
+    "conformance_vectors_total": 80,
+    "vectors_with_explicit_assertion_branches": 64,
+    "jurisdiction_vectors_falling_through_noop": 16,
+    "test_runner_parity_cases": 4,
+    "test_runner_immutability_cases": 2,
+    "advertised_suite_total": 86,
+    "tests_executed_by_ncs_in_this_run": 0
+  },
+  "result": "STATIC_REVIEW_FOUND_16_UNASSERTED_JURISDICTION_VECTORS; AI_MODEL_SUBJECT_NOT_IDENTIFIED",
+  "grade_issued": false,
+  "certificate_issued": false,
+  "independent_review_completed": false,
+  "limitation": "This run is a source/test-harness audit. It did not execute Node.js tests, API calls, model prompts, or production endpoints."
+}
