@@ -2,9 +2,9 @@ name: Cyraduct tests
 
 on:
   push:
-    branches: [main, "hardening/**", "security/**"]
+    branches: [main, "hardening/**", "security/**", "ncs/experiment-runner-v0.1"]
   pull_request:
-    branches: [main]
+    branches: [main, "ncs/finance-guard-assessment"]
   workflow_dispatch:
 
 permissions:
