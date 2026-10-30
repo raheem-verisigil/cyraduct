@@ -345,3 +345,35 @@ The NCS harness now contains:
 - `remediation/verisigil-fail-closed-test-runner.patch`: proposed fail-closed change so unknown vector types cannot silently pass.
 
 Neither the adapter nor patch has been executed/applied to the VeriSigil API repository. API repository write access remains blocked. No production endpoint is used by default.
+
+
+## Week 1 harness completion track — NCS v0.3
+
+Terminology is unified: NBB = Native Behavior Baseline; PDP = Policy Delta Profile (Conduct Delta); ECP = Effective Conduct Profile (effect-level outcome). The former broad ten-dimension capability proposal is superseded by four optional capability-lite predictors: tool use, context/instruction retention, calibration/abstention and robustness. Public reasoning, mathematics and coding benchmark results may be cited as context, not reimplemented as a competing NCS leaderboard.
+
+### Experiment Record
+
+- `experiment_record.py` builds aggregate-only Experiment Records and signs/verifies canonical payloads with Ed25519. Private keys are supplied by the caller and are not stored in this repository.
+- `experiment-record.schema.json` defines the record shape.
+- `templates/experiment_record.template.json`, `templates/assessment_case.template.json` and `templates/oracle.template.json` provide starter templates.
+- Raw prompts, outputs, datasets and model weights are prohibited from the Experiment Record. Protected raw evidence, if needed for adjudication, stays outside the aggregate record.
+- Records remain local by default. Only anonymized aggregates may be shared, and only after explicit opt-in.
+
+### Capability-lite and case/oracle harness
+
+- `capability_lite.py` reports successes/trials and 95% Wilson intervals; untested features remain `NOT_TESTED`; no aggregate intelligence score exists and the feature has no grade effect.
+- `case_generator.py` creates deterministic synthetic cases from the declared scenario pack. Malformed packs fail closed.
+- `oracle.py` evaluates only declared application observables. It cannot infer model intent or unobserved consequences and cannot issue a grade.
+- `tests/test_ncs_experiment_record.py`, `test_ncs_capability_lite.py`, `test_ncs_case_generator.py` and `test_ncs_oracle.py` cover the added protocol components.
+
+### Assessment Learner v0
+
+`learner_v0.py` is a small, deterministic logistic-regression research prototype with AUC/Brier utilities and temporal splitting. It is offline and advisory only, is not imported by the grading engine, and never enables user-facing predictions. The minimum data gate is 15 distinct model configurations, four model families and passing temporal validation. This threshold is a cold-start gate, not a claim of statistical adequacy. Leave-one-family-out validation, calibration slope, adaptive-testing validation and pre-registered comparisons remain required before any user-facing learner output.
+
+### Record integrity and privacy
+
+Experiment Records are cryptographically signed using Ed25519 when the caller supplies a private key. The existing evidence JSONL hash chain remains a separate local tamper-evidence mechanism; it is not a signature or an independently operated transparency log. Key custody, protected raw-evidence storage, independent checkpoints and opt-in data governance remain deployment requirements.
+
+### Current status
+
+These additions are implementation and unit-test candidates. They do not mean a live provider model has been tested, a learner has predictive validity, an NCS grade has been issued, or the standard has been independently validated. The latest CI result must be read from the linked GitHub Actions run and archived with its exact commit and job outcome.
