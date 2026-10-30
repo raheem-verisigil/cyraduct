@@ -61,6 +61,19 @@
   },
   "projects": [
     {
+      "project_id": "NCS_SELF_CONFORMANCE",
+      "name": "NCS Assessment Engine",
+      "relationship": "NCS Self-Conformance",
+      "repository": "raheem-verisigil/cyraduct (temporary integration harness location)",
+      "assessment_id": "NCS-SELF-2026-001",
+      "priority": 0,
+      "status": "ENGINEERING_TESTS_EXIST_SELF_CONFORMANCE_REVIEW_REQUIRED",
+      "current_scope": "Identity binding, evidence completeness, canonicalization, digest integrity, failure precedence, policy fit, certificate lifecycle and change-impact logic",
+      "native_ai_subject": "Not applicable to the deterministic NCS protocol-engine self-conformance suite; model-based evaluation of NCS evaluators is a separate future experiment",
+      "policy_subject": "NCS normative rules and protocol requirements",
+      "notes": "This assesses whether the NCS engine implements its own protocol correctly. It is not an independent assessment of NCS and cannot issue an NCS grade or certificate."
+    },
+    {
       "project_id": "CYRADUCT",
       "name": "Cyraduct Finance Guard",
       "relationship": "NCS × Cyraduct",
@@ -140,11 +153,12 @@
       "relationship": "NCS × AICaffe",
       "assessment_id": "NCS-AIC-2026-001",
       "priority": 7,
-      "status": "PORTFOLIO_CANDIDATE_CODEBASE_REQUIRED",
+      "status": "WEBSITE_REPOSITORY_FOUND_AI_COMPONENT_NOT_YET_CONFIRMED",
       "current_scope": "AI coffee recommendations and offer personalization, if implemented",
       "native_ai_subject": "Exact model/agent and version",
       "policy_subject": "Offer eligibility, consent, personalization and membership rules",
-      "notes": "Assess only the implemented AI recommendation/personalization component, not static website sections."
+      "notes": "Assess only the implemented AI recommendation/personalization component, not static website sections.",
+      "repository": "raheem-verisigil/aicaffe-website"
     }
   ],
   "exclusion_rule": "A project is not an NCS test subject merely because its proposal uses the word AI. It enters execution only after source code, exact AI subject, model/version, configuration and repeatable test interface are available.",
