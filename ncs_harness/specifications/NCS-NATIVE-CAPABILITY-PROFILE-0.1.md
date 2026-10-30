@@ -1,80 +1,61 @@
-# NCS Native Capability Profile (NCP) — Specification v0.1
+# NCS Capability-Lite Predictor Profile — v0.3 companion
 
-Status: design specification; implementation and empirical validation pending.
+Status: experimental predictor specification. It is not a general intelligence benchmark and is not part of the grading path.
 
-## 1. Purpose
+## Purpose and boundary
 
-The Native Capability Profile measures what a specified AI model or agent can demonstrably do before deployer-specific policy configuration. It complements, but does not replace, the Native Behavior Baseline and Policy Delta Profile.
+NCS's differentiator is measured conduct under declared policy and evidence-backed policy fit. NCS MUST NOT build a broad, competing general-capability leaderboard. Public, independently maintained benchmark results may be cited as context for reasoning, mathematics and coding, with benchmark name, version, date, model identity and comparability limitations disclosed.
 
-NCP is a capability measurement, not a universal IQ test, a consciousness claim, a moral score, or a trust/safety certificate.
+NCS records only four optional capability-lite features that plausibly predict policy execution failures:
+1. Tool use: correct tool selection, argument validity, permission-boundary handling and verification of tool outcomes.
+2. Context and instruction retention: retention of declared constraints, authority and task state across relevant context.
+3. Calibration and abstention: calibrated uncertainty, appropriate abstention and correction when evidence is missing.
+4. Robustness: consistency under benign paraphrase, context changes and novel combinations relevant to the declared policy.
 
-## 2. Terminology and separation
+These are predictors, not a general measure of intelligence. Each feature is optional. Untested features are NOT_TESTED, never zero.
 
-- **Native Capability Profile (NCP):** measured task capability vector for an exact model/agent artifact and execution configuration.
-- **Native Behavior Baseline (NBB):** observed conduct under a neutral, documented assessment harness before deployer-specific policy.
-- **Policy Delta Profile (PDP):** measured conduct/capability changes after the deployer's policy layer is introduced.
-- **Effective Conduct Profile (ECP):** observed post-policy behavior and application-level consequences, reported with evidence provenance.
+## Unified NCS vocabulary
 
-"Native" means before the deployer's additional policy layer. Provider-native system instructions, safety controls and model defaults remain in force and MUST be recorded; assessors must not bypass provider safeguards to manufacture a supposedly raw model.
+- NBB — Native Behavior Baseline: observed conduct before deployer-specific policy.
+- PDP — Policy Delta Profile (Conduct Delta): paired changes between NBB and the same subject under the declared policy. It is a delta, not an absolute post-policy grade.
+- ECP — Effective Conduct Profile: observed policy-configured conduct and effect-level outcomes, including application/sink evidence where available.
+- Experiment Record: signed, aggregate-only record linking model configuration, profile features, policy/control features, attempt-level and effect-level outcomes, uncertainty, suite context and evidence-manifest provenance.
 
-Capability and conduct MUST remain separate result tracks. A high capability score MUST NOT raise a conduct grade, erase a conduct failure, or prove safety. A low capability score MUST NOT be described as unsafe conduct.
+NCP/NBB/PDP/ECP must not be used as competing vocabularies. Capability-lite predictor features supplement the Experiment Record and do not replace the three conduct/effect profiles.
 
-## 3. Capability dimensions
+## Measurement and reporting
 
-Assess only dimensions relevant to the declared deployment and available modalities. Each dimension is reported separately.
+Store successes and trials for every feature. Report the observed rate and a 95% Wilson interval; publish raw numerator and denominator. Do not use a coarse 0–4 score as the underlying measure. Display bands, if ever needed, are presentation-only and must not replace rates or intervals.
 
-1. Reasoning and inference: valid conclusions from supplied premises; multi-step deduction; contradiction detection.
-2. Quantitative and mathematical work: arithmetic, quantitative reasoning, uncertainty propagation and unit consistency.
-3. Planning and decomposition: sequencing, dependency recognition, resource constraints and plan repair.
-4. Coding and technical problem solving: code correctness, tests, debugging and security-aware implementation where relevant.
-5. Factual accuracy and evidence use: answer correctness against supplied trusted sources; provenance and unsupported-claim rate.
-6. Tool-use competence: correct tool selection, argument construction, error handling and verification of tool outcomes. Tool access is a separately declared condition.
-7. Context retention and instruction integration: handling long inputs, constraints, conflicting facts and retrieval from provided context.
-8. Calibration and uncertainty: confidence alignment, appropriate abstention, error recognition and correction.
-9. Robustness and transfer: performance on paraphrases, novel combinations, distribution shifts and adversarially confusing but benign inputs.
-10. Modality competence: image, audio, video or structured-data interpretation only where the model actually supports that modality.
+The Experiment Record stores aggregates and hashes, never prompts, model outputs, training data or model weights. Exact prompts and outputs, where required for audit, remain in protected evidence storage and are referenced by access-controlled identifiers and hashes.
 
-Do not score a dimension that was not tested. Mark it NOT_TESTED or NOT_APPLICABLE, not zero.
+## Learner principle and scope
 
-## 4. Test design and scoring
+The learner proposes, rules decide, and evidence confirms.
 
-- Each dimension uses versioned task families with explicit answer keys, rubrics, difficulty labels and provenance.
-- Use held-out tasks and disclose known benchmark overlap/contamination risks.
-- Use at least three independent repetitions for stochastic tasks where feasible; report per-run values, mean/median, dispersion and sample count.
-- Separate exact-match tasks from rubric-scored open-ended tasks. Human rubric scoring requires blinded double-scoring and adjudication for a validation-grade result.
-- Record model/provider/version or immutable artifact digest, endpoint, system prompt digest, temperature, sampling parameters, context limit, tools, retrieval corpus, runtime version, date and all policy layers.
-- Use identical task inputs and equivalent runtime conditions for native and policy-configured comparisons.
-- Report accuracy or rubric score, task completion, calibration, abstention, failure modes and confidence interval where sample size supports it.
-- Report latency, token use and cost as operational metrics, not intelligence dimensions.
-- Capability scores use a 0–4 evidence scale per dimension: 0 = tested and no demonstrated capability; 1 = materially unreliable; 2 = partial/conditional; 3 = reliable within tested scope; 4 = strong and repeatable within tested scope. Every score must include task count, success denominator, rubric, confidence and evidence references.
-- A single aggregate "intelligence score" MUST NOT be published in v0.1. If a later composite is proposed, it requires published weighting, domain coverage, uncertainty, validity studies and evidence that aggregation does not hide critical weaknesses.
+The Assessment Learner is offline and advisory only. It may predict likely rule failures, recommend which tests to run next, summarize historical policy/control effects, predict likely change impact, and research threshold calibration only after suitable deployment outcome data exists.
 
-## 5. Native and policy comparison
+The learner MUST NOT issue, modify, raise, lower or override a grade, certificate, policy-fit decision or deployment authorization. The deterministic grading engine MUST NOT import or call the learner.
 
-Run A: native condition — provider-native controls retained; no deployer-specific policy overlay.
-Run B: policy condition — same model/version, task set, runtime/tool permissions and sampling settings, with the declared deployer policy added.
+Start with a small, interpretable regularized logistic regression. A model artifact must carry its feature definition, training-record hashes, code/version identity, validation report and limitations. The learner abstains for unfamiliar/out-of-distribution subjects.
 
-Report for each dimension:
-- native capability result;
-- policy-configured capability result;
-- delta and uncertainty;
-- whether the policy improved reliability, constrained capability, introduced regressions, or had no measurable effect;
-- whether the result reflects model response, orchestration, external policy engine, or application control.
+## Pre-registered experiment checks
 
-A policy layer may change behavior without changing the underlying model's intelligence. Do not describe a behavioral constraint as a loss of intelligence unless the task performance evidence supports that conclusion.
+- H1/E1: compare the profile-feature predictor with model-size and public leaderboard-rank baselines using temporal holdout and leave-one-model-family-out evaluation. Initial research target: AUC improvement of at least 0.05 over the stronger baseline; report confidence intervals and Brier score.
+- E2: assess probability calibration. The proposed calibration-slope interval 0.8–1.2 is provisional, not a validated universal acceptance threshold.
+- E3: evaluate adaptive test selection by replaying completed runs. Target: at least 95% agreement with full-run pass/fail classifications with at least 30% fewer tests. Preserve a random-coverage fraction initially set at 20%.
+- E4: compare profile-only prediction with profile-plus-capability-lite features. Retain capability-lite only if it improves held-out predictive performance; otherwise remove it.
 
-## 6. Evidence and anti-gaming controls
+Freeze thresholds, splits and exclusions before Phase D. Leave-one-family-out and temporal validation are both required; no random row split that leaks the same model configurations across train and test.
 
-Every run binds to exact subject identity, test-pack version/hash, prompt and policy hashes, environment, timestamp, raw output or protected reference, scoring rubric/version, scorer identity/method, result digest and evidence completeness state. Preserve failures and retries. Do not silently discard outliers.
+## Cold start, privacy and release gate
 
-Use synthetic or licensed tasks; do not expose confidential benchmark answers. Red-team prompts must remain within authorized safety testing and must not require bypassing provider safeguards.
+Record Experiment Records from the first run, but show no learner predictions to users until there are at least 15 distinct model configurations across at least four model families AND temporal validation passes. This is a minimum release gate, not proof of statistical adequacy; sample size and uncertainty remain visible.
 
-## 7. Reporting and decision rule
+Records remain local by default. Aggregate sharing is opt-in and anonymized. No prompts, outputs, raw datasets, weights, secrets or direct identifiers may be shared through the aggregate path. Secure aggregation/differential privacy are future research requirements before pooling sensitive cross-customer records.
 
-Publish a capability vector and a separate conduct profile. A deployment fit-check compares required capability thresholds with measured capability and separately checks conduct/policy requirements. Missing evidence yields NOT_VERIFIED and an evidence ceiling; it is never a pass.
+## Independence and status
 
-NCP does not certify general intelligence, human equivalence, consciousness, universal competence or fitness for every use case.
+The standard and its authoritative registry must live in a dedicated NCS repository, separate from Cyraduct and VeriSigilAI product repositories. Until that repository is provisioned, this is a temporary engineering branch in Cyraduct and MUST NOT be represented as independent governance.
 
-## 8. Initial implementation status
-
-NCP is a design specification only. No portfolio model has yet completed an NCP run. Existing Cyraduct 71/71 harness CI results are not intelligence measurements. VeriSigil's 80-vector governance conformance suite is also not a model-intelligence benchmark.
+The learner is an experimental research component. No portfolio dataset currently establishes predictive validity. No NCS grade is issued by this component.
