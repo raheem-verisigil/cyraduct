@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ncs.example/schemas/experiment-record-0.1.json",
+  "$id": "urn:ncs:schema:experiment-record:0.1",
   "title": "NCS Experiment Record",
   "type": "object",
   "additionalProperties": false,
