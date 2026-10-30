@@ -189,6 +189,7 @@ The current output always sets grade, letter grade and aggregate score to null; 
 ### Files and tests
 
 - `grade_compiler.py`: capability profile and declared-policy fit compiler.
+- `capability-profile-compiler.schema.json`: output contract.
 - `tests/test_ncs_grade_compiler.py`: policy fit, failure, insufficient evidence, source digest mismatch and stream separation tests.
 
 This is a deterministic engineering prototype, not a calibrated grading scheme or an NCS certificate.
