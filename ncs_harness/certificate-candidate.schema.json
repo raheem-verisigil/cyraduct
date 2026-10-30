@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ncs.example/schemas/certificate-candidate-0.1.json",
+  "title": "NCS Non-Issued Certificate Candidate",
+  "description": "Experimental readiness candidate. This schema explicitly does not define an issued certificate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "certificate_status",
+    "certificate_id",
+    "assessment_id",
+    "subject",
+    "build_record_digest",
+    "evidence",
+    "requested_validity_days",
+    "issued_at",
+    "expires_at",
+    "blockers",
+    "issuance_eligible",
+    "signature",
+    "transparency_log_entry",
+    "revocation_status",
+    "candidate_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "record_type": {
+      "const": "ncs-certificate-candidate"
+    },
+    "certificate_status": {
+      "const": "NOT_ISSUED"
+    },
+    "certificate_id": {
+      "type": "null"
+    },
+    "assessment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject": {
+      "type": "object",
+      "required": [
+        "provider",
+        "model_name",
+        "model_version",
+        "artifact_digest"
+      ],
+      "properties": {
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "artifact_digest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "build_record_digest": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "evidence_weave_sha256",
+        "capability_profile_sha256"
+      ],
+      "properties": {
+        "evidence_weave_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "capability_profile_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "requested_validity_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 365
+    },
+    "issued_at": {
+      "type": "null"
+    },
+    "expires_at": {
+      "type": "null"
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "issuance_eligible": {
+      "const": false
+    },
+    "signature": {
+      "type": "null"
+    },
+    "transparency_log_entry": {
+      "type": "null"
+    },
+    "revocation_status": {
+      "const": "NOT_APPLICABLE_NOT_ISSUED"
+    },
+    "candidate_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}
