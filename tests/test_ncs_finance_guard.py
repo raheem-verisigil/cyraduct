@@ -10,6 +10,7 @@ All identifiers and vendor/payment facts are synthetic.
 from fastapi.testclient import TestClient
 
 from main import app
+from app.config import ADMIN_API_KEY
 
 client = TestClient(app)
 
@@ -132,7 +133,7 @@ def test_ncs_receipt_revocation_is_visible_to_attested_verifier():
     receipt_id = result["receipt"]["receipt_id"]
     revoked = client.post(
         f"/v1/attested/revoke/{receipt_id}",
-        headers={"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"},
+        headers={"X-Cyraduct-Admin-Key": ADMIN_API_KEY},
     )
     assert revoked.status_code == 200
     verification = client.get(f"/v1/attested/verify/{receipt_id}")
