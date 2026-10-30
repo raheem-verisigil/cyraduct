@@ -1,0 +1,212 @@
+{
+  "schema": "ncs-assessment-scenarios/0.1",
+  "assessment_target": {
+    "product": "Cyraduct Finance Guard",
+    "assessment_type": "application-policy-and-consequence-boundary",
+    "ai_native_conduct_measured": false
+  },
+  "environment": {
+    "required": "local-isolated-test",
+    "data": "synthetic-only",
+    "external_network": "disabled-or-mocked"
+  },
+  "scenarios": [
+    {
+      "id": "NCS-CYR-FG-001",
+      "name": "valid-vendor-change",
+      "input": {
+        "callback_verified": true,
+        "callback_channel_preexisting": true,
+        "reviewer_id": "test-reviewer-01",
+        "new_beneficiary": false,
+        "dual_approval": false,
+        "sender_domain_match": true
+      },
+      "expected": {
+        "decision": "allow",
+        "receipt_required": true
+      },
+      "evidence": [
+        "request-envelope",
+        "policy-decision",
+        "receipt-signature-verification"
+      ]
+    },
+    {
+      "id": "NCS-CYR-FG-002",
+      "name": "callback-evidence-missing",
+      "input": {
+        "callback_channel_preexisting": true,
+        "reviewer_id": "test-reviewer-01",
+        "new_beneficiary": false,
+        "dual_approval": false,
+        "sender_domain_match": true
+      },
+      "expected": {
+        "decision": "deny",
+        "receipt_required": false
+      },
+      "evidence": [
+        "request-envelope",
+        "matched-rule",
+        "no-receipt"
+      ]
+    },
+    {
+      "id": "NCS-CYR-FG-003",
+      "name": "callback-not-verified",
+      "input": {
+        "callback_verified": false,
+        "callback_channel_preexisting": true,
+        "reviewer_id": "test-reviewer-01",
+        "new_beneficiary": false,
+        "dual_approval": false,
+        "sender_domain_match": true
+      },
+      "expected": {
+        "decision": "deny",
+        "receipt_required": false
+      },
+      "evidence": [
+        "request-envelope",
+        "matched-rule",
+        "no-receipt"
+      ]
+    },
+    {
+      "id": "NCS-CYR-FG-004",
+      "name": "requester-supplied-callback-channel",
+      "input": {
+        "callback_verified": true,
+        "callback_channel_preexisting": false,
+        "reviewer_id": "test-reviewer-01",
+        "new_beneficiary": false,
+        "dual_approval": false,
+        "sender_domain_match": true
+      },
+      "expected": {
+        "decision": "deny",
+        "receipt_required": false
+      },
+      "evidence": [
+        "request-envelope",
+        "matched-rule",
+        "no-receipt"
+      ]
+    },
+    {
+      "id": "NCS-CYR-FG-005",
+      "name": "reviewer-missing",
+      "input": {
+        "callback_verified": true,
+        "callback_channel_preexisting": true,
+        "new_beneficiary": false,
+        "dual_approval": false,
+        "sender_domain_match": true
+      },
+      "expected": {
+        "decision": "deny",
+        "receipt_required": false
+      },
+      "evidence": [
+        "request-envelope",
+        "matched-rule",
+        "no-receipt"
+      ]
+    },
+    {
+      "id": "NCS-CYR-FG-006",
+      "name": "new-beneficiary-without-dual-approval",
+      "input": {
+        "callback_verified": true,
+        "callback_channel_preexisting": true,
+        "reviewer_id": "test-reviewer-01",
+        "new_beneficiary": true,
+        "dual_approval": false,
+        "sender_domain_match": true
+      },
+      "expected": {
+        "decision": "deny",
+        "receipt_required": false
+      },
+      "evidence": [
+        "request-envelope",
+        "matched-rule",
+        "no-receipt"
+      ]
+    },
+    {
+      "id": "NCS-CYR-FG-007",
+      "name": "financial-transfer-purpose-missing",
+      "input": {
+        "amount": 25000,
+        "days_since_bank_change": 10
+      },
+      "expected": {
+        "decision": "deny",
+        "receipt_required": false
+      },
+      "evidence": [
+        "request-envelope",
+        "matched-rule",
+        "no-receipt"
+      ]
+    },
+    {
+      "id": "NCS-CYR-FG-008",
+      "name": "recent-bank-detail-change",
+      "input": {
+        "amount": 25000,
+        "days_since_bank_change": 1,
+        "purpose": "synthetic supplier invoice"
+      },
+      "expected": {
+        "decision": "conditional",
+        "receipt_required": true,
+        "broker_execution": "must-not-proceed-without-human-approval"
+      },
+      "evidence": [
+        "request-envelope",
+        "matched-rule",
+        "conditional-receipt",
+        "broker-decision"
+      ]
+    },
+    {
+      "id": "NCS-CYR-FG-009",
+      "name": "wire-over-policy-ceiling",
+      "input": {
+        "amount": 5000001,
+        "purpose": "synthetic payroll",
+        "days_since_bank_change": 10,
+        "dual_approval": true
+      },
+      "expected": {
+        "decision": "deny",
+        "receipt_required": false
+      },
+      "evidence": [
+        "request-envelope",
+        "semantic-validation-or-matched-rule",
+        "no-receipt"
+      ]
+    },
+    {
+      "id": "NCS-CYR-FG-010",
+      "name": "sink-verifier-signature-contract",
+      "input": {
+        "source": "current-attested-evaluate-receipt",
+        "verifier": "examples/sink_guard.py"
+      },
+      "expected": {
+        "current_observation": "known-compatibility-defect-reproduced",
+        "desired_after_fix": "valid-current-receipt-verifies"
+      },
+      "evidence": [
+        "receipt-json",
+        "public-key",
+        "verifier-result"
+      ]
+    }
+  ]
+}
