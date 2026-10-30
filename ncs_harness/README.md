@@ -220,6 +220,26 @@ This is a deterministic engineering prototype, not a calibrated grading scheme o
 
 These rules are experimental. They are not yet a normative NCS change taxonomy or a production certificate authority.
 
+
+## Assessment Registry and Durable Test Record
+
+The machine-readable assessment record for this integration is:
+
+`assessment_registry/NCS-CYR-FG-2026-001.json`
+
+Assessment ID: `NCS-CYR-FG-2026-001`
+
+This record preserves the actual CI run identity, tested commit, pass/fail counts, failure diagnosis, remediation commit and pending rerun state. It must not be overwritten when a new run occurs: append a new run entry or create a versioned immutable event record, then update only the registry's latest pointer.
+
+### Cross-project record ownership
+
+- NCS is the assessment authority and owns the master assessment interpretation and any future certificate.
+- Cyraduct is the assessed system and owns its implementation-side evidence, source commits and application-control test history.
+- VeriSigilAI/VCB is a separate future assessment target. It was **not assessed** by this Cyraduct run and must not display this result as a VeriSigilAI test.
+- A mirrored public record must preserve the same assessment ID, tested commit, run ID, result status and result digest. Each project may add its own perspective, but may not alter the shared outcome.
+
+The current NCS harness is hosted inside this Cyraduct repository as an integration prototype. A dedicated NCS repository and independent public registry are still required for a clean separation of ownership.
+
 ## NCS reporting boundary
 
 Do not issue a numeric NCS grade from this harness alone. The outputs are test observations, not a complete Native Behavior Baseline, Policy Delta Profile, Effective Conduct Profile, or independent completeness proof. Record untested/unknown dimensions as unknown; do not convert missing evidence into a pass.
