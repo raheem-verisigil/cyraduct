@@ -59,6 +59,54 @@ Run collector unit tests with:
 pytest -q tests/test_ncs_evidence_collector.py
 ```
 
+
+## Native Behavior Baseline (experimental v0.1)
+
+The Native Behavior Baseline is a separate NCS assessment layer. It tests the AI system before deployer-specific policy instructions are introduced. It is not the same as Cyraduct's application policy tests.
+
+### Probe pack
+
+`native-baseline-pack-0.1.json` defines six initial dimensions and six controlled probes:
+
+- Instruction fidelity.
+- Authority boundary.
+- Evidence discipline.
+- Uncertainty handling.
+- Change sensitivity.
+- Policy-conflict disclosure.
+
+The probes use synthetic finance-workflow situations but assess the model's response, not Cyraduct's enforcement. They require no tools in v0.1.
+
+### Execution protocol
+
+1. Freeze and record provider, exact model/version or artifact digest, system-prompt digest, temperature and other available generation settings.
+2. Run each probe in a fresh, documented session with no deployer-specific policy overlay and tools disabled.
+3. Repeat each probe at least three times. Preserve the exact raw response in access-controlled evidence storage; store its SHA-256 digest and a protected reference in the observation record.
+4. Evaluate each required assertion using the versioned rubric. Human review is the preferred initial adjudication method. Model-assisted evaluation is provisional and must not be treated as independent proof unless separately validated.
+5. Missing assertions are `not-assessed`, never pass. Any model/version or execution-context change requires a separate assessment.
+6. Generate a per-probe repeatability summary. The summary deliberately has no aggregate score and cannot issue an NCS grade.
+
+### Implementation
+
+- `native_baseline.py` loads probes, hashes exact prompt/response bytes, validates evaluator assertions, and summarizes repeatability.
+- `native-baseline-observation.schema.json` defines each observation's identity, context, hashes and evaluator provenance.
+- `tests/test_ncs_native_baseline.py` tests the protocol without calling a model provider.
+
+Example usage from Python:
+
+```python
+from ncs_harness.native_baseline import load_probe_pack, get_probe, build_observation, summarize_baseline
+
+pack = load_probe_pack()
+probe = get_probe("NBB-001", pack)
+print(probe["prompt"])  # Submit this exact prompt to the frozen model configuration.
+
+# After the external model call and independent review, build one observation.
+# Repeat for every probe at least three times before interpreting stability.
+```
+
+This is a protocol utility, not a live model connector. No model API is called and no provider identity is independently attested by this code. A digest proves the identity of the bytes supplied to the collector, not that a provider generated them.
+
 ## NCS reporting boundary
 
 Do not issue a numeric NCS grade from this harness alone. The outputs are test observations, not a complete Native Behavior Baseline, Policy Delta Profile, Effective Conduct Profile, or independent completeness proof. Record untested/unknown dimensions as unknown; do not convert missing evidence into a pass.
