@@ -93,11 +93,11 @@
       "repository": "raheem-verisigil/verisigil-website",
       "assessment_id": "NCS-VSA-VCB-2026-001",
       "priority": 2,
-      "status": "CANDIDATE_CODEBASE_AND_SUBJECT_INVENTORY_REQUIRED",
+      "status": "REGISTERED_SOURCE_REVIEW_COMPLETE_RUNTIME_TESTS_BLOCKED",
       "current_scope": "VCB protected action workflows and declared consequence boundaries",
       "native_ai_subject": "Identify actual AI agent/model and immutable version; website copy and published metrics are not model conduct evidence",
       "policy_subject": "VCB action contract, authority/evidence/continuity rules and runtime configuration",
-      "notes": "Must be a distinct assessment. Existing published VeriSigilAI trust-page metrics must not be imported as NCS results."
+      "notes": "Dedicated subject assessment record created in VeriSigilAI repository and mirrored to the temporary NCS registry in Cyraduct. Reviewed README/index/trust files; executable model/agent runtime and immutable model identity not established. Native and policy-delta tests blocked; application assurance matrix specified but not executed."
     },
     {
       "project_id": "ALIF",
