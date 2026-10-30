@@ -1,0 +1,118 @@
+{
+  "schema": "ncs-native-capability-test-pack/0.1",
+  "pack_id": "NCS-NCP-CORE-0.1",
+  "status": "DESIGN_ONLY_NOT_EXECUTED",
+  "scoring": {
+    "scale": "0-4 per dimension",
+    "aggregate_score": "PROHIBITED_IN_V0.1",
+    "missing": "NOT_TESTED or NOT_APPLICABLE; never infer zero"
+  },
+  "dimensions": [
+    {
+      "id": "CAP-01",
+      "name": "Reasoning and inference",
+      "tasks": [
+        "premise entailment",
+        "multi-step deduction",
+        "contradiction detection"
+      ]
+    },
+    {
+      "id": "CAP-02",
+      "name": "Quantitative and mathematical work",
+      "tasks": [
+        "arithmetic",
+        "word problems",
+        "units and uncertainty"
+      ]
+    },
+    {
+      "id": "CAP-03",
+      "name": "Planning and decomposition",
+      "tasks": [
+        "dependency planning",
+        "constraint satisfaction",
+        "plan repair"
+      ]
+    },
+    {
+      "id": "CAP-04",
+      "name": "Coding and technical problem solving",
+      "tasks": [
+        "implement from specification",
+        "debug failing test",
+        "explain security-relevant tradeoff"
+      ]
+    },
+    {
+      "id": "CAP-05",
+      "name": "Factual accuracy and evidence use",
+      "tasks": [
+        "answer from supplied source",
+        "cite supporting passage",
+        "abstain when evidence absent"
+      ]
+    },
+    {
+      "id": "CAP-06",
+      "name": "Tool-use competence",
+      "tasks": [
+        "choose appropriate tool",
+        "construct valid arguments",
+        "verify tool outcome"
+      ]
+    },
+    {
+      "id": "CAP-07",
+      "name": "Context retention and instruction integration",
+      "tasks": [
+        "long-context retrieval",
+        "constraint retention",
+        "resolve conflicting supplied facts"
+      ]
+    },
+    {
+      "id": "CAP-08",
+      "name": "Calibration and uncertainty",
+      "tasks": [
+        "confidence-rated answers",
+        "appropriate abstention",
+        "self-correction after evidence"
+      ]
+    },
+    {
+      "id": "CAP-09",
+      "name": "Robustness and transfer",
+      "tasks": [
+        "paraphrase invariance",
+        "novel task composition",
+        "benign misleading-input resistance"
+      ]
+    },
+    {
+      "id": "CAP-10",
+      "name": "Modality competence",
+      "tasks": [
+        "image/audio/video/structured input only where supported"
+      ]
+    }
+  ],
+  "controls": {
+    "repetitions_minimum": 3,
+    "same_model_and_version_across_comparison": true,
+    "provider_native_safety_controls_retained": true,
+    "deployer_policy_absent_in_native_run": true,
+    "deployed_policy_present_only_in_policy_delta_run": true,
+    "identical_task_pack_for_native_and_policy_runs": true,
+    "record_tool_access_and_retrieval_corpus": true,
+    "report_task_count_and_confidence": true,
+    "preserve_failures_and_retries": true
+  },
+  "prohibited_inferences": [
+    "A capability score proves safe conduct.",
+    "A conduct grade proves high intelligence.",
+    "A single benchmark establishes general intelligence.",
+    "Provider-native safeguards can be bypassed to create a raw baseline.",
+    "Latency or cost is itself an intelligence score."
+  ]
+}
