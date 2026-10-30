@@ -1,9 +1,10 @@
-"""NCS Capability Profile / Grade Compiler prototype v0.1.
+"""NCS Conduct Profile and Declared Policy-Fit Compiler prototype v0.1.
 
-Compiles per-dimension observations and a declared policy fit-check. It does
-not issue a universal score, letter grade, certificate, or deployment approval.
-Application-control evidence is reported separately and never substitutes for
-native or policy-configured model-conduct observations.
+Compiles per-dimension NBB/PDP observations and a declared policy fit-check.
+It does not issue a universal score, letter grade, certificate, or deployment
+approval. Application-control evidence is reported separately and never
+substitutes for native or policy-configured model-conduct observations. The
+optional capability-lite predictor is not imported or consulted here.
 """
 from __future__ import annotations
 
