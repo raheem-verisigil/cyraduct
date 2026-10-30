@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "ncs_harness/**"
+      - "programme/**"
       - "tests/test_ncs_*.py"
       - "app/**"
       - "policy_packs/finance_vendor_change_v1.json"
