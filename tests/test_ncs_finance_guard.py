@@ -110,3 +110,32 @@ def test_ncs_recent_bank_change_escalates_to_conditional():
                       "synthetic supplier invoice")
     assert result["decision"]["decision"] == "conditional"
     assert result["receipt"] is not None
+
+
+
+def test_ncs_wire_above_policy_ceiling_is_denied():
+    result = evaluate(
+        "wire-over-ceiling", "financial_transfer",
+        "initiate_wire_transfer",
+        {"amount": 5000001, "days_since_bank_change": 10, "dual_approval": True},
+        "synthetic payroll",
+    )
+    assert result["decision"]["decision"] == "deny"
+    assert result["receipt"] is None
+
+
+def test_ncs_receipt_revocation_is_visible_to_attested_verifier():
+    result = evaluate(
+        "revocation", "low_risk", "read_public_doc", {},
+        "synthetic revocation test",
+    )
+    receipt_id = result["receipt"]["receipt_id"]
+    revoked = client.post(
+        f"/v1/attested/revoke/{receipt_id}",
+        headers={"X-Cyraduct-Admin-Key": "dev-insecure-admin-key"},
+    )
+    assert revoked.status_code == 200
+    verification = client.get(f"/v1/attested/verify/{receipt_id}")
+    assert verification.status_code == 200
+    assert verification.json()["valid"] is False
+    assert verification.json()["reason"] == "receipt_revoked"
