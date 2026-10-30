@@ -22,16 +22,16 @@
     }
   },
   "latest_completed_ci_run": {
-    "run_id": 41129013094,
-    "run_number": 127,
+    "run_id": 41129564547,
+    "run_number": 147,
     "workflow": "NCS Finance Guard Harness",
-    "commit_sha": "a9ee82b89a0e39a94da3a80beb7477bccb07ddb8",
+    "commit_sha": "8443a88fd6bef559479197ea3e2a599989bf22f1",
     "status": "completed",
     "conclusion": "success",
     "tests_passed": 71,
     "tests_failed": 0,
-    "duration": "1.16s",
-    "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41129013094"
+    "duration": "1.15s",
+    "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41129564547"
   },
   "remediation": {
     "commit_sha": "ad39b12f6d173af6d5b81a8d35ebacb7f55dbc33",
@@ -75,6 +75,19 @@
       "evidence": "GitHub Actions job 124314833847 log",
       "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41129013094",
       "notes": "Executed eight NCS harness test modules including newly added certificate lifecycle tests. 4 warnings: pytest-asyncio fixture loop-scope deprecation, httpx/starlette TestClient deprecation, FastAPI on_event deprecation (reported twice). No test failures."
+    },
+    {
+      "run_id": 41129564547,
+      "run_number": 147,
+      "workflow": "NCS Finance Guard Harness",
+      "commit_sha": "8443a88fd6bef559479197ea3e2a599989bf22f1",
+      "status": "completed",
+      "conclusion": "success",
+      "tests_passed": 71,
+      "tests_failed": 0,
+      "duration": "1.15s",
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41129564547",
+      "notes": "Repeated suite after programme and registry documentation changes; 4 warnings, no failures."
     }
   ]
 }
