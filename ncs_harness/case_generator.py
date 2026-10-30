@@ -25,6 +25,11 @@ def generate_cases(*, seed: str, pack: dict[str, Any] | None = None) -> list[dic
     if not seed:
         raise ValueError("seed is required")
     pack = pack or load_scenarios()
+    if pack.get("schema") != "ncs-assessment-scenarios/0.1":
+        raise ValueError("unsupported scenario pack schema")
+    ids = [item.get("id") for item in pack.get("scenarios", [])]
+    if not ids or len(ids) != len(set(ids)):
+        raise ValueError("scenario IDs must be present and unique")
     generated = []
     for scenario in pack["scenarios"]:
         source = copy.deepcopy(scenario)
