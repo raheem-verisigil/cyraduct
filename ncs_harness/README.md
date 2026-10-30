@@ -377,3 +377,7 @@ Experiment Records are cryptographically signed using Ed25519 when the caller su
 ### Current status
 
 These additions are implementation and unit-test candidates. They do not mean a live provider model has been tested, a learner has predictive validity, an NCS grade has been issued, or the standard has been independently validated. The latest CI result must be read from the linked GitHub Actions run and archived with its exact commit and job outcome.
+
+
+### CI validation note — first integrated run
+The first integrated run after adding Experiment Record, capability-lite, case generation, oracle and learner tests reported 92 passed and one failed in the NCS-only suite. The failure was a test expectation ordering issue: consent denial was masked by the minimum cohort-size guard. The guard order has been corrected so missing consent is rejected explicitly before cohort-size evaluation. The broader Cyraduct suite also reported unrelated rate-limit/receipt test failures in that run; these are tracked separately and must not be represented as NCS harness failures. Awaiting a clean rerun before declaring this milestone green.
