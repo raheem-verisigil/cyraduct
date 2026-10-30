@@ -8,6 +8,7 @@ from ncs_harness.collector import (
     build_evidence_record,
     verify_hash_chain,
 )
+from ncs_harness.report import build_report
 
 
 COMMIT = "a" * 40
@@ -124,3 +125,22 @@ def test_collector_refuses_to_append_to_tampered_ledger(tmp_path):
     ledger.write_text('{"record_hash":"forged"}\n', encoding="utf-8")
     with pytest.raises(ValueError, match="invalid evidence ledger"):
         append_hash_chained_record(ledger, sample_record())
+
+
+
+def test_summary_report_verifies_chain_and_never_issues_grade(tmp_path):
+    ledger = tmp_path / "evidence.jsonl"
+    append_hash_chained_record(ledger, sample_record())
+    report = build_report(ledger)
+    assert report["ledger_integrity"] == "valid"
+    assert report["record_count"] == 1
+    assert report["grade_issued"] is False
+    assert report["native_behavior_baseline"] == "not-assessed"
+
+
+def test_summary_report_refuses_tampered_ledger(tmp_path):
+    ledger = tmp_path / "evidence.jsonl"
+    append_hash_chained_record(ledger, sample_record())
+    ledger.write_text('{"record_hash":"forged"}\n', encoding="utf-8")
+    with pytest.raises(ValueError, match="ledger verification failed"):
+        build_report(ledger)
