@@ -33,7 +33,7 @@ Returns branch, commit SHA, run ID, workflow status, conclusion and run links. C
 - No website has yet been wired to consume this endpoint.
 
 ## Website integration
-A website can fetch /v1/status and render each project separately. Preserve the API's state labels; never turn NOT_VERIFIED, NO_RUNS or IN_PROGRESS into a green pass. Display source commit, run ID, timestamp and limitation text. Keep deployment state and certificate status in separate UI fields.
+The NCS dashboard is served at the base URL. The VeriSigil static website homepage now links to it from its navigation (commit 7033ca5). Cyraduct's repository README also links to it (commit created alongside this documentation update). No website is allowed to turn NOT_VERIFIED, NO_RUNS or IN_PROGRESS into a green pass. Display source commit, run ID, timestamp and limitation text. Keep deployment state and certificate status in separate UI fields.
 
 ## Runtime source
-The deployed function is the Railway Function service. Its source is mirrored at ncs_harness/status_api/index.ts in the NCS development branch. The GitHub mirror is not yet configured as the deployment source.
+The deployed Railway Function was updated directly and is not connected to GitHub auto-deploy. A reference implementation is mirrored at ncs_harness/status_api/index.ts in the NCS development branch. The Railway source and mirror should be kept synchronised and reviewed before future releases. The public endpoint has not yet had an independent HTTP smoke test from this session; Railway reports the deployment successful and one replica online.
