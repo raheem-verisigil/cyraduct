@@ -88,6 +88,50 @@
       "duration": "1.15s",
       "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41129564547",
       "notes": "Repeated suite after programme and registry documentation changes; 4 warnings, no failures."
+    },
+    {
+      "run_id": 41138545105,
+      "run_number": 199,
+      "workflow": "NCS_HARNESS_CI",
+      "commit_sha": "a0d50357c2af70b96072d31d9f55754f404fabc9",
+      "status": "completed",
+      "conclusion": "FAILURE",
+      "tests_passed": 92,
+      "tests_failed": 1,
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41138545105",
+      "archive_path": "ncs_harness/assessment_registry/runs/NCS-CYR-FG-2026-001-CI-199.json",
+      "rerun_status": "PENDING_NOT_YET_OBSERVED"
+    },
+    {
+      "run_id": 41138545104,
+      "run_number": 192,
+      "workflow": "CYRADUCT_FULL_REPOSITORY_CI",
+      "commit_sha": "a0d50357c2af70b96072d31d9f55754f404fabc9",
+      "status": "completed",
+      "conclusion": "FAILURE",
+      "tests_passed": 227,
+      "tests_failed": 5,
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41138545104",
+      "archive_path": "ncs_harness/assessment_registry/runs/CYRADUCT-FULL-SUITE-2026-192.json",
+      "rerun_status": "PENDING_NOT_YET_OBSERVED"
     }
-  ]
+  ],
+  "latest_attempt": {
+    "ncs_harness": {
+      "run_id": 41138545105,
+      "run_number": 199,
+      "conclusion": "failure",
+      "tests_passed": 92,
+      "tests_failed": 1,
+      "rerun_status": "pending"
+    },
+    "full_cyraduct_suite": {
+      "run_id": 41138545104,
+      "run_number": 192,
+      "conclusion": "failure",
+      "tests_passed": 227,
+      "tests_failed": 5,
+      "rerun_status": "pending"
+    }
+  }
 }
