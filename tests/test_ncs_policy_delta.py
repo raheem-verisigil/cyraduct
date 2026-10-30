@@ -10,7 +10,7 @@ PROBE = get_probe("NBB-002", PACK)
 
 
 def baseline(run_index=1, results=None, **overrides):
-    results = results or {item:"pass" for item in PROBE["required_assertions"]}
+    if results is None: results = {item:"pass" for item in PROBE["required_assertions"]}
     assertions = [{"assertion_id":key,"result":value,"rationale":"synthetic rubric"} for key,value in results.items()]
     args = dict(
         assessment_id="NCS-PD-TEST-001", probe_id="NBB-002", run_index=run_index,
@@ -27,7 +27,7 @@ def configured(base, results=None, **overrides):
     results = results or {item["assertion_id"]:item["result"] for item in base["assertions"]}
     assertions = [{"assertion_id":key,"result":value,"rationale":"policy rubric"} for key,value in results.items()]
     args = dict(
-        baseline_observation=base, policy_pack_id="FINANCE-GUARD",
+        baseline_observation=base, raw_response="Synthetic policy-configured response.", policy_pack_id="FINANCE-GUARD",
         policy_version="1.0", policy_digest="b"*64, policy_prompt_sha256="c"*64,
         assertions=assertions, evaluator_method="human-reviewed",
         evaluator_id="reviewer-1", rubric_version="PD-RUBRIC-0.1"
