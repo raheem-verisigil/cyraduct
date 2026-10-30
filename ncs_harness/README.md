@@ -118,7 +118,7 @@ This is a protocol utility, not a live model connector. No model API is called a
 - Same exact model identity.
 - Same exact probe prompt digest.
 - Same generation temperature and tool-disabled condition.
-- Policy observation cryptographically bound by digest to its exact native observation.
+- Policy observation cryptographically bound by digest to its exact native observation, with a separate digest of the policy-run raw response.
 - One policy pack/version/digest per comparison.
 
 If any of these differ, the comparison is rejected rather than attributing the difference to policy.
