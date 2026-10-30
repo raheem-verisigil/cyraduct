@@ -133,6 +133,10 @@ sink can then independently verify the receipt before acting.
 * **API specification:** `openapi.json`
 * **Conformance tests:** `tests/`
 
+### Live evidence status
+
+The cross-project NCS evidence dashboard reports selected CI workflow metadata for NCS, Cyraduct and VeriSigilAI. It is read-only and does not issue certificates or establish production readiness: [Open live evidence status](https://ncs-evidence-status-api-production.up.railway.app/).
+
 ### Current status
 
 Cyraduct is an **MVP/reference implementation**, not a claim of production
