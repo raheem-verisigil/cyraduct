@@ -199,8 +199,8 @@
         "verifier": "examples/sink_guard.py"
       },
       "expected": {
-        "current_observation": "known-compatibility-defect-reproduced",
-        "desired_after_fix": "valid-current-receipt-verifies"
+        "current_observation": "valid-receipt-verifies; tampered-claims-rejected",
+        "lifecycle_note": "revocation-and-consumption-require-a-current-trusted-lifecycle-source"
       },
       "evidence": [
         "receipt-json",
