@@ -132,6 +132,24 @@ def build_evidence_record(
     else:
         status = "partially-verified"
 
+    # A passing policy assertion is not a complete consequence-boundary
+    # observation. Until the sink invocation and before/after state are
+    # observable, cap the record at partially verified.
+    consequence_observed = (
+        sink_invoked is not None
+        and sink_state_before is not None
+        and sink_state_after is not None
+    )
+    receipt_observed = (
+        receipt_id is None
+        or (
+            receipt_signature_valid is not None
+            and receipt_action_binding_valid is not None
+        )
+    )
+    if status == "verified" and (not consequence_observed or not receipt_observed):
+        status = "partially-verified"
+
     policy_delta = None
     if policy_pack is not None:
         policy_delta = {
@@ -196,6 +214,9 @@ def append_hash_chained_record(path: str | Path, record: dict[str, Any]) -> dict
     destination.parent.mkdir(parents=True, exist_ok=True)
     previous_hash = None
     if destination.exists() and destination.stat().st_size:
+        valid, chain_result = verify_hash_chain(destination)
+        if not valid:
+            raise ValueError(f"refusing to append to invalid evidence ledger: {chain_result}")
         last_line = destination.read_text(encoding="utf-8").splitlines()[-1]
         previous = json.loads(last_line)
         previous_hash = previous["record_hash"]
