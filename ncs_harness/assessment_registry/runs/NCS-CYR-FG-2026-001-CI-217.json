@@ -1,0 +1,17 @@
+{
+  "schema": "ncs-assessment-run/0.1",
+  "assessment_id": "NCS-CYR-FG-2026-001",
+  "run_id": "NCS-CYR-FG-2026-001-CI-217",
+  "run_type": "NCS_HARNESS_CI",
+  "workflow_run_id": 41139022127,
+  "workflow_run_number": 217,
+  "commit_sha": "363755dfb3ef8c157263d690fc2854a93e4c0d20",
+  "status": "COMPLETED",
+  "conclusion": "SUCCESS",
+  "tests_passed": 93,
+  "tests_failed": 0,
+  "duration_seconds": 1.22,
+  "environment": "GitHub Actions, Python 3.11, synthetic fixtures, SQLite test database",
+  "evidence_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41139022127",
+  "interpretation": "The expanded NCS harness suite passed, including Experiment Record signing/verification and sharing safeguards, capability-lite metrics, deterministic case generation, oracle checks and Learner v0 safeguards. No live AI model/provider was invoked; no NCS grade or certificate was issued."
+}
