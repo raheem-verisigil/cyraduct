@@ -381,3 +381,12 @@ These additions are implementation and unit-test candidates. They do not mean a 
 
 ### CI validation note — first integrated run
 The first integrated run after adding Experiment Record, capability-lite, case generation, oracle and learner tests reported 92 passed and one failed in the NCS-only suite. The failure was a test expectation ordering issue: consent denial was masked by the minimum cohort-size guard. The guard order has been corrected so missing consent is rejected explicitly before cohort-size evaluation. The broader Cyraduct suite also reported unrelated rate-limit/receipt test failures in that run; these are tracked separately and must not be represented as NCS harness failures. Awaiting a clean rerun before declaring this milestone green.
+
+
+### Confirmed CI result — 30 October 2026
+
+The expanded NCS-only suite completed successfully: 93 passed, 0 failed in 1.22 seconds (GitHub Actions run #217, commit 363755dfb3ef8c157263d690fc2854a93e4c0d20). The machine-readable event is assessment_registry/runs/NCS-CYR-FG-2026-001-CI-217.json.
+
+The full Cyraduct repository suite remains red: 228 passed, 4 failed (run #199). Three failures received HTTP 429 responses in tests that expected normal receipt-query/expiry behavior; the fourth rate-limit test then failed with a missing receipt key. These require isolated rate-limit fixtures or controlled limiter reset. The NCS suite passed independently and does not erase the full-suite failures.
+
+Separate read-only production smoke and LangGraph integration workflows completed successfully on the same commit. They do not constitute a live model assessment or independent security review.
