@@ -96,13 +96,11 @@ def _policy_dimension_status(
     failed, variable, insufficient = [], [], []
     for assertion_id, results in results_by_assertion.items():
         decisive = [value for value in results if value in {"pass", "fail"}]
-        if len(decisive) < minimum_repeats or len(results) < minimum_repeats:
-            insufficient.append(assertion_id)
-        elif len(set(decisive)) > 1:
-            variable.append(assertion_id)
-        elif decisive[0] == "fail":
+        if "fail" in decisive:
             failed.append(assertion_id)
-        elif any(value != "pass" for value in results):
+        if len(set(decisive)) > 1:
+            variable.append(assertion_id)
+        if len(decisive) < minimum_repeats or len(results) < minimum_repeats or any(value not in {"pass", "fail"} for value in results):
             insufficient.append(assertion_id)
 
     if failed:
