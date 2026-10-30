@@ -240,6 +240,47 @@ This record preserves the actual CI run identity, tested commit, pass/fail count
 
 The current NCS harness is hosted inside this Cyraduct repository as an integration prototype. A dedicated NCS repository and independent public registry are still required for a clean separation of ownership.
 
+
+## NCS Internal Assessment Programme
+
+The portfolio plan is maintained in `programme/NCS-INTERNAL-ASSESSMENT-PROGRAMME-0.1.json`.
+
+NCS is the assessment protocol. Cyraduct, VeriSigilAI/VCB and other eligible portfolio projects are separate assessment subjects. The NCS engine itself is tested through a separate self-conformance suite; it cannot independently certify itself.
+
+### Assessment sequence
+
+1. Lock the exact subject: repository commit, artifact digest, model/provider/version, runtime and configuration.
+2. Run the Native Behavior Baseline before applying the deployer policy.
+3. Run paired tests under the exact policy/configuration and compile the Policy Delta Profile.
+4. Observe the application decision and sink/consequence state separately.
+5. Assemble and review the Evidence Weave.
+6. Compile capability profiles and declared-policy fit.
+7. Run change-impact tests and record any required reassessment.
+
+Do not infer an AI test subject from a project proposal or website. A portfolio project enters execution only when its actual AI component, immutable identity, configuration and repeatable test interface are available. A deterministic rules engine or static website is not model conduct.
+
+### Programme project IDs
+
+- `NCS-CYR-FG-2026-001`: Cyraduct Finance Guard (first integration; CI rerun pending).
+- `NCS-VSA-VCB-2026-001`: VeriSigilAI / VCB (separate assessment; subject inventory pending).
+- `NCS-ALIF-2026-001`: ALIF (candidate; codebase and AI subject inventory required).
+- `NCS-FS-2026-001`: FreightSigil (candidate; codebase and AI subject inventory required).
+- `NCS-FC-2026-001`: FinContinuity (candidate; codebase and AI subject inventory required).
+- `NCS-RW-2026-001`: REWAIZE-AI (candidate; codebase and AI subject inventory required).
+- `NCS-AIC-2026-001`: AICaffe (candidate; codebase and AI subject inventory required).
+
+These are reserved programme identifiers, not evidence that assessments have run. Each subject must have a separate immutable run record. NCS self-conformance, Cyraduct, VeriSigilAI and all later subjects must never share a result or certificate.
+
+### Evidence and publication
+
+Each completed run should produce an immutable, machine-readable event record containing assessment ID, run ID, exact commit/artifact digest, model identity, test protocol and version, policy digest, native and policy-configured results, application observations, evidence completeness, failure/limitation details, timestamps and a canonical result digest.
+
+The subject repository should mirror the same record and digest, while retaining its own implementation-side CI and test artifacts. Public status pages should read from a verified registry/event feed. Never publish "passed" from a workflow that is still queued, in progress, incomplete or failed. A mirrored record cannot claim another project was assessed unless it has its own run.
+
+### Internal-to-external gate
+
+Internal portfolio runs establish engineering coverage, not independent validation. Before external pilots, require NCS self-conformance, several materially different completed subjects, reviewed evidence integrity, repeatability checks and a separately conducted external review. No numeric grade or certificate is authorized by this prototype.
+
 ## NCS reporting boundary
 
 Do not issue a numeric NCS grade from this harness alone. The outputs are test observations, not a complete Native Behavior Baseline, Policy Delta Profile, Effective Conduct Profile, or independent completeness proof. Record untested/unknown dimensions as unknown; do not convert missing evidence into a pass.
