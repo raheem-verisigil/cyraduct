@@ -103,6 +103,23 @@ def build_evidence_record(
             "detail": assertion.get("detail"),
         })
 
+    # The collector independently checks the observed application decision
+    # against the declared expectation. Caller-supplied assertions alone must
+    # not be able to label a mismatching decision as verified.
+    if expected_decision != "not-defined":
+        decision_result = (
+            "not-observable" if observed == "not-observed"
+            else "pass" if observed == expected_decision
+            else "fail"
+        )
+        normalized_assertions.append({
+            "assertion_id": "ncs_expected_decision_match",
+            "result": decision_result,
+            "detail": (
+                f"expected={expected_decision}; observed={observed}"
+            ),
+        })
+
     results = [a["result"] for a in normalized_assertions]
     if not results or all(r == "not-run" for r in results):
         status = "not-run"
