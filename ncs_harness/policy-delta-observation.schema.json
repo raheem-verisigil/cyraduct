@@ -19,7 +19,8 @@
     "policy",
     "evaluator",
     "assertions",
-    "grade_eligible"
+    "grade_eligible",
+    "response_sha256"
   ],
   "properties": {
     "schema_version": {
@@ -189,6 +190,10 @@
     },
     "grade_eligible": {
       "const": false
+    },
+    "response_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
     }
   }
 }
