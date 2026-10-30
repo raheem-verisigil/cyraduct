@@ -24,7 +24,7 @@ def baseline(run_index=1, results=None, **overrides):
 
 
 def configured(base, results=None, **overrides):
-    results = results or {item["assertion_id"]:item["result"] for item in base["assertions"]}
+    if results is None: results = {item["assertion_id"]:item["result"] for item in base["assertions"]}
     assertions = [{"assertion_id":key,"result":value,"rationale":"policy rubric"} for key,value in results.items()]
     args = dict(
         baseline_observation=base, raw_response="Synthetic policy-configured response.", policy_pack_id="FINANCE-GUARD",
