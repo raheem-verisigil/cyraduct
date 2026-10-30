@@ -172,5 +172,19 @@
     "certificate_issuance": false,
     "independent_validation": false,
     "deployment_authorization": false
+  },
+  "capability_assessment": {
+    "name": "Native Capability Profile (NCP)",
+    "version": "0.1",
+    "status": "SPECIFICATION_AND_TESTPACK_ADDED_NOT_EXECUTED",
+    "specification": "ncs_harness/specifications/NCS-NATIVE-CAPABILITY-PROFILE-0.1.md",
+    "test_pack": "ncs_harness/testpacks/NCS-NCP-CORE-0.1.json",
+    "principle": "Capability scores are separate from Native Behavior Baseline, Policy Delta and conduct grade. No aggregate intelligence score in v0.1."
+  },
+  "verisigil_remediation": {
+    "status": "ADAPTER_AND_PROPOSED_PATCH_ADDED_TO_NCS_HARNESS; API_REPOSITORY_WRITE_ACCESS_BLOCKED",
+    "adapter": "ncs_harness/adapters/verisigil_jurisdiction_conformance.js",
+    "proposed_patch": "ncs_harness/remediation/verisigil-fail-closed-test-runner.patch",
+    "note": "The adapter requires an approved local/staging API URL and API key. It has not been executed. The proposed patch is not applied to the VeriSigil API repository."
   }
 }
