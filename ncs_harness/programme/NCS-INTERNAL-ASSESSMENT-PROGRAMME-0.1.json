@@ -174,17 +174,63 @@
     "deployment_authorization": false
   },
   "capability_assessment": {
-    "name": "Native Capability Profile (NCP)",
-    "version": "0.1",
-    "status": "SPECIFICATION_AND_TESTPACK_ADDED_NOT_EXECUTED",
-    "specification": "ncs_harness/specifications/NCS-NATIVE-CAPABILITY-PROFILE-0.1.md",
-    "test_pack": "ncs_harness/testpacks/NCS-NCP-CORE-0.1.json",
-    "principle": "Capability scores are separate from Native Behavior Baseline, Policy Delta and conduct grade. No aggregate intelligence score in v0.1."
+    "name": "Capability-Lite Predictor Profile",
+    "version": "0.3",
+    "status": "IMPLEMENTED_AS_EXPERIMENTAL_MODULE_AND_TESTS; NO_LIVE_MODEL_DATA",
+    "features": [
+      "tool_use",
+      "context_instruction_retention",
+      "calibration_abstention",
+      "robustness"
+    ],
+    "reporting": "success/trial rates and 95% Wilson intervals; NOT_TESTED for absent features",
+    "aggregate_intelligence_score": null,
+    "grade_effect": "NONE",
+    "specification": "ncs_harness/specifications/NCS-CAPABILITY-LITE-PREDICTOR-0.3.md",
+    "test_pack": "ncs_harness/testpacks/NCS-CAPABILITY-LITE-0.3.json"
   },
   "verisigil_remediation": {
     "status": "ADAPTER_AND_PROPOSED_PATCH_ADDED_TO_NCS_HARNESS; API_REPOSITORY_WRITE_ACCESS_BLOCKED",
     "adapter": "ncs_harness/adapters/verisigil_jurisdiction_conformance.js",
     "proposed_patch": "ncs_harness/remediation/verisigil-fail-closed-test-runner.patch",
     "note": "The adapter requires an approved local/staging API URL and API key. It has not been executed. The proposed patch is not applied to the VeriSigil API repository."
+  },
+  "assessment_learner": {
+    "version": "0",
+    "status": "OFFLINE_ADVISORY_RESEARCH_PROTOTYPE; NO_TRAINED_PORTFOLIO_MODEL",
+    "module": "ncs_harness/learner_v0.py",
+    "governing_rule": "Learner proposes, rules decide, evidence confirms.",
+    "grade_authority": false,
+    "user_facing_predictions_enabled": false,
+    "minimum_release_gate": {
+      "distinct_model_configurations": 15,
+      "distinct_model_families": 4,
+      "temporal_validation_passed": true
+    },
+    "privacy": {
+      "local_by_default": true,
+      "aggregate_sharing_requires_explicit_opt_in": true,
+      "raw_prompts_outputs_datasets_weights_prohibited": true
+    },
+    "note": "The prototype is not imported by the grading engine. Its predictive validity is not established."
+  },
+  "week1_harness": {
+    "status": "IMPLEMENTED_COMPONENTS_ADDED_CI_VALIDATION_PENDING",
+    "additions": [
+      "signed Experiment Record",
+      "capability-lite rates and Wilson intervals",
+      "deterministic synthetic case generator",
+      "declared-observable oracle",
+      "record/case/oracle templates",
+      "Experiment Record schema",
+      "offline learner v0 research module"
+    ],
+    "test_modules": [
+      "tests/test_ncs_experiment_record.py",
+      "tests/test_ncs_capability_lite.py",
+      "tests/test_ncs_case_generator.py",
+      "tests/test_ncs_oracle.py",
+      "tests/test_ncs_learner_v0.py"
+    ]
   }
 }
