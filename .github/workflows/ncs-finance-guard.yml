@@ -46,4 +46,4 @@ jobs:
           pip install pytest pytest-asyncio
       - name: Run NCS assessment tests
         run: |
-          pytest -q tests/test_ncs_finance_guard.py tests/test_ncs_sink_guard_compat.py tests/test_ncs_evidence_collector.py tests/test_ncs_native_baseline.py tests/test_ncs_policy_delta.py tests/test_ncs_evidence_weave.py tests/test_ncs_grade_compiler.py tests/test_ncs_certificate_lifecycle.py
+          pytest -q tests/test_ncs_finance_guard.py tests/test_ncs_sink_guard_compat.py tests/test_ncs_evidence_collector.py tests/test_ncs_native_baseline.py tests/test_ncs_policy_delta.py tests/test_ncs_evidence_weave.py tests/test_ncs_grade_compiler.py tests/test_ncs_certificate_lifecycle.py tests/test_ncs_experiment_record.py tests/test_ncs_capability_lite.py tests/test_ncs_case_generator.py tests/test_ncs_oracle.py tests/test_ncs_learner_v0.py
