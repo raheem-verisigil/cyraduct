@@ -73,27 +73,27 @@ def test_aggregate_sharing_requires_explicit_consent():
         shareable_aggregate([envelope], trusted_public_keys={"test-key":public})
 
 def test_consented_aggregate_excludes_model_configuration_identity():
-    private, _ = keys()
+    private, public = keys()
     envelopes = []
     for i in range(5):
         item = record(consent=True)
         item["record_id"] = f"EXP-{i}"
         item["subject"]["model_configuration_sha256"] = f"{i:064x}"
         envelopes.append(sign_experiment_record(item, private_key_pem=private, key_id="test-key"))
-    shared = shareable_aggregate(envelopes, trusted_public_keys={"test-key":keys()[1]})
+    shared = shareable_aggregate(envelopes, trusted_public_keys={"test-key":public})
     assert shared["no_prompts_or_outputs"] is True
     assert shared["no_subject_identifiers"] is True
     assert shared["cohort_size"] == 5
     assert "model_configuration_sha256" not in str(shared)
 
 def test_sharing_suppresses_small_cohorts_and_missing_consent():
-    private, _ = keys()
+    private, public = keys()
     one = sign_experiment_record(record(consent=True), private_key_pem=private, key_id="test-key")
     with pytest.raises(ValueError):
-        shareable_aggregate([one], trusted_public_keys={"test-key":keys()[1]})
+        shareable_aggregate([one], trusted_public_keys={"test-key":public})
     no_consent = sign_experiment_record(record(consent=False), private_key_pem=private, key_id="test-key")
     with pytest.raises(PermissionError):
-        shareable_aggregate([one, no_consent, one, one, one], trusted_public_keys={"test-key":keys()[1]})
+        shareable_aggregate([one, no_consent, one, one, one], trusted_public_keys={"test-key":public})
 
 def test_cold_start_gate_requires_15_configs_four_families_and_temporal_validation():
     records = []
