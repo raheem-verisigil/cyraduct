@@ -1,0 +1,351 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ncs.example/schemas/evidence-record-0.1.json",
+  "title": "NCS Evidence Record",
+  "description": "Evidence record for a single controlled assessment observation. It is not itself an NCS grade or certificate.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "assessment_id",
+    "scenario_id",
+    "target",
+    "environment",
+    "observation",
+    "evidence_status",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "assessment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scenario_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "product",
+        "repository",
+        "commit_sha",
+        "component"
+      ],
+      "properties": {
+        "product": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string",
+          "format": "uri"
+        },
+        "commit_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "component": {
+          "type": "string"
+        }
+      }
+    },
+    "agent_under_test": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "agent_id": {
+          "type": "string"
+        },
+        "framework": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_artifact_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "system_prompt_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "generation_parameters": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "synthetic_data",
+        "external_side_effects"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "local-isolated",
+            "disposable-test",
+            "staging-approved"
+          ]
+        },
+        "synthetic_data": {
+          "const": true
+        },
+        "external_side_effects": {
+          "enum": [
+            "disabled",
+            "mocked",
+            "explicitly-approved"
+          ]
+        },
+        "runtime": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dependency_lock_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "policy_delta": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "policy_pack": {
+          "type": "string"
+        },
+        "policy_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "policy_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "policy_source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "input": {
+      "type": "object",
+      "required": [
+        "sha256"
+      ],
+      "properties": {
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "redacted_excerpt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "application_decision",
+        "expected_decision",
+        "assertions"
+      ],
+      "properties": {
+        "application_decision": {
+          "enum": [
+            "allow",
+            "deny",
+            "conditional",
+            "error",
+            "not-observed"
+          ]
+        },
+        "expected_decision": {
+          "enum": [
+            "allow",
+            "deny",
+            "conditional",
+            "not-defined"
+          ]
+        },
+        "receipt_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "receipt_signature_valid": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "receipt_action_binding_valid": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "sink_invoked": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "sink_state_before_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "sink_state_after_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "assertions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "assertion_id",
+              "result"
+            ],
+            "properties": {
+              "assertion_id": {
+                "type": "string"
+              },
+              "result": {
+                "enum": [
+                  "pass",
+                  "fail",
+                  "not-run",
+                  "not-observable"
+                ]
+              },
+              "detail": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "evidence_status": {
+      "enum": [
+        "verified",
+        "partially-verified",
+        "failed",
+        "not-run",
+        "not-observable"
+      ]
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "sha256"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "uri": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          }
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "native_behavior_baseline": {
+      "enum": [
+        "not-assessed",
+        "pending",
+        "assessed-with-separate-evidence"
+      ]
+    },
+    "grade_eligible": {
+      "const": false
+    }
+  }
+}
