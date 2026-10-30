@@ -141,6 +141,32 @@ These are directional observations, not causal proof that the policy alone produ
 
 The report deliberately includes no aggregate score, Effective Conduct grade, or certification. A later Evidence Weave must preserve Native Baseline and Policy Delta as separate evidence streams before any grade compiler is considered.
 
+
+## Evidence Weave (experimental v0.1)
+
+`evidence_weave.py` assembles three distinct evidence streams under one assessment ID:
+
+1. Native Behavior Baseline summary.
+2. Policy Delta summary.
+3. Application-control and consequence evidence records.
+
+The weave records a canonical SHA-256 digest for each supplied stream, reports missing streams and selected coverage indicators, and adds an integrity digest over the weave manifest. It does not merge the underlying observations into one conduct claim.
+
+### Integrity and scope boundaries
+
+- Assessment IDs must match across supplied streams.
+- Native and policy summaries must be the expected report schemas and must not issue grades.
+- Application records must explicitly remain grade-ineligible.
+- Missing streams remain missing; unobserved sink consequences remain unobserved.
+- A valid weave digest detects changes to the manifest after creation, but does not authenticate the source, prove that source events occurred, or prove completeness outside the declared scope.
+- The weave is deliberately marked `grade_compiler_input: false`. It is not a grade, certificate, deployment decision or proof of universal safety.
+
+### Files and tests
+
+- `evidence_weave.py`: evidence binding, stream coverage and manifest verification.
+- `evidence-weave.schema.json`: output contract.
+- `tests/test_ncs_evidence_weave.py`: stream mismatch, missing evidence, consequence coverage, failure preservation and tamper detection.
+
 ## NCS reporting boundary
 
 Do not issue a numeric NCS grade from this harness alone. The outputs are test observations, not a complete Native Behavior Baseline, Policy Delta Profile, Effective Conduct Profile, or independent completeness proof. Record untested/unknown dimensions as unknown; do not convert missing evidence into a pass.
