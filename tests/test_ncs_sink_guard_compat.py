@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 """Known-defect reproducer: current receipts and example sink guard disagree.
 
 The test is intentionally expected to pass only while it observes the documented
