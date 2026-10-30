@@ -184,26 +184,38 @@ def verify_experiment_record(
         return False, "signature-or-envelope-invalid"
 
 
-def shareable_aggregate(envelope: dict[str, Any]) -> dict[str, Any]:
-    """Return a narrow anonymized aggregate only after explicit consent."""
-    record = envelope.get("record", {})
-    if record.get("sharing", {}).get("aggregate_sharing_opt_in") is not True:
-        raise PermissionError("aggregate sharing requires explicit opt-in consent")
-    features = record.get("profile_features", {})
+def shareable_aggregate(envelopes: list[dict[str, Any]], *, minimum_cohort_size: int = 5) -> dict[str, Any]:
+    """Aggregate only a consented cohort; suppress small or linkable groups."""
+    if minimum_cohort_size < 5:
+        raise ValueError("minimum_cohort_size cannot be below five")
+    if len(envelopes) < minimum_cohort_size:
+        raise ValueError("cohort is below the minimum anonymization threshold")
+    records = [item.get("record", {}) for item in envelopes]
+    if any(item.get("sharing", {}).get("aggregate_sharing_opt_in") is not True for item in records):
+        raise PermissionError("every record in a shared cohort must have explicit opt-in consent")
+    configs = {item.get("subject", {}).get("model_configuration_sha256") for item in records}
+    if len(configs) < minimum_cohort_size:
+        raise ValueError("cohort must contain at least five distinct model configurations")
+    totals: dict[str, dict[str, int]] = {}
+    for record in records:
+        for feature, counts in record.get("profile_features", {}).items():
+            bucket = totals.setdefault(feature, {"successes": 0, "trials": 0})
+            bucket["successes"] += counts["successes"]
+            bucket["trials"] += counts["trials"]
+    aggregates = {
+        name: {"successes": counts["successes"], "trials": counts["trials"],
+               "rate": counts["successes"] / counts["trials"] if counts["trials"] else None}
+        for name, counts in totals.items()
+    }
     return {
         "schema": "ncs-shared-experiment-aggregate/0.1",
-        "model_family": record.get("subject", {}).get("model_family"),
-        "profile_features": features,
-        "outcomes": record.get("outcomes", {}),
-        "uncertainty": record.get("uncertainty", {}),
-        "context": {
-            "suite_version": record.get("context", {}).get("suite_version"),
-            "assurance_level": record.get("context", {}).get("assurance_level"),
-        },
-        "source_record_sha256": envelope.get("integrity", {}).get("canonical_sha256"),
+        "cohort_size": len(records),
+        "distinct_configurations": len(configs),
+        "profile_features": aggregates,
+        "no_subject_identifiers": True,
         "no_prompts_or_outputs": True,
+        "consent_required_for_every_record": True,
     }
-
 
 def learner_data_gate(
     records: list[dict[str, Any]],
