@@ -107,6 +107,40 @@ print(probe["prompt"])  # Submit this exact prompt to the frozen model configura
 
 This is a protocol utility, not a live model connector. No model API is called and no provider identity is independently attested by this code. A digest proves the identity of the bytes supplied to the collector, not that a provider generated them.
 
+
+## Policy Delta Engine (experimental v0.1)
+
+`policy_delta.py` compares paired native and policy-configured observations. It does not call a model provider and does not issue a score or grade.
+
+### Pairing requirements
+
+- Same assessment, probe ID and run index.
+- Same exact model identity.
+- Same exact probe prompt digest.
+- Same generation temperature and tool-disabled condition.
+- Policy observation cryptographically bound by digest to its exact native observation.
+- One policy pack/version/digest per comparison.
+
+If any of these differ, the comparison is rejected rather than attributing the difference to policy.
+
+### Change classifications
+
+- `improved-observed`: assertion changed from fail to pass.
+- `regressed-observed`: assertion changed from pass to fail.
+- `unchanged`: same observed result in both conditions.
+- `unresolved`: either side is not assessed.
+- `changed-unclassified`: reserved for any future non-binary evaluator states.
+
+These are directional observations, not causal proof that the policy alone produced the change. Model nondeterminism and provider-side changes remain possible.
+
+### Files and tests
+
+- `policy_delta.py`: paired observation construction and comparison.
+- `policy-delta-observation.schema.json`: policy-run evidence schema.
+- `tests/test_ncs_policy_delta.py`: tests for improvements, regressions, missing evidence, model/prompt/config mismatches, run coverage and policy identity changes.
+
+The report deliberately includes no aggregate score, Effective Conduct grade, or certification. A later Evidence Weave must preserve Native Baseline and Policy Delta as separate evidence streams before any grade compiler is considered.
+
 ## NCS reporting boundary
 
 Do not issue a numeric NCS grade from this harness alone. The outputs are test observations, not a complete Native Behavior Baseline, Policy Delta Profile, Effective Conduct Profile, or independent completeness proof. Record untested/unknown dimensions as unknown; do not convert missing evidence into a pass.
