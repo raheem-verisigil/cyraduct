@@ -55,11 +55,17 @@ class Workbench:
     """SQLite-backed case workflow with explicit human decisions and evidence states."""
 
     def __init__(self, database: str | Path = ":memory:"):
-        self.database = str(database)
+        raw_database = str(database)
+        self._uri = raw_database == ":memory:"
+        self.database = (f"file:ncs-workbench-{uuid.uuid4().hex}?mode=memory&cache=shared"
+                         if self._uri else raw_database)
+        # A shared in-memory database survives across per-operation connections
+        # while this keeper connection remains open.
+        self._keeper = sqlite3.connect(self.database, uri=True) if self._uri else None
         self._init()
 
     def _connect(self):
-        db = sqlite3.connect(self.database)
+        db = sqlite3.connect(self.database, uri=self._uri)
         db.row_factory = sqlite3.Row
         return db
 
