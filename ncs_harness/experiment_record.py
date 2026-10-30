@@ -188,11 +188,11 @@ def shareable_aggregate(envelopes: list[dict[str, Any]], *, minimum_cohort_size:
     """Aggregate only a consented cohort; suppress small or linkable groups."""
     if minimum_cohort_size < 5:
         raise ValueError("minimum_cohort_size cannot be below five")
-    if len(envelopes) < minimum_cohort_size:
-        raise ValueError("cohort is below the minimum anonymization threshold")
     records = [item.get("record", {}) for item in envelopes]
     if any(item.get("sharing", {}).get("aggregate_sharing_opt_in") is not True for item in records):
         raise PermissionError("every record in a shared cohort must have explicit opt-in consent")
+    if len(envelopes) < minimum_cohort_size:
+        raise ValueError("cohort is below the minimum anonymization threshold")
     configs = {item.get("subject", {}).get("model_configuration_sha256") for item in records}
     if len(configs) < minimum_cohort_size:
         raise ValueError("cohort must contain at least five distinct model configurations")
