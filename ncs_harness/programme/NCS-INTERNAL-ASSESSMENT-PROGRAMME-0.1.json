@@ -153,11 +153,11 @@
       "relationship": "NCS × AICaffe",
       "assessment_id": "NCS-AIC-2026-001",
       "priority": 7,
-      "status": "WEBSITE_REPOSITORY_FOUND_AI_COMPONENT_NOT_YET_CONFIRMED",
-      "current_scope": "AI coffee recommendations and offer personalization, if implemented",
+      "status": "WEBSITE_BACKEND_REPOSITORY_FOUND_NO_AI_MODEL_COMPONENT_CONFIRMED",
+      "current_scope": "Not eligible for native AI conduct assessment yet; backend currently documents cafés, products, offers, waitlist and interest APIs.",
       "native_ai_subject": "Exact model/agent and version",
       "policy_subject": "Offer eligibility, consent, personalization and membership rules",
-      "notes": "Assess only the implemented AI recommendation/personalization component, not static website sections.",
+      "notes": "Repository README describes a marketing site and conventional Node/PostgreSQL backend. No implemented model/agent is established by the inspected README. Retain as a candidate for future AI recommendation or personalization module assessment, not as a current NCS AI subject.",
       "repository": "raheem-verisigil/aicaffe-website"
     }
   ],
