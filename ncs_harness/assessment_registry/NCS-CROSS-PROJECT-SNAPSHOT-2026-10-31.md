@@ -77,9 +77,15 @@ The proof report is dated 2026-09-03 and describes its own V3/V4/V5 evidence. Th
 - Dedicated NCS Railway project/service: not found in the inspected Railway projects. No production NCS workbench exists to deploy.
 - No project website was updated with new live test badges or live result feeds in this assessment.
 
-## 5. Required next actions
+## 5. Follow-up remediation committed after the snapshot
 
-1. Fix the Cyraduct test isolation and consent/cohort precedence test without weakening privacy thresholds or production rate limiting.
+- Commit `4723b18abb0802431d69532b73b901fbae2d0655` adds `tests/conftest.py` to reset the shared SlowAPI in-memory limiter storage around each test. This is intended to isolate test quotas without changing production rate limits.
+- This fixture has **not yet been executed in CI**. The PR currently targets `ncs/finance-guard-assessment`, while the inspected workflow is configured for pull requests targeting `main`; no check run was attached to the new head commit when inspected. Do not treat this mitigation as verified.
+- The consent/cohort precedence failure remains unresolved.
+
+## 6. Required next actions
+
+1. Run the complete Cyraduct suite on the current PR head and verify whether the limiter fixture removes the four order-dependent failures; do not weaken privacy thresholds or production rate limiting.
 2. Add executable oracles for VEC-043–VEC-058 and remove pass-by-default behavior in both Node runner and SDK.
 3. Add a required Node conformance CI job and make endpoint tests report failures honestly; do not use continue-on-error for required assurance gates.
 4. Establish a dedicated NCS repository and runnable workbench service before deploying NCS to Railway.
