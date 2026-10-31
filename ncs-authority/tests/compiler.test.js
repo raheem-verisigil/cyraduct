@@ -1,0 +1,18 @@
+'use strict';
+const assert=require('node:assert/strict'),cp=require('node:child_process'),path=require('node:path');
+const compiler=path.join(__dirname,'..','compiler','compile-assessment.js');
+const run=x=>{const p=cp.spawnSync(process.execPath,[compiler],{input:JSON.stringify(x),encoding:'utf8'});assert.equal(p.status,0,p.stderr);return JSON.parse(p.stdout);};
+const stages=['artifact_identity','build_record','native_baseline','policy_delta','independent_review'].map(name=>({name,status:'COMPLETED'}));
+let x=run({assessment_id:'NCS-READY-001',decision_status:'IN_PROGRESS',stages});
+assert.equal(x.status,'READY_FOR_AUTHORIZED_REVIEW');assert.equal(x.grade,null);assert.equal(x.certificate,null);
+x=run({assessment_id:'NCS-BLOCK-001',decision_status:'IN_PROGRESS',stages:[]});
+assert.equal(x.status,'BLOCKED_INCOMPLETE_EVIDENCE');assert.equal(x.missing_or_incomplete_stages.length,5);
+x=run({assessment_id:'NCS-DUP-001',decision_status:'IN_PROGRESS',stages:[...stages,{name:'native_baseline',status:'COMPLETED'}]});
+assert.equal(x.status,'INVALID_ASSESSMENT');assert.match(x.validation_errors.join(' '),/Duplicate stage/);
+x=run({assessment_id:'NCS-STATE-001',decision_status:'MAGIC',stages});
+assert.equal(x.status,'INVALID_ASSESSMENT');assert.match(x.validation_errors.join(' '),/Invalid decision_status/);
+x=run({assessment_id:'NCS-STAGE-001',decision_status:'IN_PROGRESS',stages:[{name:'native_baseline',status:'DONE'}]});
+assert.equal(x.status,'INVALID_ASSESSMENT');assert.match(x.validation_errors.join(' '),/invalid status/);
+x=run({assessment_id:'NCS-REVOKED-001',decision_status:'REVOKED',stages});
+assert.equal(x.status,'BLOCKED_INCOMPLETE_EVIDENCE');
+console.log('NCS compiler validation tests: 6 passed, 0 failed');
