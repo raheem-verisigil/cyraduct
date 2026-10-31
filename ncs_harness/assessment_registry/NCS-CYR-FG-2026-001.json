@@ -105,5 +105,17 @@
       "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41146994115",
       "notes": "PR-head verification on 31 October 2026; selected NCS Finance Guard synthetic harness only. Four warnings; no failures. No live model-provider assessment, grade, certificate or independent validation."
     }
-  ]
+  ],
+  "shared_ncs_verification": {
+    "authority_package_status": "PRE_ALPHA_STAGED_PENDING_DEDICATED_REPOSITORY",
+    "portal_preview": "https://github.com/raheem-verisigil/cyraduct/tree/ncs/experiment-runner-v0.1/ncs-authority/portal",
+    "project_status_page": "https://github.com/raheem-verisigil/cyraduct/blob/ncs/experiment-runner-v0.1/docs/NCS-ASSESSMENT-STATUS.html",
+    "project_report": "ncs-authority/reports/CYRADUCT-ASSESSMENT-STATUS-2026-10-31.md",
+    "portal_limitations": [
+      "not_production_partner_service",
+      "no_authentication_or_durable_portal_challenge_registry",
+      "no_signature_or_transparency_log_verification",
+      "no_grade_or_certificate_issuance"
+    ]
+  }
 }
