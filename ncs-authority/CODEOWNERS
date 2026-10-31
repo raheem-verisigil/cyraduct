@@ -1,0 +1,8 @@
+# Interim CODEOWNERS. Replace with independent reviewer teams before public authority operation.
+# Project maintainer ownership is administrative only and is NOT independent review.
+* @raheem-verisigil
+/spec/ @raheem-verisigil
+/schemas/ @raheem-verisigil
+/compiler/ @raheem-verisigil
+/verifier/ @raheem-verisigil
+/certificates/ @raheem-verisigil
