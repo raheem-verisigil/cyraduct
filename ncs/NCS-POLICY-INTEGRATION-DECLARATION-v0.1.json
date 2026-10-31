@@ -1,0 +1,54 @@
+{
+  "schema_version": "ncs-product-adapter/0.1",
+  "product_id": "cyraduct",
+  "product_name": "Cyraduct",
+  "product_version": "MVP/reference implementation — version to be pinned per test run",
+  "owner": "Raheem / project owner — legal entity and authority to be confirmed before external assessment",
+  "repository_ref": "https://github.com/raheem-verisigil/cyraduct",
+  "ncs_roles": [
+    "EVIDENCE_PROVIDER",
+    "CONTROL_IMPLEMENTER",
+    "VERIFIER"
+  ],
+  "supported_policy_requirement_types": [
+    "PERMIT",
+    "RESTRICT",
+    "PROHIBIT",
+    "ESCALATE",
+    "HUMAN_REVIEW"
+  ],
+  "control_mappings": [
+    {
+      "policy_requirement_id": "CANDIDATE-NCS-POLICY-CONSEQUENCE-AUTHORITY-001",
+      "control_id": "Cyraduct action evaluation, signed authorization receipt and downstream broker receipt validation",
+      "enforcement_mode": "AUTOMATED",
+      "test_reference": "tests/ and docs/FINANCE_GUARD.md",
+      "evidence_reference": "signed authorization receipt, receipt verification result, broker execution decision and tamper-evident audit record"
+    }
+  ],
+  "evidence_outputs": [
+    "signed authorization receipt",
+    "receipt verification result",
+    "broker enforcement decision",
+    "action/agent binding result",
+    "audit record"
+  ],
+  "change_events": [
+    "policy pack version change",
+    "receipt schema or signing-key change",
+    "broker enforcement path change",
+    "action-envelope or consequence-rule change",
+    "integration/environment change"
+  ],
+  "limitations": [
+    "MVP/reference implementation; not a production-readiness claim",
+    "policy packs are hand-written JSON; a policy language/visual policy studio is not yet built",
+    "evidence references on a receipt do not yet automatically alter policy permissions",
+    "only explicitly integrated execution sinks are covered",
+    "candidate NCS mapping has not been independently assessed"
+  ],
+  "authorization_and_disclosure": {
+    "test_authorization_ref": null,
+    "publication_permission_status": "NOT_GRANTED"
+  }
+}
