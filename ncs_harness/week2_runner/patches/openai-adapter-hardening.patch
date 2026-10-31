@@ -1,0 +1,91 @@
+diff --git a/ncs_exp/__main__.py b/ncs_exp/__main__.py
+index 4d50448..7e136f5 100644
+--- a/ncs_exp/__main__.py
++++ b/ncs_exp/__main__.py
+@@ -29,7 +29,8 @@ def cmd_build(a):
+     m = casegen.build_all(a.out)
+-    db = json.load(open(os.path.join(a.out, "accounts.json")))
++    with open(os.path.join(a.out, "accounts.json"), encoding="utf-8") as f:
++        db = json.load(f)
+@@ -51,12 +52,18 @@ def cmd_run(a):
+-    arm = json.load(open(a.arm)) if a.arm else {"name": "none"}
++    if a.arm:
++        with open(a.arm, encoding="utf-8") as f:
++            arm = json.load(f)
++    else:
++        arm = {"name": "none"}
+     base = os.path.dirname(os.path.abspath(a.arm)) if a.arm else "."
+     if arm.get("policy_file"):
+-        arm["policy_text"] = open(os.path.join(base, arm["policy_file"])).read().strip()
++        with open(os.path.join(base, arm["policy_file"]), encoding="utf-8") as f:
++            arm["policy_text"] = f.read().strip()
+     if arm.get("controls_file"):
+-        arm["controls"] = json.load(open(os.path.join(base, arm["controls_file"])))
++        with open(os.path.join(base, arm["controls_file"]), encoding="utf-8") as f:
++            arm["controls"] = json.load(f)
+diff --git a/ncs_exp/models.py b/ncs_exp/models.py
+index 630a2b7..0d45418 100644
+--- a/ncs_exp/models.py
++++ b/ncs_exp/models.py
+@@ -105,6 +105,10 @@ class OpenAICompatModel(Model):
+         super().__init__(name, **kw)
+         self.base_url = base_url.rstrip("/")
+         self.api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
++        if not self.base_url.startswith(("https://", "http://")):
++            raise ProviderError("base_url must be an absolute HTTP(S) URL")
++        if not self.api_key and self.base_url.startswith("https://api.openai.com"):
++            raise ProviderError("OPENAI_API_KEY is not set; configure it in the runner environment")
+@@ -132,14 +136,25 @@ class OpenAICompatModel(Model):
+         headers = {"authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+         r = _post(f"{self.base_url}/chat/completions", headers, body)
++        if not isinstance(r, dict) or not r.get("choices"):
++            raise ProviderError("provider response is missing choices")
+         if r.get("model"):
+             self.observed_ids.add(r["model"])
+-        msg = r["choices"][0]["message"]
++        msg = (r["choices"][0] or {}).get("message") or {}
++        content = msg.get("content") or ""
++        if isinstance(content, list):
++            content = "\n".join(x.get("text", "") for x in content
++                                  if isinstance(x, dict) and x.get("type") == "text")
++        if not isinstance(content, str):
++            raise ProviderError("provider response content has an unsupported shape")
+         calls = []
+         for tc in msg.get("tool_calls") or []:
+             try:
+                 args = json.loads(tc["function"].get("arguments") or "{}")
+-            except ValueError:
+-                args = {}
++            except (KeyError, TypeError, ValueError) as e:
++                raise ProviderError("provider returned malformed tool-call arguments") from e
++            if not isinstance(args, dict):
++                raise ProviderError("provider tool-call arguments must be a JSON object")
+             calls.append({"id": tc["id"], "name": tc["function"]["name"], "args": args})
+-        return {"text": (msg.get("content") or "").strip(), "tool_calls": calls}
++        return {"text": content.strip(), "tool_calls": calls}
+diff --git a/tests/test_runner.py b/tests/test_runner.py
+index f719d58..38c4789 100644
+--- a/tests/test_runner.py
++++ b/tests/test_runner.py
+@@ -247,6 +247,19 @@ class AdapterTests(unittest.TestCase):
+             out = m.chat("sys", [{"role": "user", "text": "hi"}], [])
+         self.assertEqual(out["tool_calls"][0]["args"], {"query": "y"})
++
++    def test_openai_requires_key_for_official_endpoint(self):
++        with mock.patch.dict(os.environ, {"OPENAI_API_KEY": ""}, clear=False):
++            with self.assertRaisesRegex(models.ProviderError, "OPENAI_API_KEY"):
++                models.OpenAICompatModel("model", base_url="https://api.openai.com/v1")
++
++    def test_openai_rejects_malformed_tool_arguments(self):
++        reply = {"model": "srv", "choices": [{"message": {"content": None, "tool_calls": [
++            {"id": "9", "function": {"name": "search_kb", "arguments": "not-json"}}]}}]}
++        m = models.OpenAICompatModel("m", base_url="http://localhost:1/v1")
++        with mock.patch.object(models, "_post", return_value=reply):
++            with self.assertRaisesRegex(models.ProviderError, "malformed tool-call"):
++                m.chat("sys", [{"role": "user", "text": "hi"}], [])
++
++    def test_openai_rejects_empty_response(self):
++        m = models.OpenAICompatModel("m", base_url="http://localhost:1/v1")
++        with mock.patch.object(models, "_post", return_value={"choices": []}):
++            with self.assertRaisesRegex(models.ProviderError, "missing choices"):
++                m.chat("sys", [{"role": "user", "text": "hi"}], [])
