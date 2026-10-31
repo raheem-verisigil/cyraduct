@@ -1,34 +1,28 @@
-# NCS OpenAI Provider Runbook (v0.1)
+# NCS OpenAI Provider Runbook (v0.2)
 
-Status: adapter implementation present in the NCS experiment harness; live provider execution is pending a user-created API key and exact model selection.
+Status: the uploaded `ncs_experiment_harness.zip` already contains a standard-library OpenAI-compatible Chat Completions adapter. Its original adapter had not been tested against a live provider. The hardening patch linked below was applied to a working copy and passed the full local test suite; it has not yet been merged into the uploaded ZIP or the separate provider-neutral `week2_runner` prototype.
 
 ## Provider contract
 
-The harness uses the OpenAI-compatible Chat Completions interface:
 - Base URL: `https://api.openai.com/v1`
 - Request path: `/chat/completions`
-- Authentication: server-side `Authorization: Bearer $OPENAI_API_KEY`
-- Model identifier: explicit CLI argument; record the exact returned model identifier in the run evidence.
+- Authentication: `Authorization: Bearer $OPENAI_API_KEY`
+- Model: pass an exact model ID explicitly; capture the provider-returned model ID.
+- The key must never appear in source code, CLI arguments, manifests, transcripts or logs.
 
-The adapter must never write the API key to run manifests, transcripts, logs, or Git.
+## Secret setup
 
-## Required environment
+Create an API key at https://platform.openai.com/api-keys. Configure API billing and a project spending limit. Set `OPENAI_API_KEY` in the shell or secret manager used by the runner. Do not paste it into chat or commit it to Git.
 
-Set these only in the runner's secure environment:
-- `OPENAI_API_KEY` — secret API key created in the OpenAI API Platform.
-- Do not commit a `.env` containing the key.
-- Do not pass the key as a command-line argument.
+## Development-only smoke test
 
-## First live smoke test
-
-Use a small development-only subset first. Do not use the held-out set for adapter debugging.
+Run from the extracted `ncs_exp/` project root, after setting the secret in the runner environment. Replace the model placeholder with an exact model ID enabled for your API project.
 
 ```bash
-export OPENAI_API_KEY='(set securely in your shell or secret manager)'
 python -m ncs_exp run \
   --provider openai \
   --base-url https://api.openai.com/v1 \
-  --model '<exact model identifier>' \
+  --model '<exact-model-id>' \
   --cases build/dev_cases.jsonl \
   --data-dir build \
   --arm arms/none.json \
@@ -41,27 +35,36 @@ python -m ncs_exp run \
   --workers 1
 ```
 
-Then inspect transcripts and verify the evidence:
+Then verify and inspect the run:
 
 ```bash
 python -m ncs_exp verify runs/openai-smoke --cases build/dev_cases.jsonl
 python -m ncs_exp summarize runs/openai-smoke
 ```
 
-A successful smoke test only establishes that the adapter can execute this limited sample and produce verifiable run evidence. It does not validate the policy oracles, establish model safety, or count as the preregistered experiment.
+Do not add `--pinned` unless the provider's exact model version is genuinely fixed and evidenced. The model name alone does not prove an immutable backend snapshot.
 
-## Before the full experiment
+## Adapter hardening completed in working copy
 
-1. Confirm model access, exact model ID, project budget/spend limit and API rate limits.
-2. Run the smoke test and inspect errors, tool calls, transcripts, output truncation and observed model ID.
-3. Validate heuristic oracles against hand-labelled outputs. Keep judge-required rules unresolved until their separate validation threshold is met.
-4. Freeze and hash the arms, case suite, runner version and configuration before any held-out evaluation.
-5. Use the preregistration's held-out protocol only after all development and adapter debugging are complete.
+The patch at [openai-adapter-hardening.patch](patches/openai-adapter-hardening.patch) makes the following changes:
+- Fails early if the official OpenAI endpoint is selected without `OPENAI_API_KEY`.
+- Validates that the base URL is absolute HTTP(S).
+- Treats missing/empty provider choices as a provider error.
+- Supports text-block content arrays returned by some compatible endpoints.
+- Rejects malformed or non-object tool-call JSON instead of silently converting it to an empty argument object.
+- Closes CLI file handles explicitly, eliminating the ResourceWarning observed in the prior test run.
+- Adds regression tests for missing credentials, malformed tool arguments and empty provider responses.
 
-## Safety and evidence boundaries
+Local verification on the modified working copy: **64 tests passed**, including a strict ResourceWarning check. This is adapter/unit and mock verification only; no live OpenAI request has been made.
 
-- Never store API keys in the repository, experiment records or evidence manifests.
-- Do not include raw prompts, customer data or raw model outputs in learner Experiment Records.
-- Do not describe a smoke test as a completed benchmark.
-- Do not set `--pinned` unless the provider/model version is genuinely pinned. Otherwise the evidence must disclose that limitation.
-- OpenAI API usage is billed separately from a ChatGPT subscription; set a project budget/alert before running.
+## Before a full assessment
+
+1. Run the five-case development smoke test.
+2. Inspect transcripts, tool-call arguments, provider errors, observed model ID and token/usage metadata where available.
+3. Hand-label outputs to validate the heuristic oracles; keep judge-required rules unresolved until their preregistered validation threshold is met.
+4. Freeze and hash the suite, policy arms, runner and configuration.
+5. Only then begin the preregistered held-out experiment. Do not use held-out cases for adapter debugging.
+
+## Evidence limits
+
+A smoke test verifies only that the limited request/response path works and produces evidence. It is not a model safety result, a policy-fit conclusion, or a completed benchmark. The existing harness still has known oracle limitations and its signed manifest does not by itself establish signer identity.
