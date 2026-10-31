@@ -1,0 +1,51 @@
+{
+  "schema": "ncs-assessment-run/0.1",
+  "assessment_id": "NCS-CYR-FG-2026-001",
+  "run_id": "NCS-CYR-FG-2026-001-CI-240",
+  "run_type": "CI_SYNTHETIC_APPLICATION_AND_HARNESS",
+  "run_status": "COMPLETED",
+  "source_repository": "raheem-verisigil/cyraduct",
+  "source_commit": "726babe4f76344493e7a340f260f49b1cd099a07",
+  "workflow": {
+    "name": "NCS Finance Guard Harness",
+    "run_number": 240,
+    "run_id": 41146994115,
+    "conclusion": "success",
+    "url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41146994115"
+  },
+  "test_counts": {
+    "passed": 93,
+    "failed": 0,
+    "warnings": 4,
+    "duration_seconds": 1.27
+  },
+  "scope": [
+    "Selected synthetic NCS Finance Guard assessment harness tests",
+    "Assessment-registry and harness CI validation"
+  ],
+  "not_in_scope_or_not_proven": [
+    "Live model-provider invocation",
+    "Native Behavior Baseline for a deployed AI model",
+    "Policy Delta for a live model/agent",
+    "Real payment or production sink execution",
+    "Independent partner reproduction",
+    "NCS grade or certificate",
+    "Production readiness or regulatory certification"
+  ],
+  "related_product_suite": {
+    "workflow": "Cyraduct tests",
+    "run_number": 226,
+    "run_id": 41146994204,
+    "conclusion": "success",
+    "tests_passed": 235,
+    "tests_failed": 0,
+    "warnings": 4,
+    "duration_seconds": 3.31,
+    "url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41146994204",
+    "scope_note": "Cyraduct full product test suite; distinct from the selected NCS harness result."
+  },
+  "evidence_interpretation": "CI confirms the selected synthetic harness and Cyraduct product test suites passed on the recorded source commit. It does not establish native AI model conduct, production security, or independent validation.",
+  "grade_issued": false,
+  "certificate_issued": false,
+  "independent_review_completed": false
+}
