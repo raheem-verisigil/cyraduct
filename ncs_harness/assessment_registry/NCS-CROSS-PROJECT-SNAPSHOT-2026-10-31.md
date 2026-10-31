@@ -94,3 +94,21 @@ The proof report is dated 2026-09-03 and describes its own V3/V4/V5 evidence. Th
 - VeriSigilAI/VCB: no complete fresh runtime test run; static audit found material conformance-test coverage gaps in the legacy API repository.
 - NCS workbench/compiler: architecture specifications committed to draft PR #29; not yet implemented.
 - Railway deployment: no NCS deployment or website result-feed deployment has been performed.
+
+
+## Verification addendum — 31 October 2026 (run metadata rechecked)
+
+The PR-head commit `726babe4f76344493e7a340f260f49b1cd099a07` has two completed GitHub Actions workflows associated with it:
+
+- **NCS Finance Guard Harness**, run #240 / ID `41146994115`: conclusion `success`; job `ncs-finance-guard`; log confirms **93 passed, 0 failed, 4 warnings** (1.27 seconds).
+- **Cyraduct tests**, run #226 / ID `41146994204`: conclusion `success`; job `test`; log confirms **235 passed, 0 failed, 4 warnings** (3.31 seconds).
+
+These are CI results on the PR-head commit, not evidence of a live model-provider assessment, NCS certificate, production readiness, or independent review. The CI warnings include dependency/framework deprecations and the GitHub Actions Node.js 20-to-24 transition notice; they did not fail either job.
+
+### VeriSigilAI / VCB — unchanged assessment boundary
+
+The NCS assessment record `NCS-VSA-VCB-2026-001` remains registered, but no runtime assessment has been completed. The 16 jurisdiction vectors VEC-043–VEC-058 remain a **static test-harness coverage finding** in the legacy API repository. No product-code remediation or fresh runtime CI was performed because write access to `raheem-verisigil/verisigil-api` was denied. Native Behavior Baseline and Policy Delta remain blocked until a specific AI model/agent workload, immutable identity and reproducible invocation path are supplied. Application assurance scenarios remain unexecuted in this NCS run.
+
+### Release decision
+
+Keep PR #29 unmerged and the evidence surfaces non-certifying until review and partner reproduction. Do not publish a grade, certificate, model-conduct pass, or production-readiness claim from these CI results.
