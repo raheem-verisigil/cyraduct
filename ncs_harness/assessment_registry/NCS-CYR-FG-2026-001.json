@@ -4,7 +4,7 @@
   "title": "NCS × Cyraduct Finance Guard — Initial Integration Assessment",
   "authority": {
     "assessment_protocol": "Native Conduct Standard (NCS)",
-    "master_record_repository": "PENDING_DEDICATED_NCS_REPOSITORY",
+    "master_record_repository": "raheem-verisigil/naconstan",
     "current_harness_location": "raheem-verisigil/cyraduct/ncs_harness/",
     "authority_boundary": "NCS owns assessment protocol, evidence interpretation and eventual certification decisions; Cyraduct owns tested-system implementation and application-control evidence."
   },
@@ -107,15 +107,20 @@
     }
   ],
   "shared_ncs_verification": {
-    "authority_package_status": "PRE_ALPHA_STAGED_PENDING_DEDICATED_REPOSITORY",
-    "portal_preview": "https://github.com/raheem-verisigil/cyraduct/tree/ncs/experiment-runner-v0.1/ncs-authority/portal",
+    "authority_repository": "https://github.com/raheem-verisigil/naconstan",
+    "authority_package_status": "DEDICATED_PRIVATE_REPOSITORY_PRE_ALPHA",
+    "authority_branch": "main",
+    "authority_ci_run": "https://github.com/raheem-verisigil/naconstan/actions/runs/41204731119",
+    "latest_governance_ci_run": "https://github.com/raheem-verisigil/naconstan/actions/runs/41211453109",
+    "portal_preview": "https://github.com/raheem-verisigil/naconstan/blob/main/ncs-authority/portal/index.html",
     "project_status_page": "https://github.com/raheem-verisigil/cyraduct/blob/ncs/experiment-runner-v0.1/docs/NCS-ASSESSMENT-STATUS.html",
     "project_report": "ncs-authority/reports/CYRADUCT-ASSESSMENT-STATUS-2026-10-31.md",
-    "portal_limitations": [
-      "not_production_partner_service",
-      "no_authentication_or_durable_portal_challenge_registry",
-      "no_signature_or_transparency_log_verification",
-      "no_grade_or_certificate_issuance"
+    "limitations": [
+      "private repository; partner access requires explicit collaborator access",
+      "pre-alpha browser-local portal; no authenticated partner accounts or durable case management",
+      "no signature or transparency-log verification",
+      "no grade or certificate issuance",
+      "independent governance and branch protection not yet established"
     ]
   }
 }
