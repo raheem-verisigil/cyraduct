@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ncs.example/spec/experiment-record-0.1.schema.json",
+  "title": "NCS Experiment Record minimum envelope",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "model_configuration",
+    "policy",
+    "suite",
+    "environment",
+    "outcomes",
+    "uncertainty",
+    "evidence_manifest",
+    "integrity"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_configuration": {
+      "type": "object",
+      "required": [
+        "provider",
+        "model_id",
+        "version",
+        "configuration_sha256"
+      ],
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "model_id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "configuration_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "serving_settings_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "required": [
+        "policy_sha256"
+      ],
+      "properties": {
+        "policy_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "rule_set_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "suite": {
+      "type": "object",
+      "required": [
+        "version",
+        "sha256"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "environment": {
+      "type": "object",
+      "required": [
+        "environment_id",
+        "assurance_level"
+      ],
+      "properties": {
+        "environment_id": {
+          "type": "string"
+        },
+        "assurance_level": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "outcomes": {
+      "type": "object",
+      "required": [
+        "attempted",
+        "effected",
+        "indeterminate"
+      ],
+      "properties": {
+        "attempted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "effected": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "indeterminate": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "uncertainty": {
+      "type": "object",
+      "description": "Counts, intervals and method; no fabricated confidence intervals."
+    },
+    "evidence_manifest": {
+      "type": "object",
+      "required": [
+        "sha256"
+      ],
+      "properties": {
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "integrity": {
+      "type": "object",
+      "required": [
+        "algorithm",
+        "digest",
+        "signature_status"
+      ],
+      "properties": {
+        "algorithm": {
+          "const": "sha256"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "signature_status": {
+          "enum": [
+            "UNSIGNED",
+            "SIGNED_UNVERIFIED",
+            "VERIFIED"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
