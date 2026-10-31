@@ -1,0 +1,21 @@
+name: NCS Authority Package Checks
+on:
+  push:
+    branches: [ncs/experiment-runner-v0.1]
+    paths: ['ncs-authority/**', '.github/workflows/ncs-authority.yml']
+  pull_request:
+    paths: ['ncs-authority/**', '.github/workflows/ncs-authority.yml']
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate JSON schemas parse
+        run: node -e "for (const p of ['ncs-authority/schemas/evidence-manifest.schema.json','ncs-authority/schemas/assessment-record.schema.json']) JSON.parse(require('fs').readFileSync(p,'utf8')); console.log('Schema JSON parse passed')"
+      - name: Syntax check
+        run: node --check ncs-authority/compiler/compile-assessment.js && node --check ncs-authority/verifier/verify-manifest.js && node --check ncs-authority/tests/smoke.test.js
+      - name: Run authority smoke tests
+        run: node ncs-authority/tests/smoke.test.js
