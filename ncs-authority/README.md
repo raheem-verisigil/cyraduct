@@ -26,3 +26,11 @@ The assessment runner is not yet connected to live model providers. The verifier
 
 ## Transfer plan
 Create a dedicated repository named `native-conduct-standard`, move this package without product-specific dependencies, enable branch protection and CODEOWNERS, and appoint an independent standards/review group before any public certification.
+
+
+## Governance and repository transfer
+- [Governance operating controls](governance/GOVERNANCE-OPERATING-CONTROLS-v0.1.md)
+- [Dedicated repository transfer checklist](governance/DEDICATED-REPOSITORY-TRANSFER-CHECKLIST.md)
+- [Interim CODEOWNERS](CODEOWNERS) — current maintainer ownership is administrative, not independent review.
+
+Public NCS certification remains prohibited until independent governance and repository controls are established. The connected GitHub integration used for this work does not expose repository creation or branch-protection configuration; the transfer checklist records the remaining owner action.
