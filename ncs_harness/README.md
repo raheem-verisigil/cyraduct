@@ -2,6 +2,18 @@
 
 Status: pilot harness draft. This is an NCS assessment adapter, not an NCS certificate and not a claim of independent certification.
 
+## Governance Operations Workbench (prototype v0.1)
+
+The first local workflow/domain slice is in `workbench/`. It registers AI assurance cases against a frozen model-configuration digest, assigns multidisciplinary roles, tracks risk gaps, records evidence provenance and explicit human decisions, marks evidence stale after material configuration changes, exports a case manifest and verifies a per-case hash-chained event history.
+
+Run its focused tests from the repository root:
+
+```bash
+python -m pytest -q tests/test_ncs_workbench.py
+```
+
+This is a local SQLite prototype. It does not yet provide a production API/UI, authentication, tenant isolation, verified delegated authority, protected evidence vault, external signed checkpoint or deployment approval. See `workbench/README.md` for the exact limits. The workbench records governance operations; it does not determine legal compliance.
+
 ## Purpose
 
 Exercise Cyraduct's Finance Guard policy and receipt boundaries with synthetic vendor/payment data. Keep three evidence classes separate:
