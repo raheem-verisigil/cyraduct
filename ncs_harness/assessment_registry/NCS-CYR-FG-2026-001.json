@@ -22,16 +22,18 @@
     }
   },
   "latest_completed_ci_run": {
-    "run_id": 41129564547,
-    "run_number": 147,
+    "run_id": 41146994115,
+    "run_number": 240,
     "workflow": "NCS Finance Guard Harness",
-    "commit_sha": "8443a88fd6bef559479197ea3e2a599989bf22f1",
+    "commit_sha": "726babe4f76344493e7a340f260f49b1cd099a07",
     "status": "completed",
     "conclusion": "success",
-    "tests_passed": 71,
+    "tests_passed": 93,
     "tests_failed": 0,
-    "duration": "1.15s",
-    "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41129564547"
+    "warnings": 4,
+    "duration": "1.27s",
+    "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41146994115",
+    "scope": "NCS selected synthetic Finance Guard assessment harness only; not native model-provider assessment or independent validation."
   },
   "remediation": {
     "commit_sha": "ad39b12f6d173af6d5b81a8d35ebacb7f55dbc33",
@@ -52,7 +54,7 @@
     "independent_validation_completed": false,
     "native_model_provider_runs_completed": false,
     "application_control_tests_completed": true,
-    "public_result_label": "INITIAL_CI_RUN_FAILED_ONE_TEST; REMEDIATION_COMMITTED; RERUN_PENDING",
+    "public_result_label": "NCS_HARNESS_CI_PASS_93_OF_93; CYRADUCT_FULL_SUITE_PASS_235_OF_235; NO_GRADE_OR_CERTIFICATE",
     "ncs_harness_ci_passed": true
   },
   "synchronization": {
@@ -88,6 +90,20 @@
       "duration": "1.15s",
       "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41129564547",
       "notes": "Repeated suite after programme and registry documentation changes; 4 warnings, no failures."
+    },
+    {
+      "run_id": 41146994115,
+      "run_number": 240,
+      "workflow": "NCS Finance Guard Harness",
+      "commit_sha": "726babe4f76344493e7a340f260f49b1cd099a07",
+      "status": "completed",
+      "conclusion": "success",
+      "tests_passed": 93,
+      "tests_failed": 0,
+      "warnings": 4,
+      "duration": "1.27s",
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41146994115",
+      "notes": "PR-head verification on 31 October 2026; selected NCS Finance Guard synthetic harness only. Four warnings; no failures. No live model-provider assessment, grade, certificate or independent validation."
     }
   ]
 }
