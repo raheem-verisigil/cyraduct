@@ -19,3 +19,9 @@ These results validate the relevant software CI suites only. They do not assess 
 - Complete independent partner reproduction and adjudication.
 
 **No NCS grade or certificate has been issued.**
+
+
+## NCS authority infrastructure progress (31 Oct 2026)
+The staged authority package now includes draft governance operating controls, an interim CODEOWNERS file, a dedicated-repository transfer checklist, and a manually dispatchable/scoped CI workflow. The manifest verifier was hardened to reject empty evidence lists, duplicate evidence IDs/paths, absolute/traversal paths, symlinks, malformed digests and missing files. Smoke coverage was expanded from 3 to 7 cases. A local Node.js 22 execution of the matching verifier/compiler/test source passed 7/7. This local execution is not a GitHub Actions run; the newly committed workflow result has not yet been confirmed.
+
+The separate repository and independent reviewer body are still not established. Current CODEOWNERS entries are administrative placeholders, not independent approvals. No grade or certificate is issued.
