@@ -4,7 +4,7 @@ on:
     branches: [ncs/experiment-runner-v0.1]
     paths: ['ncs-authority/**', '.github/workflows/ncs-authority.yml']
   pull_request:
-    branches: [main, ncs/experiment-runner-v0.1]
+    branches: [main, ncs/experiment-runner-v0.1, ncs/finance-guard-assessment]
     paths: ['ncs-authority/**', '.github/workflows/ncs-authority.yml']
   workflow_dispatch:
 permissions:
