@@ -22,6 +22,6 @@ jobs:
       - name: Validate JSON schemas parse
         run: node -e "for (const p of ['ncs-authority/schemas/evidence-manifest.schema.json','ncs-authority/schemas/assessment-record.schema.json']) JSON.parse(require('node:fs').readFileSync(p,'utf8')); console.log('Schema JSON parse passed')"
       - name: Syntax check
-        run: node --check ncs-authority/compiler/compile-assessment.js && node --check ncs-authority/verifier/verify-manifest.js && node --check ncs-authority/tests/smoke.test.js
+        run: node --check ncs-authority/compiler/compile-assessment.js && node --check ncs-authority/verifier/verify-manifest.js && node --check ncs-authority/tests/smoke.test.js && node --check ncs-authority/tests/compiler.test.js
       - name: Run authority smoke tests
-        run: node ncs-authority/tests/smoke.test.js
+        run: node ncs-authority/tests/smoke.test.js && node ncs-authority/tests/compiler.test.js
