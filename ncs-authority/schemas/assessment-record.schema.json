@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NCS Assessment Record v0.1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "assessment_id",
+    "subject",
+    "scope",
+    "stages",
+    "decision_status",
+    "grade_issued",
+    "certificate_issued"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "ncs-assessment-record/0.1"
+    },
+    "assessment_id": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "object",
+      "required": [
+        "artifact_id",
+        "artifact_digest"
+      ],
+      "properties": {
+        "artifact_id": {
+          "type": "string"
+        },
+        "artifact_digest": {
+          "type": "string"
+        }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "test_profile": {
+          "type": "string"
+        },
+        "native_baseline": {
+          "type": "boolean"
+        },
+        "policy_delta": {
+          "type": "boolean"
+        }
+      }
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "status"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "NOT_STARTED",
+              "BLOCKED",
+              "RUNNING",
+              "COMPLETED",
+              "FAILED",
+              "NOT_APPLICABLE"
+            ]
+          },
+          "evidence_refs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "decision_status": {
+      "enum": [
+        "INTAKE",
+        "IN_PROGRESS",
+        "BLOCKED",
+        "PROVISIONAL",
+        "REVIEW_REQUIRED",
+        "DECIDED",
+        "REVOKED"
+      ]
+    },
+    "grade_issued": {
+      "type": "boolean"
+    },
+    "certificate_issued": {
+      "type": "boolean"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}
