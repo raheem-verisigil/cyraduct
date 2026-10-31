@@ -1,0 +1,9 @@
+[project]
+name = "ncs-experiment-runner"
+version = "0.1.0"
+description = "Evidence-only execution harness for Native Conduct Standard experiments"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
