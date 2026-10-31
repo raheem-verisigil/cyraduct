@@ -33,3 +33,9 @@ The provisional compiler now validates assessment ID, decision state, stage stru
 
 ## GitHub Actions validation confirmed (31 October 2026)
 The NCS Authority Package Checks workflow completed successfully on commit `bb1e16b0e3c83a6f2a35f4204cd446721561e632`. Run: https://github.com/raheem-verisigil/cyraduct/actions/runs/41202010366 . Confirmed successful steps: checkout, Node.js 22 setup, both JSON schema parse checks, compiler/verifier/test syntax checks, evidence verifier adversarial smoke tests, and compiler validation tests. This validates the staging package on the Cyraduct branch only; it does not validate a dedicated NCS repository, independent governance, production portal security, or model conduct.
+
+
+## Dedicated NCS authority repository update — 31 October 2026
+The dedicated private NCS repository is now established at https://github.com/raheem-verisigil/naconstan. The authority package is present in its main branch. Its authority-transfer CI completed successfully: https://github.com/raheem-verisigil/naconstan/actions/runs/41204731119. A governance/documentation correction branch also passed CI: https://github.com/raheem-verisigil/naconstan/actions/runs/41211453109. The latter branch is pending pull-request review/merge.
+
+The NCS authority remains pre-alpha. The repository default branch is currently unprotected; CODEOWNERS is an administrative placeholder, and independent reviewers/board have not been appointed. The partner portal is a private static preview, not an externally accessible production service. No NCS grade or certificate is issued. Cyraduct's software CI results above remain distinct from native model-conduct assessment.
