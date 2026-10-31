@@ -339,3 +339,15 @@ curl -X POST http://localhost:8000/v1/conformance/run
 
 These are the honest next steps, not hidden gaps — consistent with the project's
 own non-goals: Cyraduct does not claim guarantees it hasn't built yet.
+
+
+## Native Conduct Standard (NCS) assessment status
+
+Cyraduct's NCS assessment record is **software CI verified; native model assessment incomplete**. On commit `726babe4f76344493e7a340f260f49b1cd099a07`, the selected synthetic NCS Finance Guard harness passed 93/93 and the Cyraduct product suite passed 235/235. These results do not establish native AI model conduct, production safety or independent certification.
+
+- [Cyraduct NCS assessment status](docs/NCS-ASSESSMENT-STATUS.html)
+- [Cyraduct NCS assessment report](ncs-authority/reports/CYRADUCT-ASSESSMENT-STATUS-2026-10-31.md)
+- [NCS authority and partner portal staging package](ncs-authority/README.md)
+- [Partner portal preview](ncs-authority/portal/index.html)
+
+The NCS package is pre-alpha and staged in this repository pending transfer to a dedicated independently governed repository. No grade or certificate has been issued.
