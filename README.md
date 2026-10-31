@@ -343,3 +343,10 @@ curl -X POST http://localhost:8000/v1/conformance/run
 
 These are the honest next steps, not hidden gaps — consistent with the project's
 own non-goals: Cyraduct does not claim guarantees it hasn't built yet.
+
+
+## NCS policy integration — proposal only
+
+This repository includes a proposed NCS Product Adapter declaration at [ncs/NCS-POLICY-INTEGRATION-DECLARATION-v0.1.json](ncs/NCS-POLICY-INTEGRATION-DECLARATION-v0.1.json). It describes a candidate mapping from organisational AI policy requirements to this product's declared control and evidence surfaces.
+
+**Status: CANDIDATE / NOT VALIDATED / NOT NCS-CERTIFIED.** The declaration is a design and integration hypothesis, not an NCS assessment, independent review, endorsement or certification. Exact artifact/commit, scope, test authorization, evidence and limitations must be pinned and reviewed before any NCS assessment claim. Publication permission is not granted by this declaration.
