@@ -22,21 +22,22 @@
     }
   },
   "latest_completed_ci_run": {
-    "run_id": 41129564547,
-    "run_number": 147,
+    "run_id": 41263147349,
+    "run_number": 261,
     "workflow": "NCS Finance Guard Harness",
-    "commit_sha": "8443a88fd6bef559479197ea3e2a599989bf22f1",
+    "commit_sha": "e37cc0be151054d93d28d86ded95319ef7b08cc9",
     "status": "completed",
     "conclusion": "success",
-    "tests_passed": 71,
+    "tests_passed": 93,
     "tests_failed": 0,
-    "duration": "1.15s",
-    "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41129564547"
+    "duration": "1.14s",
+    "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41263147349",
+    "archive_path": "ncs_harness/assessment_registry/runs/NCS-CYR-FG-2026-001-CI-261.json"
   },
   "remediation": {
-    "commit_sha": "ad39b12f6d173af6d5b81a8d35ebacb7f55dbc33",
-    "change": "Updated the test expectation to preserve failure precedence.",
-    "status": "COMMITTED_AWAITING_NEW_CI_RESULT"
+    "commit_sha": "e37cc0be151054d93d28d86ded95319ef7b08cc9",
+    "change": "Added an autouse pytest fixture to reset the in-process SlowAPI storage between tests and expanded workflow path filters to include the shared fixture and rate-limit regression tests.",
+    "status": "RATE_LIMIT_TEST_ISOLATION_PATCHED; FULL_SUITE_FIRST_CLEAN_RUN_CONFIRMED"
   },
   "certificate_lifecycle": {
     "status": "EXPERIMENTAL_NON_ISSUING",
@@ -44,7 +45,7 @@
     "certificate_candidate_schema": "ncs_harness/certificate-candidate.schema.json",
     "change_impact_engine": "ncs_harness/certificate_lifecycle.py",
     "lifecycle_tests_added": true,
-    "lifecycle_tests_in_latest_completed_run": false
+    "lifecycle_tests_in_latest_completed_run": true
   },
   "public_claims": {
     "ncs_grade_issued": false,
@@ -52,7 +53,7 @@
     "independent_validation_completed": false,
     "native_model_provider_runs_completed": false,
     "application_control_tests_completed": true,
-    "public_result_label": "INITIAL_CI_RUN_FAILED_ONE_TEST; REMEDIATION_COMMITTED; RERUN_PENDING",
+    "public_result_label": "NCS_HARNESS_PASS_93; FULL_CYRADUCT_SUITE_PASS_232; REPEATABILITY_GATE_PENDING",
     "ncs_harness_ci_passed": true
   },
   "synchronization": {
@@ -140,25 +141,71 @@
       "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41139022098",
       "archive_path": "ncs_harness/assessment_registry/runs/CYRADUCT-FULL-SUITE-2026-199.json",
       "triage": "Product rate-limit/test-fixture failures remain"
+    },
+    {
+      "run_id": 41263147349,
+      "run_number": 261,
+      "workflow": "NCS Finance Guard Harness",
+      "commit_sha": "e37cc0be151054d93d28d86ded95319ef7b08cc9",
+      "status": "completed",
+      "conclusion": "success",
+      "tests_passed": 93,
+      "tests_failed": 0,
+      "duration": "1.14s",
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41263147349",
+      "archive_path": "ncs_harness/assessment_registry/runs/NCS-CYR-FG-2026-001-CI-261.json"
+    },
+    {
+      "run_id": 41263147329,
+      "run_number": 306,
+      "workflow": "Cyraduct tests",
+      "commit_sha": "e37cc0be151054d93d28d86ded95319ef7b08cc9",
+      "status": "completed",
+      "conclusion": "success",
+      "tests_passed": 232,
+      "tests_failed": 0,
+      "duration": "5.02s",
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41263147329",
+      "archive_path": "ncs_harness/assessment_registry/runs/CYRADUCT-FULL-SUITE-2026-306.json",
+      "triage": "Four previously observed rate-limit/receipt-shape failures no longer reproduced after shared test-client rate-limit storage reset."
     }
   ],
   "latest_attempt": {
     "ncs_harness": {
-      "run_id": 41139022127,
-      "run_number": 217,
+      "run_id": 41263147349,
+      "run_number": 261,
+      "workflow": "NCS Finance Guard Harness",
+      "commit_sha": "e37cc0be151054d93d28d86ded95319ef7b08cc9",
+      "status": "completed",
       "conclusion": "success",
       "tests_passed": 93,
       "tests_failed": 0,
-      "duration": "1.22s",
-      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41139022127"
+      "duration": "1.14s",
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41263147349",
+      "archive_path": "ncs_harness/assessment_registry/runs/NCS-CYR-FG-2026-001-CI-261.json"
     },
     "full_cyraduct_suite": {
-      "run_id": 41139022098,
-      "run_number": 199,
-      "conclusion": "failure",
-      "tests_passed": 228,
-      "tests_failed": 4,
-      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41139022098"
+      "run_id": 41263147329,
+      "run_number": 306,
+      "workflow": "Cyraduct tests",
+      "commit_sha": "e37cc0be151054d93d28d86ded95319ef7b08cc9",
+      "status": "completed",
+      "conclusion": "success",
+      "tests_passed": 232,
+      "tests_failed": 0,
+      "duration": "5.02s",
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41263147329",
+      "archive_path": "ncs_harness/assessment_registry/runs/CYRADUCT-FULL-SUITE-2026-306.json",
+      "triage": "Four previously observed rate-limit/receipt-shape failures no longer reproduced after shared test-client rate-limit storage reset."
     }
+  },
+  "production_hardening": {
+    "commit_sha": "e37cc0be151054d93d28d86ded95319ef7b08cc9",
+    "rate_limit_test_isolation": "IMPLEMENTED",
+    "full_suite_first_clean_run": true,
+    "consecutive_clean_full_suite_runs": 1,
+    "required_consecutive_clean_full_suite_runs": 3,
+    "production_deployment_performed": false,
+    "live_payment_endpoints_used": false
   }
 }
