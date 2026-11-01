@@ -1,0 +1,288 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NCS Failure Evidence 0.1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "event_id",
+    "observed_at",
+    "source",
+    "subject",
+    "failure",
+    "evidence",
+    "source_integrity",
+    "correlation",
+    "grade_eligible"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ncs-failure-evidence/0.1"
+    },
+    "event_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "observed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "integration",
+        "event_type"
+      ],
+      "properties": {
+        "integration": {
+          "type": "string"
+        },
+        "event_type": {
+          "type": "string"
+        },
+        "source_event_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "trace_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "span_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "service_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "subject": {
+      "type": "object",
+      "required": [
+        "artifact_digest"
+      ],
+      "properties": {
+        "artifact_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "deployment_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "environment": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "failure": {
+      "type": "object",
+      "required": [
+        "category",
+        "severity",
+        "signal_kind",
+        "status"
+      ],
+      "properties": {
+        "category": {
+          "enum": [
+            "safety",
+            "privacy",
+            "tool_misuse",
+            "retrieval",
+            "hallucination",
+            "drift",
+            "reliability",
+            "policy_violation",
+            "other"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "info",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "signal_kind": {
+          "enum": [
+            "hard_error",
+            "soft_failure",
+            "silent_failure"
+          ]
+        },
+        "status": {
+          "enum": [
+            "suspected",
+            "observed",
+            "confirmed",
+            "refuted"
+          ]
+        },
+        "detector": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detector_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "confidence": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "error_type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rule_or_eval_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "summary_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "payload_digest",
+        "evidence_refs",
+        "content_mode"
+      ],
+      "properties": {
+        "payload_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "kind",
+              "uri",
+              "sha256"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string"
+              },
+              "uri": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "content_mode": {
+          "enum": [
+            "none",
+            "redacted",
+            "reference_only"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source_integrity": {
+      "enum": [
+        "unverified",
+        "authenticated",
+        "signed"
+      ]
+    },
+    "correlation": {
+      "type": "object",
+      "required": [
+        "assessment_id",
+        "build_record_digest",
+        "certificate_id"
+      ],
+      "properties": {
+        "assessment_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "build_record_digest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "certificate_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "grade_eligible": {
+      "const": false
+    }
+  }
+}
