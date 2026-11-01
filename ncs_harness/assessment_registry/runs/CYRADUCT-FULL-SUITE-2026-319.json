@@ -1,0 +1,17 @@
+{
+  "schema": "ncs-assessment-run/0.1",
+  "assessment_id": "NCS-CYR-FG-2026-001",
+  "run_id": "CYRADUCT-FULL-SUITE-2026-319",
+  "run_type": "CYRADUCT_FULL_REPOSITORY_CI",
+  "workflow_run_id": 41264005635,
+  "workflow_run_number": 319,
+  "commit_sha": "c1bed2eff693221fd1ab5eb723aba3c3013b1bbe",
+  "status": "COMPLETED",
+  "conclusion": "SUCCESS",
+  "tests_passed": 243,
+  "tests_failed": 0,
+  "warnings": 4,
+  "duration": "4.35s",
+  "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41264005635",
+  "notes": "Full repository tests passed after addition of NCS failure evidence engine. Test suite includes tests/test_ncs_failure_evidence.py."
+}
