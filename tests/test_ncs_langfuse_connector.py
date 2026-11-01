@@ -11,7 +11,7 @@ def cfg():
     return LangfuseConfig("https://cloud.langfuse.com", "pk-test", "sk-test")
 
 def test_normalizes_error_observation_only_with_explicit_artifact_digest():
-    connector = LangfuseNCSConnector(cfg(), client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200,json={}))))
+    connector = LangfuseNCSConnector(cfg(), client=httpx.Client(base_url="https://cloud.langfuse.com", transport=httpx.MockTransport(lambda r: httpx.Response(200,json={}))))
     row = {
         "id":"obs-1","traceId":"trace-1","type":"GENERATION","level":"ERROR",
         "startTime":"2026-11-01T10:00:00Z","statusMessage":"TimeoutError: upstream timeout",
@@ -28,7 +28,7 @@ def test_normalizes_error_observation_only_with_explicit_artifact_digest():
     assert "upstream timeout" not in str(event)
 
 def test_quarantines_observation_without_artifact_binding():
-    connector = LangfuseNCSConnector(cfg(), client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200,json={}))))
+    connector = LangfuseNCSConnector(cfg(), client=httpx.Client(base_url="https://cloud.langfuse.com", transport=httpx.MockTransport(lambda r: httpx.Response(200,json={}))))
     event, reason = connector.normalize_observation({
         "id":"obs-2","level":"ERROR","startTime":"2026-11-01T10:00:00Z","model":"gpt-x"
     })
@@ -44,7 +44,7 @@ def test_paginates_bounded_error_and_warning_queries():
         if request.url.params.get("level") == "ERROR":
             return httpx.Response(200,json={"data":[{"id":"obs-1"}],"meta":{"cursor":"next"}})
         return httpx.Response(200,json={"data":[],"meta":{}})
-    client = httpx.Client(transport=httpx.MockTransport(handler))
+    client = httpx.Client(base_url="https://cloud.langfuse.com", transport=httpx.MockTransport(handler))
     connector = LangfuseNCSConnector(cfg(),client=client)
     rows = list(connector.iter_observations(from_start_time="2026-11-01T00:00:00Z",to_start_time="2026-11-02T00:00:00Z"))
     assert [x["id"] for x in rows] == ["obs-1","obs-2"]
@@ -54,7 +54,7 @@ def test_paginates_bounded_error_and_warning_queries():
     assert calls[-1]["level"] == "WARNING"
 
 def test_rejects_unbounded_or_timezone_free_polling_windows():
-    connector = LangfuseNCSConnector(cfg(),client=httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200,json={}))))
+    connector = LangfuseNCSConnector(cfg(),client=httpx.Client(base_url="https://cloud.langfuse.com", transport=httpx.MockTransport(lambda r: httpx.Response(200,json={}))))
     with pytest.raises(ValueError,match="timezone"):
         list(connector.iter_observations(from_start_time="2026-11-01T00:00:00",to_start_time="2026-11-02T00:00:00Z"))
     with pytest.raises(ValueError,match="earlier"):
