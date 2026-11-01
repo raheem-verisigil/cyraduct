@@ -5,7 +5,10 @@ on:
     paths:
       - "ncs_harness/**"
       - "programme/**"
+      - "tests/conftest.py"
       - "tests/test_ncs_*.py"
+      - "tests/test_private_record_access.py"
+      - "tests/test_rate_limiting.py"
       - "app/**"
       - "policy_packs/finance_vendor_change_v1.json"
       - ".github/workflows/ncs-finance-guard.yml"
@@ -14,7 +17,10 @@ on:
       - "ncs/finance-guard-assessment"
     paths:
       - "ncs_harness/**"
+      - "tests/conftest.py"
       - "tests/test_ncs_*.py"
+      - "tests/test_private_record_access.py"
+      - "tests/test_rate_limiting.py"
       - "app/**"
       - "policy_packs/finance_vendor_change_v1.json"
       - ".github/workflows/ncs-finance-guard.yml"
