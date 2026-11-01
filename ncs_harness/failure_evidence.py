@@ -80,8 +80,8 @@ def normalize_observability_event(
     if not isinstance(evidence, dict):
         raise ValueError("evidence is required")
     payload_digest = _digest(evidence.get("payload_digest"), "evidence.payload_digest")
-    if source_integrity not in SOURCE_INTEGRITY or content_mode not in CONTENT_MODES:
-        raise ValueError("invalid source_integrity or content_mode")
+    if source_integrity != "unverified" or content_mode not in CONTENT_MODES:
+        raise ValueError("ingestion must start unverified; use a verifier to establish source integrity")
     refs = evidence.get("evidence_refs", [])
     if not isinstance(refs, list) or any(not isinstance(x, dict) or not x.get("kind") or not x.get("uri") for x in refs):
         raise ValueError("evidence_refs must contain kind and opaque uri")
