@@ -1,0 +1,17 @@
+{
+  "schema": "ncs-assessment-run/0.1",
+  "assessment_id": "NCS-CYR-FG-2026-001",
+  "run_id": "CYRADUCT-FULL-SUITE-2026-309",
+  "run_type": "CYRADUCT_FULL_REPOSITORY_CI",
+  "workflow_run_id": 41263257382,
+  "workflow_run_number": 309,
+  "commit_sha": "f692e8f2c7980a4d4ecc14c0ad22e6be70ed8da9",
+  "status": "COMPLETED",
+  "conclusion": "SUCCESS",
+  "tests_passed": 232,
+  "tests_failed": 0,
+  "warnings": 4,
+  "duration": "3.68s",
+  "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41263257382",
+  "notes": "Full repository suite excluding tests/integrations. Second consecutive confirmed clean full-suite result after test rate-limit storage isolation."
+}
