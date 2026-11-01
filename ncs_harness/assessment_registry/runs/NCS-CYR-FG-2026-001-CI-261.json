@@ -1,0 +1,16 @@
+{
+  "schema": "ncs-assessment-run/0.1",
+  "assessment_id": "NCS-CYR-FG-2026-001",
+  "run_id": "NCS-CYR-FG-2026-001-CI-261",
+  "run_type": "NCS_FINANCE_GUARD_HARNESS_CI",
+  "workflow_run_id": 41263147349,
+  "workflow_run_number": 261,
+  "commit_sha": "e37cc0be151054d93d28d86ded95319ef7b08cc9",
+  "status": "COMPLETED",
+  "conclusion": "SUCCESS",
+  "tests_passed": 93,
+  "tests_failed": 0,
+  "warnings": 4,
+  "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41263147349",
+  "notes": "Includes tests/test_ncs_certificate_lifecycle.py. Synthetic/test-only execution; no certificate issued."
+}
