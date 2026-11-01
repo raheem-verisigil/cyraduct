@@ -203,11 +203,119 @@ class LangfuseNCSConnector:
             return None, f"invalid_ncs_metadata:{str(exc)}"
         return event, None
 
+
+    def iter_scores(self, *, from_timestamp: str, to_timestamp: str) -> Iterator[dict[str, Any]]:
+        """Yield evaluation scores from Scores API v3 within a fixed window."""
+        self._validate_window(from_timestamp, to_timestamp)
+        cursor = None
+        while True:
+            params: dict[str, Any] = {
+                "fromTimestamp": from_timestamp,
+                "toTimestamp": to_timestamp,
+                "source": "EVAL",
+                "fields": "details,subject",
+                "limit": self.config.page_limit,
+            }
+            if cursor:
+                params["cursor"] = cursor
+            try:
+                response = self.client.get("/api/public/v3/scores", params=params)
+                response.raise_for_status()
+                body = response.json()
+            except httpx.HTTPStatusError as exc:
+                status = exc.response.status_code
+                if status in (401, 403):
+                    raise LangfuseConnectorError("Langfuse authentication/permission failure reading evaluation scores") from exc
+                if status == 429:
+                    raise LangfuseConnectorError("Langfuse API rate limit reached while reading evaluation scores") from exc
+                raise LangfuseConnectorError(f"Langfuse scores API returned HTTP {status}") from exc
+            except (httpx.HTTPError, ValueError) as exc:
+                raise LangfuseConnectorError("Langfuse scores request failed or returned invalid JSON") from exc
+            rows = body.get("data")
+            if not isinstance(rows, list):
+                raise LangfuseConnectorError("Langfuse scores response missing data array")
+            for row in rows:
+                if isinstance(row, dict):
+                    yield row
+            meta = body.get("meta") or {}
+            cursor = meta.get("cursor") if isinstance(meta, dict) else None
+            if not cursor:
+                break
+
+    def normalize_score(self, row: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
+        """Map only explicit failed eval outcomes; scores are not model-authenticity proofs."""
+        details = row.get("metadata") or (row.get("details") or {}).get("metadata") or {}
+        if not isinstance(details, dict):
+            return None, "score_metadata_not_object"
+        artifact_digest = details.get(self.config.artifact_metadata_key)
+        if not isinstance(artifact_digest, str) or not HEX64.fullmatch(artifact_digest):
+            return None, "score_missing_or_invalid_artifact_digest"
+        data_type = str(row.get("dataType") or "").upper()
+        value = row.get("value")
+        explicit_failure = details.get("ncs.failure.is_failure")
+        failed = explicit_failure is True
+        if data_type == "BOOLEAN" and value is False:
+            failed = True
+        elif data_type == "CATEGORICAL" and isinstance(value, str) and value.strip().lower() in {
+            "fail", "failed", "failure", "error", "incorrect", "unsafe", "false"
+        }:
+            failed = True
+        if not failed:
+            return None, "evaluation_score_not_explicitly_failed"
+        subject = row.get("subject") or {}
+        if not isinstance(subject, dict):
+            return None, "score_subject_not_object"
+        timestamp = row.get("timestamp")
+        if not isinstance(timestamp, str):
+            return None, "score_missing_timestamp"
+        category = details.get(self.config.category_metadata_key, "reliability")
+        severity = details.get(self.config.severity_metadata_key, "medium")
+        status = details.get(self.config.status_metadata_key, "observed")
+        score_identity = {
+            "id": row.get("id"), "name": row.get("name"), "value": value,
+            "dataType": data_type, "source": row.get("source"), "timestamp": timestamp,
+            "subject": subject, "artifact_digest": artifact_digest,
+            "failure_category": category, "failure_severity": severity,
+        }
+        digest = sha256_json(score_identity)
+        try:
+            event = normalize_observability_event(
+                event_id=f"langfuse-score:{row.get('id') or digest}",
+                observed_at=timestamp,
+                source={
+                    "integration": "langfuse", "event_type": f"evaluation.score.{row.get('name') or 'unnamed'}",
+                    "source_event_id": str(row.get("id") or ""),
+                    "trace_id": subject.get("traceId"),
+                    "span_id": subject.get("id") if subject.get("kind") == "observation" else None,
+                    "service_name": details.get("service.name"),
+                },
+                subject={
+                    "artifact_digest": artifact_digest,
+                    "provider": details.get("gen_ai.provider.name"),
+                    "model_name": details.get("gen_ai.request.model"),
+                    "model_version": details.get("gen_ai.response.model.version"),
+                    "deployment_id": details.get("service.instance.id"),
+                    "environment": row.get("environment"),
+                },
+                failure={
+                    "category": category, "severity": severity, "signal_kind": "soft_failure",
+                    "status": status, "detector": "langfuse-evaluation-score-v3",
+                    "detector_version": "0.1", "rule_or_eval_id": str(row.get("name") or ""),
+                    "summary_code": "langfuse_eval_score_failed",
+                },
+                evidence={"payload_digest": digest, "evidence_refs": []},
+                content_mode="none",
+            )
+        except (ValueError, TypeError) as exc:
+            return None, f"invalid_ncs_score_metadata:{str(exc)}"
+        return event, None
+
     def poll(self, *, from_start_time: str, to_start_time: str) -> dict[str, Any]:
         """Read a bounded window and return normalized events plus quarantine counters."""
         events: list[dict[str, Any]] = []
         quarantined: dict[str, int] = {}
         fetched = 0
+        scores_fetched = 0
         for row in self.iter_observations(from_start_time=from_start_time, to_start_time=to_start_time):
             fetched += 1
             event, reason = self.normalize_observation(row)
@@ -215,12 +323,19 @@ class LangfuseNCSConnector:
                 events.append(event)
             elif reason:
                 quarantined[reason] = quarantined.get(reason, 0) + 1
+        for row in self.iter_scores(from_timestamp=from_start_time, to_timestamp=to_start_time):
+            scores_fetched += 1
+            event, reason = self.normalize_score(row)
+            if event is not None:
+                events.append(event)
+            elif reason:
+                quarantined[reason] = quarantined.get(reason, 0) + 1
         return {
             "schema": "ncs-langfuse-poll/0.1",
-            "source": "langfuse-observations-api-v2",
+            "source": "langfuse-observations-api-v2+scores-api-v3",
             "from_start_time": from_start_time,
             "to_start_time": to_start_time,
-            "observations_fetched": fetched,
+            "observations_fetched": fetched,\n            "evaluation_scores_fetched": scores_fetched,
             "events_emitted": len(events),
             "quarantined": quarantined,
             "events": events,
