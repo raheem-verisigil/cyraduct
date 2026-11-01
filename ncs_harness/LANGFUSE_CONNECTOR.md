@@ -5,11 +5,11 @@ This is a read-only connector for Langfuse v4+ using the supported Observations 
 ## Data flow
 
 1. Instrument the AI application so Langfuse observations carry an explicit NCS artifact digest in observation metadata: `ncs.artifact.sha256`.
-2. The connector polls bounded UTC time windows from `GET /api/public/v2/observations`, requesting only core/basic/metadata/model/prompt/trace-context fields.
-3. ERROR and WARNING observations are normalized to `ncs-failure-evidence/0.1`.
+2. The connector polls bounded UTC time windows from `GET /api/public/v2/observations` for ERROR/WARNING spans and `GET /api/public/v3/scores` for explicit evaluation failures. It requests only core/basic/metadata/model/trace-context fields for observations and details/subject for scores.
+3. ERROR and WARNING observations, plus explicitly failed boolean/categorical evaluation scores, are normalized to `ncs-failure-evidence/0.1`. Numeric scores are ignored unless a future version defines a validated threshold contract.
 4. Rows with no valid artifact digest are quarantined, never guessed from model name, release, or version.
 5. Every emitted event remains `source_integrity=unverified`, `grade_eligible=false`. Langfuse API Basic Auth proves permission to read the project, not cryptographic authorship or artifact identity.
-6. NCS rule decisions remain recommendations. This connector does not execute containment or change certificate state.
+6. Evaluation score rows are treated as detector outputs, not proof of a failure. Only explicit failed values are emitted; all remain unverified until separately attested. NCS rule decisions remain recommendations. This connector does not execute containment or change certificate state.
 
 ## Install and configure
 
