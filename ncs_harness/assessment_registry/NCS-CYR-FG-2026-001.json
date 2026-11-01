@@ -22,17 +22,17 @@
     }
   },
   "latest_completed_ci_run": {
-    "run_id": 41263369497,
-    "run_number": 277,
+    "run_id": 41264005658,
+    "run_number": 291,
     "workflow": "NCS Finance Guard Harness",
-    "commit_sha": "a2064ad5df98105460b88a41624c781ea14fa283",
+    "commit_sha": "c1bed2eff693221fd1ab5eb723aba3c3013b1bbe",
     "status": "completed",
     "conclusion": "success",
-    "tests_passed": 93,
+    "tests_passed": 104,
     "tests_failed": 0,
-    "duration": "1.14s",
-    "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41263369497",
-    "archive_path": "ncs_harness/assessment_registry/runs/NCS-CYR-FG-2026-001-CI-277.json"
+    "duration": "1.24s",
+    "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41264005658",
+    "archive_path": "ncs_harness/assessment_registry/runs/NCS-CYR-FG-2026-001-CI-291.json"
   },
   "remediation": {
     "commit_sha": "e37cc0be151054d93d28d86ded95319ef7b08cc9",
@@ -53,7 +53,7 @@
     "independent_validation_completed": false,
     "native_model_provider_runs_completed": false,
     "application_control_tests_completed": true,
-    "public_result_label": "NCS_HARNESS_PASS_93; FULL_CYRADUCT_SUITE_PASS_232; REPEATABILITY_4_CONSECUTIVE_PASSES",
+    "public_result_label": "NCS_HARNESS_PASS_104; FULL_CYRADUCT_SUITE_PASS_243; FAILURE_EVIDENCE_ENGINE_EXPERIMENTAL",
     "ncs_harness_ci_passed": true
   },
   "synchronization": {
@@ -246,47 +246,77 @@
       "duration": "3.95s",
       "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41263363333",
       "archive_path": "ncs_harness/assessment_registry/runs/CYRADUCT-FULL-SUITE-2026-313.json"
+    },
+    {
+      "run_id": 41264005658,
+      "run_number": 291,
+      "workflow": "NCS Finance Guard Harness",
+      "commit_sha": "c1bed2eff693221fd1ab5eb723aba3c3013b1bbe",
+      "status": "completed",
+      "conclusion": "success",
+      "tests_passed": 104,
+      "tests_failed": 0,
+      "duration": "1.24s",
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41264005658",
+      "archive_path": "ncs_harness/assessment_registry/runs/NCS-CYR-FG-2026-001-CI-291.json"
+    },
+    {
+      "run_id": 41264005635,
+      "run_number": 319,
+      "workflow": "Cyraduct tests",
+      "commit_sha": "c1bed2eff693221fd1ab5eb723aba3c3013b1bbe",
+      "status": "completed",
+      "conclusion": "success",
+      "tests_passed": 243,
+      "tests_failed": 0,
+      "duration": "4.35s",
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41264005635",
+      "archive_path": "ncs_harness/assessment_registry/runs/CYRADUCT-FULL-SUITE-2026-319.json"
     }
   ],
   "latest_attempt": {
     "ncs_harness": {
-      "run_id": 41263369497,
-      "run_number": 277,
+      "run_id": 41264005658,
+      "run_number": 291,
       "workflow": "NCS Finance Guard Harness",
-      "commit_sha": "a2064ad5df98105460b88a41624c781ea14fa283",
+      "commit_sha": "c1bed2eff693221fd1ab5eb723aba3c3013b1bbe",
       "status": "completed",
       "conclusion": "success",
-      "tests_passed": 93,
+      "tests_passed": 104,
       "tests_failed": 0,
-      "duration": "1.14s",
-      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41263369497",
-      "archive_path": "ncs_harness/assessment_registry/runs/NCS-CYR-FG-2026-001-CI-277.json"
+      "duration": "1.24s",
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41264005658",
+      "archive_path": "ncs_harness/assessment_registry/runs/NCS-CYR-FG-2026-001-CI-291.json"
     },
     "full_cyraduct_suite": {
-      "run_id": 41263363333,
-      "run_number": 313,
+      "run_id": 41264005635,
+      "run_number": 319,
       "workflow": "Cyraduct tests",
-      "commit_sha": "850691f7f8efbcb52da6636fee9a17d3f7b273b7",
+      "commit_sha": "c1bed2eff693221fd1ab5eb723aba3c3013b1bbe",
       "status": "completed",
       "conclusion": "success",
-      "tests_passed": 232,
+      "tests_passed": 243,
       "tests_failed": 0,
-      "duration": "3.95s",
-      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41263363333",
-      "archive_path": "ncs_harness/assessment_registry/runs/CYRADUCT-FULL-SUITE-2026-313.json"
+      "duration": "4.35s",
+      "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41264005635",
+      "archive_path": "ncs_harness/assessment_registry/runs/CYRADUCT-FULL-SUITE-2026-319.json"
     }
   },
   "production_hardening": {
     "commit_sha": "e37cc0be151054d93d28d86ded95319ef7b08cc9",
     "rate_limit_test_isolation": "IMPLEMENTED",
     "full_suite_first_clean_run": true,
-    "consecutive_clean_full_suite_runs": 4,
+    "consecutive_clean_full_suite_runs": 5,
     "required_consecutive_clean_full_suite_runs": 3,
     "production_deployment_performed": false,
     "live_payment_endpoints_used": false,
-    "latest_tested_commit": "ca01dfd5635926ece4319ed9c1224ef9fb2b8124",
-    "repeatability_status": "PASSED_4_CONSECUTIVE_CLEAN_FULL_SUITE_RUNS",
+    "latest_tested_commit": "c1bed2eff693221fd1ab5eb723aba3c3013b1bbe",
+    "repeatability_status": "PASSED; NEW_FEATURE_ADDED_AND_TESTED",
     "latest_ncs_tested_commit": "a2064ad5df98105460b88a41624c781ea14fa283",
-    "latest_full_suite_tested_commit": "850691f7f8efbcb52da6636fee9a17d3f7b273b7"
+    "latest_full_suite_tested_commit": "850691f7f8efbcb52da6636fee9a17d3f7b273b7",
+    "failure_evidence_engine": "EXPERIMENTAL_V0_1_ADDED",
+    "failure_evidence_tests": 10,
+    "ncs_test_count": 104,
+    "full_suite_test_count": 243
   }
 }
