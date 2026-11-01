@@ -1,0 +1,17 @@
+{
+  "schema": "ncs-assessment-run/0.1",
+  "assessment_id": "NCS-CYR-FG-2026-001",
+  "run_id": "NCS-CYR-FG-2026-001-CI-291",
+  "run_type": "NCS_FINANCE_GUARD_HARNESS_CI",
+  "workflow_run_id": 41264005658,
+  "workflow_run_number": 291,
+  "commit_sha": "c1bed2eff693221fd1ab5eb723aba3c3013b1bbe",
+  "status": "COMPLETED",
+  "conclusion": "SUCCESS",
+  "tests_passed": 104,
+  "tests_failed": 0,
+  "warnings": 4,
+  "duration": "1.24s",
+  "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41264005658",
+  "notes": "Includes new NCS failure evidence and modification rule engine tests; no certificate issued."
+}
