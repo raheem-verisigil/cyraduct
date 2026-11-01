@@ -99,7 +99,7 @@ class LangfuseNCSConnector:
                     "fromStartTime": from_start_time,
                     "toStartTime": to_start_time,
                     "level": level,
-                    "fields": "core,basic,metadata,model,prompt,trace_context",
+                    "fields": "core,basic,metadata,model,trace_context",
                     "limit": self.config.page_limit,
                 }
                 if cursor:
@@ -150,7 +150,10 @@ class LangfuseNCSConnector:
         # Only retain a bounded error-type token, never raw exception text.
         error_type = None
         if isinstance(status_message, str) and status_message:
-            error_type = re.sub(r"[^A-Za-z0-9_.:-]", "_", status_message[:96])
+            # Retain only a likely exception class token, never its message.
+            match = re.match(r"^([A-Za-z_][A-Za-z0-9_.]*(?:Error|Exception))(?::|$)", status_message.strip())
+            if match:
+                error_type = match.group(1)[:96]
         category = metadata.get(self.config.category_metadata_key, "reliability")
         severity = metadata.get(self.config.severity_metadata_key, "high" if level == "ERROR" else "medium")
         status = metadata.get(self.config.status_metadata_key, "observed")
