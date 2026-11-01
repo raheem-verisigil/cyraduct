@@ -409,7 +409,7 @@ The Failure Evidence Engine consumes provider-neutral observability signals from
 - OpenTelemetry GenAI conventions are an interoperability vocabulary; an OTel exception is not automatically a safety failure. The initial mapper defaults conservatively to reliability unless an explicit NCS category is supplied.
 - Observability signals are unverified by default. A provider trace does not prove source authenticity, event completeness or model artifact identity.
 - Raw prompts, completions, tool arguments/results and exception payloads are not stored in the normalized record. Keep sensitive source material in an access-controlled evidence vault; retain hashes and opaque references here.
-- A detector's confirmed label alone is insufficient for the confirmed high-impact rule: source integrity must also be authenticated or signed.
+- A detector's confirmed label alone is insufficient for the confirmed high-impact rule: source integrity must also be authenticated or signed. The normalizer always starts unverified and refuses caller-asserted trust. The prototype includes Ed25519 verification over canonical event bytes against an out-of-band pinned public-key fingerprint; only a successful verification changes the event to signed.
 - The engine only recommends actions. It never blocks runtime actions, executes containment, changes certificate state, issues grades or authorizes return to production.
 - Human/institutional decisions, their authority, supporting evidence and implementation results must be recorded separately. Reassessment is performed against the affected artifact and Build Record.
 
