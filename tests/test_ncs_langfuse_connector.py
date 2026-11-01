@@ -66,3 +66,54 @@ def test_authentication_errors_are_sanitized():
     connector = LangfuseNCSConnector(cfg(),client=httpx.Client(transport=httpx.MockTransport(handler)))
     with pytest.raises(LangfuseConnectorError,match="authentication/permission"):
         list(connector.iter_observations(from_start_time="2026-11-01T00:00:00Z",to_start_time="2026-11-02T00:00:00Z"))
+
+
+def test_maps_explicit_failed_boolean_eval_score_with_artifact_digest():
+    connector = LangfuseNCSConnector(cfg(), client=httpx.Client(
+        base_url="https://cloud.langfuse.com",
+        transport=httpx.MockTransport(lambda r: httpx.Response(200,json={}))
+    ))
+    event, reason = connector.normalize_score({
+        "id":"score-1","name":"groundedness","value":False,"dataType":"BOOLEAN",
+        "source":"EVAL","timestamp":"2026-11-01T10:00:00Z","environment":"test",
+        "subject":{"kind":"observation","id":"obs-1","traceId":"trace-1"},
+        "details":{"metadata":{"ncs.artifact.sha256":D,"ncs.failure.category":"hallucination"}}
+    })
+    assert reason is None
+    assert event["source"]["event_type"] == "evaluation.score.groundedness"
+    assert event["source"]["trace_id"] == "trace-1"
+    assert event["failure"]["category"] == "hallucination"
+    assert event["source_integrity"] == "unverified"
+    assert event["grade_eligible"] is False
+
+
+def test_ignores_non_failed_eval_score_and_quarantines_missing_artifact():
+    connector = LangfuseNCSConnector(cfg(), client=httpx.Client(
+        base_url="https://cloud.langfuse.com",
+        transport=httpx.MockTransport(lambda r: httpx.Response(200,json={}))
+    ))
+    row = {"id":"s1","value":True,"dataType":"BOOLEAN","timestamp":"2026-11-01T10:00:00Z",
+           "details":{"metadata":{"ncs.artifact.sha256":D}}}
+    event, reason = connector.normalize_score(row)
+    assert event is None and reason == "evaluation_score_not_explicitly_failed"
+    row["value"] = False
+    row["details"]["metadata"] = {}
+    event, reason = connector.normalize_score(row)
+    assert event is None and reason == "score_missing_or_invalid_artifact_digest"
+
+
+def test_paginates_scores_v3_and_uses_evaluation_source():
+    calls = []
+    def handler(request):
+        calls.append(dict(request.url.params))
+        return httpx.Response(200,json={"data":[{"id":"score-1"}],"meta":{}})
+    connector = LangfuseNCSConnector(cfg(),client=httpx.Client(
+        base_url="https://cloud.langfuse.com",transport=httpx.MockTransport(handler)
+    ))
+    rows = list(connector.iter_scores(
+        from_timestamp="2026-11-01T00:00:00Z",to_timestamp="2026-11-02T00:00:00Z"
+    ))
+    assert len(rows) == 1
+    assert calls[0]["source"] == "EVAL"
+    assert calls[0]["fields"] == "details,subject"
+    assert calls[0]["fromTimestamp"] == "2026-11-01T00:00:00Z"
