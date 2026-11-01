@@ -390,3 +390,43 @@ The expanded NCS-only suite completed successfully: 93 passed, 0 failed in 1.22 
 The full Cyraduct repository suite remains red: 228 passed, 4 failed (run #199). Three failures received HTTP 429 responses in tests that expected normal receipt-query/expiry behavior; the fourth rate-limit test then failed with a missing receipt key. These require isolated rate-limit fixtures or controlled limiter reset. The NCS suite passed independently and does not erase the full-suite failures.
 
 Separate read-only production smoke and LangGraph integration workflows completed successfully on the same commit. They do not constitute a live model assessment or independent security review.
+
+
+## Failure Evidence and Modification Rule Engine (experimental v0.1)
+
+The Failure Evidence Engine consumes provider-neutral observability signals from platforms such as Langfuse, Phoenix, LangSmith and enterprise telemetry systems. It is a governance adapter and rule engine, not a tracing backend, anomaly detector, incident-response executor, or runtime authorization layer.
+
+### Data path
+
+1. An observability platform exports an event, span, exception or evaluation result.
+2. An adapter normalizes it into `ncs-failure-evidence/0.1`, bound to the exact SHA-256 model artifact digest. A model name alone is insufficient.
+3. The event is mapped into the NCS failure taxonomy: safety, privacy, tool misuse, retrieval, hallucination, drift, reliability, policy violation, or other.
+4. A versioned Modification Rule returns evidence-preservation, notification, human-review, containment-recommendation and reassessment-scope instructions.
+5. A failure case binds the source event digest to the rule decision for audit and subsequent Build Record/change-impact review.
+
+### Non-negotiable boundaries
+
+- OpenTelemetry GenAI conventions are an interoperability vocabulary; an OTel exception is not automatically a safety failure. The initial mapper defaults conservatively to reliability unless an explicit NCS category is supplied.
+- Observability signals are unverified by default. A provider trace does not prove source authenticity, event completeness or model artifact identity.
+- Raw prompts, completions, tool arguments/results and exception payloads are not stored in the normalized record. Keep sensitive source material in an access-controlled evidence vault; retain hashes and opaque references here.
+- A detector's confirmed label alone is insufficient for the confirmed high-impact rule: source integrity must also be authenticated or signed.
+- The engine only recommends actions. It never blocks runtime actions, executes containment, changes certificate state, issues grades or authorizes return to production.
+- Human/institutional decisions, their authority, supporting evidence and implementation results must be recorded separately. Reassessment is performed against the affected artifact and Build Record.
+
+### Initial rule set
+
+| Condition | Rule | Recommendation |
+|---|---|---|
+| Unverified or not-yet-adjudicated signal | `NCS-FMR-UNVERIFIED-001` | Preserve evidence, human triage, consider temporary containment |
+| Authenticated/signed, confirmed, high/critical safety/privacy/tool-misuse/policy event | `NCS-FMR-CONTAIN-001` | Priority review and containment recommendation; no automatic execution |
+| Authenticated/signed, confirmed, other high/critical failure | `NCS-FMR-REASSESS-001` | Priority review and targeted reassessment |
+| Lower-severity confirmed event | `NCS-FMR-OBSERVE-001` | Governance queue and trend review |
+| Refuted event | `NCS-FMR-REFUTED-001` | Close only after human review |
+
+### Files and tests
+
+- `failure_evidence.py`: normalized ingestion, conservative OTel mapper, deterministic rule engine, case binding and integrity verification.
+- `failure-evidence.schema.json`: strict event contract.
+- `tests/test_ncs_failure_evidence.py`: artifact binding, timestamp and confidence validation, source-integrity gating, rule routing, OTel mapping, case tamper detection and cross-event binding.
+
+The prototype does not yet ship vendor-specific authenticated webhooks, signature verification, durable deduplication, incident queues or external transparency-log anchoring. Those are required before production integration.
