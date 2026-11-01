@@ -47,3 +47,17 @@ Output is JSON to stdout. It contains normalized events and quarantine counts. S
 ## Production limitations
 
 This first connector is polling-only and read-only. It does not yet provide durable cursor checkpoints, idempotency storage, score API v3 ingestion, a scheduled worker, encrypted event persistence, or independently governed Ed25519 key registration/rotation/revocation. It must be deployed behind a controlled worker identity and tested against a non-production Langfuse project before production use.
+
+
+## GitHub Actions dry-run connection
+
+The repository includes a separate manual-only workflow at `.github/workflows/ncs-langfuse-readonly.yml`. It does not run on push or pull request and does not write to Langfuse. It requires these GitHub Actions secrets:
+
+- `LANGFUSE_PUBLIC_KEY`
+- `LANGFUSE_SECRET_KEY`
+
+Optional repository variable:
+
+- `LANGFUSE_BASE_URL` (defaults to the Langfuse EU Cloud URL shown above; set the US, Japan, HIPAA or self-hosted HTTPS origin as appropriate).
+
+Add them under GitHub repository **Settings → Secrets and variables → Actions**. Never put the values in source files, issues, pull requests or chat. The workflow takes explicit ISO-8601 start/end bounds, performs a read-only poll, and prints only aggregate counts plus a digest of the event set. It does not print or persist event payloads. Run it first against a dedicated non-production Langfuse project.
