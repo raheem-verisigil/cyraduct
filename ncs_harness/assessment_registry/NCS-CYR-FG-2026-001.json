@@ -341,10 +341,11 @@
     "latest_ncs_tested_commit": "a2064ad5df98105460b88a41624c781ea14fa283",
     "latest_full_suite_tested_commit": "850691f7f8efbcb52da6636fee9a17d3f7b273b7",
     "failure_evidence_engine": "EXPERIMENTAL_V0_1",
-    "failure_evidence_tests": 10,
+    "failure_evidence_tests": 13,
     "ncs_test_count": 106,
     "full_suite_test_count": 245,
     "source_attestation": "ED25519_VERIFIED_AGAINST_PINNED_FINGERPRINT",
-    "caller_asserted_trust": "REJECTED"
+    "caller_asserted_trust": "REJECTED",
+    "failure_evidence_test_path": "tests/test_ncs_failure_evidence.py"
   }
 }
