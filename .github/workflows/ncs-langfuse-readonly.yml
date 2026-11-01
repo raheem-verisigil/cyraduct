@@ -56,7 +56,7 @@ jobs:
               "from_start_time": result["from_start_time"],
               "to_start_time": result["to_start_time"],
               "observations_fetched": result["observations_fetched"],
-              "events_emitted": result["events_emitted"],
+              "events_emitted": result["events_emitted"],\n              "evaluation_scores_fetched": result["evaluation_scores_fetched"],
               "quarantined": result["quarantined"],
               "event_set_sha256": hashlib.sha256(json.dumps(
                   result["events"], sort_keys=True, separators=(",", ":")
