@@ -11,10 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-    test/live-langgraph-e2e
-
       PYTHONPATH: ${{ github.workspace }}
-      main
       CYRADUCT_BASE_URL: https://api.cyraduct.com
       CYRADUCT_RUNTIME_API_KEY: ${{ secrets.CYRADUCT_E2E_RUNTIME_API_KEY }}
       CYRADUCT_TRUSTED_KEY_ID: ${{ secrets.CYRADUCT_E2E_TRUSTED_KEY_ID }}
@@ -41,7 +38,6 @@ jobs:
           python - <<'PY'
           import base64, hashlib, os, re
           raw = os.environ["CYRADUCT_TRUSTED_PUBLIC_KEY_B64"]
-          # Accept base64 copied with whitespace or PEM line wrapping; reject unrelated formats.
           raw = re.sub(r"-----BEGIN [^-]+-----|-----END [^-]+-----", "", raw)
           compact = "".join(raw.split())
           try:
