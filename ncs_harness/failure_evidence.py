@@ -234,3 +234,54 @@ def verify_failure_case(case: dict[str, Any]) -> tuple[bool, str]:
     if case.get("certificate_status_change") != "NONE":
         return False, "automatic_certificate_mutation_not_permitted"
     return True, "valid"
+
+def verify_ed25519_source_attestation(
+    event: dict[str, Any], *, signature_b64: str, public_key_b64: str,
+    key_id: str, expected_public_key_sha256: str,
+) -> dict[str, Any]:
+    """Verify a gateway/provider attestation before trusting a failure signal.
+
+    The signature covers the canonical normalized event while
+    source_integrity='unverified'. The public-key fingerprint must be pinned
+    out-of-band by the receiving organization. This function verifies one
+    attestation; it does not provide key discovery, rotation, revocation,
+    replay storage, or an HSM-backed key registry.
+    """
+    import base64
+    from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
+    if event.get("schema") != "ncs-failure-evidence/0.1":
+        raise ValueError("unsupported failure evidence schema")
+    if event.get("source_integrity") != "unverified":
+        raise ValueError("attestation input must have unverified source_integrity")
+    if not isinstance(key_id, str) or not key_id.strip():
+        raise ValueError("key_id is required")
+    _digest(expected_public_key_sha256, "expected_public_key_sha256")
+    try:
+        public_key = base64.b64decode(public_key_b64, validate=True)
+        signature = base64.b64decode(signature_b64, validate=True)
+    except Exception as exc:
+        raise ValueError("public key and signature must be valid Base64") from exc
+    if len(public_key) != 32:
+        raise ValueError("Ed25519 public key must be exactly 32 raw bytes")
+    actual_fingerprint = hashlib.sha256(public_key).hexdigest()
+    if actual_fingerprint != expected_public_key_sha256:
+        raise ValueError("pinned public-key fingerprint mismatch")
+    unsigned_payload = canonical_json_bytes(event)
+    try:
+        Ed25519PublicKey.from_public_bytes(public_key).verify(signature, unsigned_payload)
+    except (InvalidSignature, ValueError) as exc:
+        raise ValueError("source attestation signature verification failed") from exc
+
+    verified = dict(event)
+    verified["source_integrity"] = "signed"
+    verified["source_attestation"] = {
+        "algorithm": "Ed25519",
+        "key_id": key_id,
+        "public_key_sha256": actual_fingerprint,
+        "signature_sha256": hashlib.sha256(signature).hexdigest(),
+        "verified": True,
+    }
+    return verified
+
