@@ -24,7 +24,7 @@ def test_normalizes_error_observation_only_with_explicit_artifact_digest():
     assert event["subject"]["artifact_digest"] == D
     assert event["source_integrity"] == "unverified"
     assert event["grade_eligible"] is False
-    assert "TimeoutError" in event["failure"]["error_type"]
+    assert event["failure"]["error_type"] == "TimeoutError"
     assert "upstream timeout" not in str(event)
 
 def test_quarantines_observation_without_artifact_binding():
