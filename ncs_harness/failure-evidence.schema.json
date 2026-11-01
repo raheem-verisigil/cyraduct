@@ -283,6 +283,36 @@
     },
     "grade_eligible": {
       "const": false
+    },
+    "source_attestation": {
+      "type": "object",
+      "required": [
+        "algorithm",
+        "key_id",
+        "public_key_sha256",
+        "signature_sha256",
+        "verified"
+      ],
+      "properties": {
+        "algorithm": {
+          "const": "Ed25519"
+        },
+        "key_id": {
+          "type": "string"
+        },
+        "public_key_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "signature_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "verified": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
     }
   }
 }
