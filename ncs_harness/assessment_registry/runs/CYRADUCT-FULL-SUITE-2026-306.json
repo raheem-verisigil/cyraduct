@@ -1,0 +1,16 @@
+{
+  "schema": "ncs-assessment-run/0.1",
+  "assessment_id": "NCS-CYR-FG-2026-001",
+  "run_id": "CYRADUCT-FULL-SUITE-2026-306",
+  "run_type": "CYRADUCT_FULL_REPOSITORY_CI",
+  "workflow_run_id": 41263147329,
+  "workflow_run_number": 306,
+  "commit_sha": "e37cc0be151054d93d28d86ded95319ef7b08cc9",
+  "status": "COMPLETED",
+  "conclusion": "SUCCESS",
+  "tests_passed": 232,
+  "tests_failed": 0,
+  "warnings": 4,
+  "log_url": "https://github.com/raheem-verisigil/cyraduct/actions/runs/41263147329",
+  "notes": "Full repository suite excluding tests/integrations. Rate-limit storage isolation fixture reset between tests. No production payment endpoints called."
+}
