@@ -1,0 +1,68 @@
+name: NCS Langfuse Read-only Connector
+
+on:
+  workflow_dispatch:
+    inputs:
+      from_start_time:
+        description: "Inclusive ISO-8601 start time, e.g. 2026-11-01T00:00:00Z"
+        required: true
+        type: string
+      to_start_time:
+        description: "Exclusive ISO-8601 end time, e.g. 2026-11-02T00:00:00Z"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  read-only-poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      LANGFUSE_BASE_URL: ${{ vars.LANGFUSE_BASE_URL || 'https://cloud.langfuse.com' }}
+      LANGFUSE_PUBLIC_KEY: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+      LANGFUSE_SECRET_KEY: ${{ secrets.LANGFUSE_SECRET_KEY }}
+      NCS_FROM_START_TIME: ${{ inputs.from_start_time }}
+      NCS_TO_START_TIME: ${{ inputs.to_start_time }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - name: Install connector dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Verify credentials are configured
+        shell: bash
+        run: |
+          test -n "$LANGFUSE_PUBLIC_KEY" || { echo "::error::LANGFUSE_PUBLIC_KEY repository secret is missing"; exit 1; }
+          test -n "$LANGFUSE_SECRET_KEY" || { echo "::error::LANGFUSE_SECRET_KEY repository secret is missing"; exit 1; }
+      - name: Poll bounded Langfuse window (read-only)
+        run: |
+          python - <<'PY'
+          import json, os, hashlib
+          from ncs_harness.langfuse_connector import poll_from_environment
+          result = poll_from_environment(
+              from_start_time=os.environ["NCS_FROM_START_TIME"],
+              to_start_time=os.environ["NCS_TO_START_TIME"],
+          )
+          # Do not print event payloads, prompts, completions, or raw exceptions to CI logs.
+          summary = {
+              "schema": result["schema"],
+              "source": result["source"],
+              "from_start_time": result["from_start_time"],
+              "to_start_time": result["to_start_time"],
+              "observations_fetched": result["observations_fetched"],
+              "events_emitted": result["events_emitted"],
+              "quarantined": result["quarantined"],
+              "event_set_sha256": hashlib.sha256(json.dumps(
+                  result["events"], sort_keys=True, separators=(",", ":")
+              ).encode()).hexdigest(),
+              "grade_eligible": False,
+              "event_payloads_persisted": False,
+          }
+          print(json.dumps(summary, indent=2, sort_keys=True))
+          PY
