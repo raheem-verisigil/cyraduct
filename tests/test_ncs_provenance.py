@@ -76,3 +76,10 @@ def test_report_never_claims_grade_eligibility():
         "target_node_id": "output", "relation": "retrieved_at_inference", "claim_state": "observed",
         "evidence_refs": ref()}))
     assert summary["grade_eligible"] is False
+
+def test_root_artifact_and_output_digests_must_match_graph_nodes():
+    altered_nodes = nodes()
+    altered_nodes[0]["content_digest"] = E
+    with pytest.raises(ValueError, match="model_artifact node bound"):
+        build_provenance_graph(model_artifact_digest=D, output_digest=F,
+            inference_run_id="run-001", nodes=altered_nodes, edges=[])
