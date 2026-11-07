@@ -79,6 +79,13 @@ def build_provenance_graph(*, model_artifact_digest: str, output_digest: str,
         by_id[node_id] = item
         normalized_nodes.append(item)
 
+    if not any(n["node_type"] == "model_artifact" and n["content_digest"] == model_artifact_digest for n in normalized_nodes):
+        raise ValueError("graph must contain a model_artifact node bound to model_artifact_digest")
+    if not any(n["node_type"] == "output" and n["content_digest"] == output_digest for n in normalized_nodes):
+        raise ValueError("graph must contain an output node bound to output_digest")
+    if not any(n["node_type"] == "inference_run" for n in normalized_nodes):
+        raise ValueError("graph must contain an inference_run node")
+
     normalized_edges = []
     seen = set()
     for edge in edges:
