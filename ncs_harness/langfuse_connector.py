@@ -105,7 +105,7 @@ class LangfuseNCSConnector:
                 if cursor:
                     params["cursor"] = cursor
                 try:
-                    response = self.client.get("/api/public/v2/observations", params=params)
+                    response = self.client.get(self.config.base_url.rstrip("/") + "/api/public/v2/observations", params=params)
                     response.raise_for_status()
                     body = response.json()
                 except httpx.HTTPStatusError as exc:
@@ -219,7 +219,7 @@ class LangfuseNCSConnector:
             if cursor:
                 params["cursor"] = cursor
             try:
-                response = self.client.get("/api/public/v3/scores", params=params)
+                response = self.client.get(self.config.base_url.rstrip("/") + "/api/public/v3/scores", params=params)
                 response.raise_for_status()
                 body = response.json()
             except httpx.HTTPStatusError as exc:
@@ -335,7 +335,8 @@ class LangfuseNCSConnector:
             "source": "langfuse-observations-api-v2+scores-api-v3",
             "from_start_time": from_start_time,
             "to_start_time": to_start_time,
-            "observations_fetched": fetched,\n            "evaluation_scores_fetched": scores_fetched,
+            "observations_fetched": fetched,
+            "evaluation_scores_fetched": scores_fetched,
             "events_emitted": len(events),
             "quarantined": quarantined,
             "events": events,
